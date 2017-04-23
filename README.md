@@ -1,37 +1,11 @@
-## Welcome to GitHub Pages
+## Welcome to 14 Lectures on Visual SLAM: From Theory to Practice, by Xiang Gao, Tao Zhang, Qinrui Yan and Yi Liu
 
-You can use the [editor on GitHub](https://github.com/gaoxiang12/slambook-en/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+This is the English version of this book. If you are Chinese readers, please check [this page](https://item.jd.com/12077296218.html). Our code is in github: [code](https://github.com/gaoxiang12/slambook). 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+So far the English version is free as I havn't contacted any publishing house. It is translated from the Chinese version. We are still doing the translation, maybe for a few months. 
 
-### Markdown
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/gaoxiang12/slambook-en/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+## Contents 
+### Chapter 0. [Preface](/ch0.md)
+### Chapter 1. First Glance of Visual SLAM.
+### Chapter 2. Rigid Body Motion in 3D Space.
