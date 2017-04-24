@@ -2,7 +2,7 @@
 
 This is the English version of this book. If you are a Chinese reader, please check [this page](https://item.jd.com/12077296218.html). Our code is in github: [code](https://github.com/gaoxiang12/slambook). 
 
-So far the English version is free as I havn't contacted any publishing house. It is translated from the Chinese version. We are still doing the translation, maybe for a few months. 
+So far the English version is free as I haven't contacted any publishing house. It is translated from the Chinese version. We are still doing the translation, maybe for a few months. 
 
 
 ## Contents 
