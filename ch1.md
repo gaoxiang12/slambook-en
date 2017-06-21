@@ -54,6 +54,28 @@ From lecture 7, we will be discussing SLAM algorithms, starting with Visual Odom
 
 Finally, if you don't understand what we are talking about at all, congratulations! This book is right for you! Come on and fight!
 
+### Code
+
+All source code in this book is hosted on github:
+
+[https://github.com/gaoxiang12/slambook](https://github.com/gaoxiang12/slambook)
+
+It is strongly recommended that readers download them for viewing at any time. The code is divided by chapter, for example, the contents of the 7th lecture will be placed in folder "ch7". In addition, some of the small libraries used in the book can be found in the "3rd party" folder as compressed packages. For large and medium-sized libraries like OpenCV, we will introduce their installation methods when they first appear. If you have any questions about the code, click the "Issues" button on GitHub to submit. If there is indeed a problem with the code, we will make changes in a timely manner. Even if your understanding is biased, we will still reply as much as possible. If you are not accustomed to using Git, you can also click the button on the right which contains the word "download" to download a zipped file to your local drive.
+
+### Oriented readers
+
+This book is for students and researchers interested in SLAM. Reading this book requires certain prerequisites, we assume that you have the following knowledge:
+
+* **Calculus, Linear Algebra, Probability Theory.** These are the fundamental mathematical knowledge that most readers should have learned during undergraduate study. You should at least understand what a matrix and a vector are, and what it means by doing differentiation and integration. For more advanced mathematical knowledge needed, they will be introduced in this book as we proceed.
+
+* **Basic C++ Programming.** As we will be using C++ as our major programming language, it is recommended that the readers are at least familiar with its basic concepts and syntax. For example, you should know what a class is, how to use the C++ standard library, how to use template classes, etc. We will try our best to avoid using tricks, but in certain situations we really can not avert. In addition, we will adopt some of C++ 11 standard, but don't worry, they will be explained as they appear.
+
+* **Linux Basics.** Our development environment is Linux instead of Windows, and we will only provide source code for Linux. **We believe that mastering Linux is an essential skill for SLAM researchers, and please don't doubt at the beginning. After going through the contents of this book, we believe you will agree with us.** In Linux, the configuration of related libraries is so convenient, and you will gradually appreciate the benefit of mastering Linux. If you have never used a Linux system, it will be beneficial if you can find some Linux learning materials and spend some time reading them (to master Linux basics, the first few chapters of an introductory book should be sufficient). We do not ask readers to have superb Linux operating skills, but we do hope readers at least know how to fire an terminal, and enter the code directory. There are some self-test questions on Linux at the end of this chapter. If you have answers for them, you shouldn't have much problem in understanding the code in this book.
+
+Readers who are interested in SLAM but do not have the above mentioned knowledge may find it difficult to proceed with this book. If you do not understand the basics of C++, you can read some introductory books such as _C ++ Primer Plus_. If you do not have the relevant math knowledge, we also suggest that you read some relevant math textbooks first. Nevertheless, we think that most readers who have completed undergraduate study should already have the necessary mathematical arsenal. Regarding the code, we recommend that you spend time typing them by yourself, and tweaking the parameters to see how they affect outputs. This will be very helpful.
+
+This book can be used as a textbook for SLAM-related courses, but also suitable as an extra-curricular self-study materials.
+
 ### Style
 
 ### Acknowledgements
