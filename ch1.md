@@ -54,39 +54,39 @@ From lecture 7, we will be discussing SLAM algorithms, starting with Visual Odom
 
 Finally, if you don't understand what we are talking about at all, congratulations! This book is right for you! Come on and fight!
 
-### Code
+### Source code
 
 All source code in this book is hosted on github:
 
 [https://github.com/gaoxiang12/slambook](https://github.com/gaoxiang12/slambook)
 
-It is strongly recommended that readers download them for viewing at any time. The code is divided by chapter, for example, the contents of the 7th lecture will be placed in folder "ch7". In addition, some of the small libraries used in the book can be found in the "3rd party" folder as compressed packages. For large and medium-sized libraries like OpenCV, we will introduce their installation methods when they first appear. If you have any questions about the code, click the "Issues" button on GitHub to submit. If there is indeed a problem with the code, we will make changes in a timely manner. Even if your understanding is biased, we will still reply as much as possible. If you are not accustomed to using Git, you can also click the button on the right which contains the word "download" to download a zipped file to your local drive.
+It is strongly recommended that readers download them for viewing at any time. The code is divided by chapters, for example, the contents of the 7th lecture will be placed in folder "ch7". In addition, some of the small libraries used in the book can be found in the "3rd party" folder as compressed packages. For large and medium-sized libraries like OpenCV, we will introduce their installation methods when they first appear. If you have any questions regarding the code, click the "Issues" button on GitHub to submit. If there is indeed a problem with the code, we will make changes in a timely manner. Even if your understanding is biased, we will still reply as much as possible. If you are not accustomed to using Git, you can also click the button on the right which contains the word "download" to download a zipped file to your local drive.
 
 ### Oriented readers
 
-This book is for students and researchers interested in SLAM. Reading this book requires certain prerequisites, we assume that you have the following knowledge:
+This book is for students and researchers interested in SLAM. Reading this book needs certain prerequisites, we assume that you have the following knowledge:
 
-* **Calculus, Linear Algebra, Probability Theory.** These are the fundamental mathematical knowledge that most readers should have learned during undergraduate study. You should at least understand what a matrix and a vector are, and what it means by doing differentiation and integration. For more advanced mathematical knowledge needed, they will be introduced in this book as we proceed.
+* **Calculus, Linear Algebra, Probability Theory.** These are the fundamental mathematical knowledge that most readers should have learned during undergraduate study. You should at least understand what a matrix and a vector are, and what it means by doing differentiation and integration. For more advanced mathematical knowledge required, we will introduce in this book as we proceed.
 
 * **Basic C++ Programming.** As we will be using C++ as our major programming language, it is recommended that the readers are at least familiar with its basic concepts and syntax. For example, you should know what a class is, how to use the C++ standard library, how to use template classes, etc. We will try our best to avoid using tricks, but in certain situations we really can not avert. In addition, we will adopt some of C++ 11 standard, but don't worry, they will be explained as they appear.
 
-* **Linux Basics.** Our development environment is Linux instead of Windows, and we will only provide source code for Linux. **We believe that mastering Linux is an essential skill for SLAM researchers, and please don't doubt at the beginning. After going through the contents of this book, we believe you will agree with us.** In Linux, the configuration of related libraries is so convenient, and you will gradually appreciate the benefit of mastering Linux. If you have never used a Linux system, it will be beneficial if you can find some Linux learning materials and spend some time reading them (to master Linux basics, the first few chapters of an introductory book should be sufficient). We do not ask readers to have superb Linux operating skills, but we do hope readers at least know how to fire an terminal, and enter the code directory. There are some self-test questions on Linux at the end of this chapter. If you have answers for them, you shouldn't have much problem in understanding the code in this book.
+* **Linux Basics.** Our development environment is Linux instead of Windows, and we will only provide source code for Linux. **We believe that mastering Linux is an essential skill for SLAM researchers, and please take it to begin. After going through the contents of this book, we believe you will agree with us.** In Linux, the configuration of related libraries is so convenient, and you will gradually appreciate the benefit of mastering it. If you have never used a Linux system, it will be beneficial if you can find some Linux learning materials and spend some time reading them (to master Linux basics, the first few chapters of an introductory book should be sufficient). We do not ask readers to have superb Linux operating skills, but we do hope readers at least know how to fire an terminal, and enter a code directory. There are some self-test questions on Linux at the end of this chapter. If you have answers to them, you shouldn't have much problem in understanding the code in this book.
 
 Readers who are interested in SLAM but do not have the above mentioned knowledge may find it difficult to proceed with this book. If you do not understand the basics of C++, you can read some introductory books such as _C ++ Primer Plus_. If you do not have the relevant math knowledge, we also suggest that you read some relevant math textbooks first. Nevertheless, we think that most readers who have completed undergraduate study should already have the necessary mathematical arsenal. Regarding the code, we recommend that you spend time typing them by yourself, and tweaking the parameters to see how they affect outputs. This will be very helpful.
 
-This book can be used as a textbook for SLAM-related courses, but also suitable as an extra-curricular self-study materials.
+This book can be used as a textbook for SLAM-related courses, but also suitable as extra-curricular self-study materials.
 
 ### Style
 
-This book covers both mathematical theory, and programming implementation. Therefore, for the convenience of reading, we will be using different layouts to distinguish different contents.
+This book covers both mathematical theory and programming implementation. Therefore, for the convenience of reading, we will be using different layouts to distinguish different contents.
 
-1.  Mathematical formulas will be listed separately, and important formulas will be assigned with an equation 	number, for example:
+1.  Mathematical formulas will be listed separately, and important formulas will be assigned with an equation number on the right end of the line, for example:
 
 	![](http://latex.codecogs.com/gif.latex?\\bm{y}=\\bm{A}\\bm{x})
 
 	Italics are used for scalars (e.g. ![](http://latex.codecogs.com/gif.latex?a)), bold italics are used for vectors and matrices (e.g. ![](http://latex.codecogs.com/gif.latex?\\bm{a}), ![](http://latex.codecogs.com/gif.latex?\\bm{A})). Hollow bold represents special sets, e.g. real number ![](http://latex.codecogs.com/gif.latex?\\mathbb{R}) and integer set ![](http://latex.codecogs.com/gif.latex?\\mathbb{Z}). Gothic is used for Lie Algebra, e.g. ![](http://latex.codecogs.com/gif.latex?\\mathfrak{se}(3)).
 
-2.  The program code will be framed into boxes, using a smaller font size, with line numbers on the left. If a 	code block is long, the box will continue to the next page:
+2.  Source code will be framed into boxes, using a smaller font size, with line numbers on the left. If a code block is long, the box may continue to the next page:
 
 	```cpp
 	#include <iostream>
@@ -99,25 +99,25 @@ This book covers both mathematical theory, and programming implementation. There
 	}
 	```
 
-3.  When the code block is too long or contains repeated parts with previously listed code, it is not appropriate to be listed entirely. We will **only give important snippets** and label it with "Snippet". Therefore, we strongly recommend that readers download all the source code on GitHub and complete the exercises to better understand the book.
+3.  When the code block is too long or contains repeated parts with previously listed code, it is not appropriate to be listed entirely. We will **only give important snippets** and mark it with "Snippet". Therefore, we strongly recommend that readers download all the source code on GitHub and complete the exercises to better understand the book.
 
-4.  Due to typographical reasons, the code shown in the book may be slightly different from the code on GitHub. In that case please use the code on GitHub.
+4.  Due to typographical reasons, the code shown in the book may be slightly different from the code hosted on GitHub. In that case please use the code on GitHub.
 
 5.  For each of the libraries we use, it will be explained in details when first appearing, but not repeated in the follow-up. Therefore, it is recommended that readers read this book in order.
 
 6.  An abstract will be presented at the beginning of each lecture. A summary and some exercises will be given at the end. The cited references are listed at the end of the book.
 
-7.  The chapters with an asterisk mark in front is an optional reading, and the reader can read it according to interest. Skipping them will not hinder the understanding of subsequent chapters.
+7.  The chapters with an asterisk mark in front are optional readings, and readers can read them according to their interest. Skipping them will not hinder the understanding of subsequent chapters.
 
-8.  Important content will be marked in **bold**, as we are accustomed to.
+8.  Important contents will be marked in **bold**, as we are accustomed to.
 
-9.  Most of the experiments we designed are demonstrative. Understanding them does not mean that you are already familiar with the entire library. So we recommend that you spend some time on yourselves in further exploring the important libraries frequently used in the book.
+9.  Most of the experiments we designed are demonstrative. Understanding them does not mean that you are already familiar with the entire library. So we recommend that you spend time on yourselves in further exploring the important libraries frequently used in the book.
 
 10. The book's exercises and optional readings may require you to search for additional materials, so you need to learn to use search engines.
 
 ### Acknowledgments
 
-### Exercises (Self-test Questions)
+### Exercises (self-test questions)
 
 1. There is a linear equation ![](http://latex.codecogs.com/gif.latex?\\bm{A}\\bm{x}=\\bm{b}), if ![](http://latex.codecogs.com/gif.latex?\\bm{A}) and ![](http://latex.codecogs.com/gif.latex?\\bm{b}) are known, how to solve for ![](http://latex.codecogs.com/gif.latex?\\bm{x})? What are the requirements for ![](http://latex.codecogs.com/gif.latex?\\bm{A}) and ![](http://latex.codecogs.com/gif.latex?\\bm{b})? (Hint: the dimensionality and rank of ![](http://latex.codecogs.com/gif.latex?\\bm{A}))
 
