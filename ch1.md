@@ -82,7 +82,7 @@ This book covers both mathematical theory, and programming implementation. There
 
 1.  Mathematical formulas will be listed separately, and important formulas will be assigned with an equation 	number, for example:
 
-<center>![](http://latex.codecogs.com/gif.latex?\\bm{y}=\\bm{A}\\bm{x})</center>
+	<center>![](http://latex.codecogs.com/gif.latex?\\bm{y}=\\bm{A}\\bm{x})</center>
 
 	Italics are used for scalars (e.g. ![](http://latex.codecogs.com/gif.latex?a)), bold italics are used for vectors and matrices (e.g. ![](http://latex.codecogs.com/gif.latex?\\bm{a}), ![](http://latex.codecogs.com/gif.latex?\\bm{A})). Hollow bold represents special sets, e.g. real number ![](http://latex.codecogs.com/gif.latex?\\mathbb{R}) and integer set ![](http://latex.codecogs.com/gif.latex?\\mathbb{Z}). Gothic is used for Lie Algebra, e.g. ![](http://latex.codecogs.com/gif.latex?\\mathfrak{se}(3)).
 
