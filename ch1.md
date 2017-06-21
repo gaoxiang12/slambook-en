@@ -58,7 +58,7 @@ Finally, if you don't understand what we are talking about at all, congratulatio
 
 All source code in this book is hosted on github:
 
-<center>[https://github.com/gaoxiang12/slambook](https://github.com/gaoxiang12/slambook)</center>
+[https://github.com/gaoxiang12/slambook](https://github.com/gaoxiang12/slambook)
 
 It is strongly recommended that readers download them for viewing at any time. The code is divided by chapter, for example, the contents of the 7th lecture will be placed in folder "ch7". In addition, some of the small libraries used in the book can be found in the "3rd party" folder as compressed packages. For large and medium-sized libraries like OpenCV, we will introduce their installation methods when they first appear. If you have any questions about the code, click the "Issues" button on GitHub to submit. If there is indeed a problem with the code, we will make changes in a timely manner. Even if your understanding is biased, we will still reply as much as possible. If you are not accustomed to using Git, you can also click the button on the right which contains the word "download" to download a zipped file to your local drive.
 
@@ -82,7 +82,7 @@ This book covers both mathematical theory, and programming implementation. There
 
 1.  Mathematical formulas will be listed separately, and important formulas will be assigned with an equation 	number, for example:
 
-	<center>![](http://latex.codecogs.com/gif.latex?\\bm{y}=\\bm{A}\\bm{x})</center>
+	![](http://latex.codecogs.com/gif.latex?\\bm{y}=\\bm{A}\\bm{x})
 
 	Italics are used for scalars (e.g. ![](http://latex.codecogs.com/gif.latex?a)), bold italics are used for vectors and matrices (e.g. ![](http://latex.codecogs.com/gif.latex?\\bm{a}), ![](http://latex.codecogs.com/gif.latex?\\bm{A})). Hollow bold represents special sets, e.g. real number ![](http://latex.codecogs.com/gif.latex?\\mathbb{R}) and integer set ![](http://latex.codecogs.com/gif.latex?\\mathbb{Z}). Gothic is used for Lie Algebra, e.g. ![](http://latex.codecogs.com/gif.latex?\\mathfrak{se}(3)).
 
