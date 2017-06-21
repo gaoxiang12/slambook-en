@@ -78,6 +78,43 @@ This book can be used as a textbook for SLAM-related courses, but also suitable 
 
 ### Style
 
+This book covers both mathematical theory, and programming implementation. Therefore, for the convenience of reading, we will be using different layouts to distinguish different contents.
+
+1.  Mathematical formulas will be listed separately, and important formulas will be assigned with an equation 	number, for example:
+
+	<center>![](http://latex.codecogs.com/gif.latex?\\bm{y}=\\bm{A}\\bm{x})</center>
+
+	Italics are used for scalars (e.g. ![](http://latex.codecogs.com/gif.latex?a)), bold italics are used for vectors and matrices (e.g. ![](http://latex.codecogs.com/gif.latex?\\bm{a}), ![](http://latex.codecogs.com/gif.latex?\\bm{A})). Hollow bold represents special sets, e.g. real number ![](http://latex.codecogs.com/gif.latex?\\mathbb{R}) and integer set ![](http://latex.codecogs.com/gif.latex?\\mathbb{Z}). Gothic is used for Lie Algebra, e.g. ![](http://latex.codecogs.com/gif.latex?\\mathfrak{se}(3)).
+
+2.  The program code will be framed into boxes, using a smaller font size, with line numbers on the left. If a 	code block is long, the box will continue to the next page:
+
+	```cpp
+	#include <iostream>
+	using namespace std;
+	
+	int main ( int argc, char** argv )
+	{
+		cout<<"Hello"<<endl;
+		return 0;
+	}
+	```
+
+3.  When the code block is too long or contains repeated parts with previously listed code, it is not appropriate to be listed entirely. We will **only give important snippets** and label it with "Snippet". Therefore, we strongly recommend that readers download all the source code on GitHub and complete the exercises to better understand the book.
+
+4.  Due to typographical reasons, the code shown in the book may be slightly different from the code on GitHub. In that case please use the code on GitHub.
+
+5.  For each of the libraries we use, it will be explained in details when first appearing, but not repeated in the follow-up. Therefore, it is recommended that readers read this book in order.
+
+6.  An abstract will be presented at the beginning of each lecture. A summary and some exercises will be given at the end. The cited references are listed at the end of the book.
+
+7.  The chapters with an asterisk mark in front is an optional reading, and the reader can read it according to interest. Skipping them will not hinder the understanding of subsequent chapters.
+
+8.  Important content will be marked in **bold**, as we are accustomed to.
+
+9.  Most of the experiments we designed are demonstrative. Understanding them does not mean that you are already familiar with the entire library. So we recommend that you spend some time on yourselves in further exploring the important libraries frequently used in the book.
+
+10. The book's exercises and optional readings may require you to search for additional materials, so you need to learn to use search engines.
+
 ### Acknowledgments
 
 ### Exercises (Self-test Questions)
