@@ -58,7 +58,7 @@ Finally, if you don't understand what we are talking about at all, congratulatio
 
 All source code in this book is hosted on github:
 
-[https://github.com/gaoxiang12/slambook](https://github.com/gaoxiang12/slambook)
+<center>[https://github.com/gaoxiang12/slambook](https://github.com/gaoxiang12/slambook)</center>
 
 It is strongly recommended that readers download them for viewing at any time. The code is divided by chapter, for example, the contents of the 7th lecture will be placed in folder "ch7". In addition, some of the small libraries used in the book can be found in the "3rd party" folder as compressed packages. For large and medium-sized libraries like OpenCV, we will introduce their installation methods when they first appear. If you have any questions about the code, click the "Issues" button on GitHub to submit. If there is indeed a problem with the code, we will make changes in a timely manner. Even if your understanding is biased, we will still reply as much as possible. If you are not accustomed to using Git, you can also click the button on the right which contains the word "download" to download a zipped file to your local drive.
 
@@ -78,9 +78,27 @@ This book can be used as a textbook for SLAM-related courses, but also suitable 
 
 ### Style
 
-### Acknowledgements
+### Acknowledgments
 
-### Practice
+### Exercises (Self-test Questions)
+
+1. There is a linear equation ![](http://latex.codecogs.com/gif.latex?\\bm{A}\\bm{x}=\\bm{b}), if ![](http://latex.codecogs.com/gif.latex?\\bm{A}) and ![](http://latex.codecogs.com/gif.latex?\\bm{b}) are known, how to solve for ![](http://latex.codecogs.com/gif.latex?\\bm{x})? What are the requirements for ![](http://latex.codecogs.com/gif.latex?\\bm{A}) and ![](http://latex.codecogs.com/gif.latex?\\bm{b})? (Hint: the dimensionality and rank of ![](http://latex.codecogs.com/gif.latex?\\bm{A}))
+
+2. What is a Gaussian distribution? What does it look like in one-dimensional case? How about in high-dimensional case?
+
+3. Do you know what a **class** is in C++? Do you know STL? Have you ever used them?
+
+4. How do you write a C++ program? (It's completely fine if your answer is "using Visual C++ 6.0". As long as you have C++ or C programming experience, you are in good hand)
+
+5. Do you know the C++11 standard? Which new features have you heard of or used? Are you familiar with any other standard?
+
+6. Do you know Linux? Have you used at least one flavor (not including Android), such as Ubuntu?
+
+7. What is the directory structure of Linux? What basic commands do you know? (e.g. ls, cat, etc.)
+
+8. How to install a software in Ubuntu (without using the Software Center)? What directories are software usually installed? If you only know the fuzzy name of a software (for example, you want to install a library with a word "eigen" in its name), how would you install it?
+
+9. *Spend an hour learning Vim, you will be using it sooner or later. You can enter "vimtutor" in an terminal and read through its contents. We do not require you to operate it very skillfully, as long as you can use it to edit the code in the process of learning this book. **Do not waste time on its plugins, do not try to turn Vim into an IDE, we will only use it for text editing.**
 
 ### References
 
