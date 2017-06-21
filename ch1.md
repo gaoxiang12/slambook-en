@@ -96,9 +96,9 @@ This book can be used as a textbook for SLAM-related courses, but also suitable 
 
 7. What is the directory structure of Linux? What basic commands do you know? (e.g. ls, cat, etc.)
 
-8. How to install a software in Ubuntu (without using the Software Center)? What directories are software usually installed? If you only know the fuzzy name of a software (for example, you want to install a library with a word "eigen" in its name), how would you install it?
+8. How to install a software in Ubuntu (without using the Software Center)? What directories are software usually installed under? If you only know the fuzzy name of a software (for example, you want to install a library with a word "eigen" in its name), how would you do it?
 
-9. *Spend an hour learning Vim, you will be using it sooner or later. You can enter "vimtutor" in an terminal and read through its contents. We do not require you to operate it very skillfully, as long as you can use it to edit the code in the process of learning this book. **Do not waste time on its plugins, do not try to turn Vim into an IDE, we will only use it for text editing.**
+9. *Spend an hour learning Vim, you will be using it sooner or later. You can enter "vimtutor" in an terminal and read through its contents. We do not require you to operate it very skillfully, as long as you can use it to edit the code in the process of learning this book. **Do not waste time on its plugins, do not try to turn Vim into an IDE for now, we will only use it for text editing.**
 
 ### References
 
