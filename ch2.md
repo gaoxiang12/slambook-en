@@ -7,6 +7,8 @@
 3.  Understand how to compile and run a program under Linux. If there is a problem, how to debug it.
 4.  Master the basic use of cmake.
 
+### Lecture Introduction
+
 This lecture summarizes the structure of a visual SLAM system as an outline of subsequent chapters. Practice part introduces the fundamentals of environment setup and program development. We will complete a "Hello SLAM" program at the end.
 
 ### Meet "Little Carrot"
@@ -26,7 +28,7 @@ First of all, a robot needs wheels and motors to move, so we installed wheels un
 
 "Positioning" and "map building", can be seen as perception in both directions: inward and outward. As a well-rounded robot, Little Carrot need not only to understand its own **state** (i.e. location), but also the external **environment** (i.e. map). Of course, there are many ways to solve these two problems. For example, we can lay guiding rails on the floor of the room, or stick markers such as pictures containing QR code on the wall, or mount radio positioning devices on the table. If you are outdoor, you can also install a positioning component (like the one in a cell phone or a car) on the head of Little Carrot. With these devices, can we claim that the positioning problem has been resolved? Let's categorize these sensors (see \ autoref {fig: sensors}) into two classes.
 
-images of sensors
+![sensors](/resources/whatIsSLAM/sensors.pdf)
 
 The first class are **non-intrusive** sensors which are completely self-contained inside a robot, such as wheel encoders, cameras, laser scanners, etc. They do not assume an cooperative environment. The other class are **intrusive** sensors depending on a prepared environment, such as the above mentioned guiding rails, QR code stickers, etc. Intrusive sensors can usually locate a robot directly, solving the positioning problem in a simple and effective manner. However, since they require changes to the environment, the scope of use is often limited. For example, what if there is no GPS signal, or guiding rails cannot be laid? What should we do in those cases?
 
@@ -35,5 +37,7 @@ We can see that the intrusive sensors place certain **constraints** to the exter
 Looking back at the SLAM definitions discussed earlier, we emphasized an **unknown environment** in SLAM problems. In theory, we should not presume the environment where Little Carrot will used (but in reality we will have a rough range, such as indoor or outdoor), which means that we can not assume that the external sensors like GPS can work smoothly. Therefore, the use of portable non-intrusive sensors to achieve SLAM is our main focus. In particular, when talking about visual SLAM, we generally refer to the using of **cameras** to solve the positioning and map building problems.
 
 Visual SLAM is the main subject of this book, so we are particularly interested in what the Little Carrot's eyes can do. The cameras used in SLAM is different from the commonly seen SLR cameras. It is often much simpler and does not carry expensive lens. It shoots at the surrounding environment at a certain rate, forming a continuous video stream. An ordinary camera can capture images at 30 frames per second, while high-speed cameras shoots faster. The camera can be divided into three categories: Monocular, Stereo and RGB-D, as shown by \ autoref {fig: camera}. Intuitively, a monocular camera has only one camera, a stereo camera has two. The principle of a RGB-D camera is more complex, in addition to being able to collect color images, it can also measure the distance of the scene from the camera for each pixel. RGB-D cameras usually carry multiple cameras, and may adopt a variety of different working principles. In the fifth lecture, we will detail their working principles, and the reader just need an intuitive impression for now. In addition, there are also specialty and emerging camera types can be applied to SLAM, such as panorama camera [Pretto2011], event camera [Rueckauer2016]. Although they are occasionally seen in SLAM applications, so far they have not become mainstream. From the appearance we can infer that Little Carrot seems to carry a stereo camera (it will be quite scary if it is monocular, imagine it...).
+
+![camera](/resources/whatIsSLAM/camera.pdf)
 
 
