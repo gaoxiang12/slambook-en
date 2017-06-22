@@ -56,4 +56,21 @@ However, even if we know which objects are near and which are far, they are stil
 
 Only with translation movement, depth can be calculated, and the real scale cannot be determined. These two things could cause significant trouble when applying monocular SLAM. The root cause is that depth can not be determined from a single image. So, in order to obtain real-scaled depth, researchers started to use stereo and RGB-D cameras.
 
+#### Stereo Camera and RGB-D Camera
+
+The purpose of using stereo cameras and RGB-D cameras is to measure the distance between objects and the camera, to overcome the shortcomings of monocular camera that distances are unknown. Once distances are known, the 3D structure of a scene can be recovered from a single frame, and thus eliminates the scale uncertainty. Although both stereo camera and RGB-D camera are to measure the distance, their principles are not the same. Each stereo camera consists of two monocular cameras, displaced with a known distance, namely the **baseline**. We use this baseline to calculate the 3D position of each pixel, in a way that is very similar to our human eyes. We can estimate the distances of the objects based on the differences between the images from left and right eye, and we will try to do the same on computer (see figure [stereo]). If we extend stereo camera, we can also build multi-camera systems, but there is no difference in essence.
+
+![stereo](/resources/whatIsSLAM/stereo.jpg)
+
+Stereo cameras usually require significant amount of computational power to (not reliably) estimate depth for each pixel. This is really clumsy compared to human beings. The depth range measured by a stereo camera is related to the baseline length. The longer a baseline is, the farther it can measure. So stereo cameras mounted on autonomous vehicles are usually quite big. Depth estimation for stereo cameras is achieved by comparing images from the left and right cameras, and does not rely on other sensing equipment. Thus stereo cameras can be applied both indoor and outdoor. The disadvantage of stereo cameras or multi-camera systems is that the configuration and calibration process is complicated, and their depth range and accuracy are limited by baseline length and camera resolution. Moreover, stereo matching and disparity calculation also consumes much computational resource, and usually requires GPU and FPGA to accelerate in order to generate real-time depth maps for original images. Therefore, under the current state-of-art, computational cost is one of the major problems for stereo cameras.
+
+Depth camera (also known as RGB-D camera, RGB-D will be used in this book) is a type of new cameras rising since 2010. Similar to laser scanners, RGB-D cameras adopt infrared structure of light or Time-of-Flight (ToF) principles, measure distances between objects and camera by actively emitting light to the object and receive the return light. This part is not solved by software as a stereo camera, but by physical means of measurement, so it can save much computational resource compared to stereo cameras (see figure [rgbd]). Currently used RGB-D cameras include Kinect / Kinect V2, Xtion Pro Live, RealSense, etc. However, most of the RGB-D cameras still suffer from issues including narrow measurement range, noisy data, small field of view, susceptible to sunlight interference, cannot measure transparent material. For SLAM purpose, RGB-D cameras are mainly used in indoor environments, and are not suitable for outdoor applications.
+
+![rgbd](/resources/whatIsSLAM/rgbd.jpg)
+
+We have discussed the common types of cameras, and we believe you should have gained an intuitive understanding of them. Now, imagine a camera is in a process of moving in a scene, we will get a series of continuously changing images (footnote: you can try to use your phone to record a video clip.). The goal of visual SLAM is to localize and build a map using these images. This is not as simple as we would think. It is not a simple algorithm that continuously output positions and map information as long as we feed it with input data. SLAM requires a sound algorithm framework, and after decades of hard work by researchers, the framework has been finalized.
+
+### The Classic Visual SLAM Framework
+
+
 
