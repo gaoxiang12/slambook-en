@@ -15,7 +15,9 @@ This lecture summarizes the structure of a visual SLAM system as an outline of s
 
 Suppose we assembled a robot called "Little Carrot", as shown in the following sketch:
 
-![carrot](/resources/whatIsSLAM/carrot.pdf "Little Carrot")
+![carrot](/resources/whatIsSLAM/carrot.pdf)
+
+![android](/resources/whatIsSLAM/android.jpg)
 
 Although it looks a bit like the Android robot, it has nothing to do with the Android system. We put a laptop into its trunk (so that we can debug programs at any time). So, what is our robot capable to do?
 
