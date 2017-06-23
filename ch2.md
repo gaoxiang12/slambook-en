@@ -72,5 +72,41 @@ We have discussed the common types of cameras, and we believe you should have ga
 
 ### The Classic Visual SLAM Framework
 
+Let's take a look at the classic visual SLAM framework, shown in the following figure [workflow]:
 
+![workflow](/resources/whatIsSLAM/workflow.jpg)
+
+The entire visual SLAM work-flow includes the following steps:
+
+1.  Sensor data acquisition. In visual SLAM, this mainly refers to for acquisition and preprocessing for camera images. For a mobile robot, this will also include the acquisition and synchronization for motor encoders, IMU sensors, etc.
+2.  **Visual Odometer** (VO). The task of VO is to estimate the camera movement between adjacent frames, as well as to generate a local map. VO is also known as the **Front End**.
+3. **Backend optimization**. The back end receives camera poses at different time stamps from VO, as well as results from loop detection, and apply optimization to generate a globally consistent trajectory and map. Because it is connected after the VO, it is also known as the **Back End**.
+4. **Loop Closing**. Loop closing determines whether the robot has returned to its previous position. If a loop is detected, it will provide information to the back end for further optimization.
+5. **Mapping**. It constructs a task specific map based on the estimated camera trajectory.
+
+The classic visual SLAM framework is the result of more than a decade's research endeavor. The framework itself and the algorithms it contains have been basically finalized and have been provided in several vision and robotics libraries. Relying on these algorithms, we are able to build visual SLAM systems performing real-time positioning and mapping in normal environments. Therefore, we can draw the conclusion: **if the working environment is limited to static and rigid, with insignificant lighting changes and no human interference**, visual SLAM technology is mature [Cadena2016].
+
+The readers may have not understood the concepts of the modules yet, so we will detail the functionality of each module as follows. However, an deeper understanding of their working principles requires certain mathematical knowledge, and they will be expanded in the second part of this book. For now, an intuitive and qualitative understanding of each module is good enough.
+
+#### Visual Odometer
+
+The visual odometer is concerned with the movement of a camera between **adjacent image frames**, and the simplest case is of course the motion relationship between two successive images. For example, when we see figure [cameramotion], we will naturally reflect that the right image should be the result of the left image after a rotation to the left with a certain angle (you will feel more natural if shown in video form). Let's consider this question: how do we know the motion is "turning left"? Humans have long been accustomed to using our eyes to explore the world, and estimating our own positions, but this intuition is often difficult to explain, especially in rational language. When we see [cameramotion], we will naturally think that the bar is close to us, and the walls and the blackboard are farther away. When the camera turns to left, the closer part of the bar started to appear, and the cabinet on the right side started to move out of our sight. With this information, we conclude that the camera should be be rotating to the left.
+
+![cameramotion](/resources/whatIsSLAM/cameramotion.jpg)
+
+But if we further ask: can we determine how much the camera has rotated and translated, in units of degrees or centimeters? It is still difficult for us to give an quantitative answer. Because our intuition is not good at calculating numbers. But for a computer, movements have to be described with numbers. So we will ask: **how should a computer determine a camera's motion based on images?**
+
+As mentioned earlier, in the field of computer vision, a task that seems natural to a human can be very challenging for a computer. Images are nothing but numerical matrices in computers. A computer has no idea what these matrices mean (this is the problem that machine learning is also trying to solve). In visual SLAM, we can only see blocks of pixels, knowing that they are the results of projections by spatial points onto the camera's imaging plane. In order to quantify a camera's movement, we must first **understand the geometric relationship between a camera and the spatial points**.
+
+Some background knowledge is needed to clarify this geometric relationship and the realization of VO methods. Here we only want to convey an intuitive concept. For now, you just need to take away that VO is able to estimate camera motions from images of adjacent frames and restore the 3D structures of the scene. It is named as an "odometer", because similar to an actual odometer, it only calculates the movement at neighboring moments, and does not consider the information in the further past. In this regard, VO is like a species with only a short memory.
+
+Now, assuming that we have a visual odometer, we are able to estimate camera movements between every two successive frames. If we connect the adjacent movements, this constitutes the movement of the robot trajectory, and therefore addresses the positioning problem. On the other hand, we can calculate the 3D position for each pixel according to the camera position at each time step, and they will form an map. Up to here, it seems with an VO, the SLAM problem is already solved. Or, is it?
+
+Visual odometer is indeed an key to solving visual SLAM, we will be spending a great part to explain it in details. However, using only a VO to estimate trajectories will inevitably cause **accumulative drift**. This is due to the fact that the visual odometer (in the simplest case) only estimates the movement between two frames. We know that each estimate is accompanied by a certain error, and because the way odometers work, errors from previous moments will be carried forward to the following moments, resulting in inaccurate estimation after a period of time (see figure [loopclosure]). For example, the robot first turns left ![](http://latex.codecogs.com/gif.latex?90^\\circ) and then turns right ![](http://latex.codecogs.com/gif.latex?90^\\circ). Due to error, we estimate the first ![](http://latex.codecogs.com/gif.latex?90^\\circ) as ![](http://latex.codecogs.com/gif.latex?89^\\circ). Then we will be embarrassed to find that after the right turn, the estimated position of the robot will not return to the origin. What's worse, even the following estimates are accurate, they will always be carrying the ![](http://latex.codecogs.com/gif.latex?1^\\circ) error compared to the ground-truth.
+
+![cameramotion](/resources/whatIsSLAM/loopclosure.jpg)
+
+This is the so-called **drift**. It will cause us unable to build a consistent map. You will find the original straight corridor oblique, and the original ![](http://latex.codecogs.com/gif.latex?90^\\circ) angle crooked - this is really an unbearable thing! In order to solve the drifting problem, we also need other two components: **back-end optimization** (footnote: usually know as the back end. Since it is often the optimization methods that's used in this part, it is also called back-end optimization.) and **loop closing**. Loop closing is responsible for detecting when a robot returns to its previous position, while the back-end optimization corrects the shape of the entire trajectory based on this information.
+
+#### Back-end Optimization
 
