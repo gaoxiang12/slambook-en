@@ -165,22 +165,5 @@ Corresponding to the motion equation, there is also a **observation equation**. 
 
 Where, ![](http://latex.codecogs.com/gif.latex?\\bm{v}_{k,j}) is the noise in this observation. Since there are more forms of observation sensors, the observed data ![](http://latex.codecogs.com/gif.latex?\\bm{z}) and the observed equation ![](http://latex.codecogs.com/gif.latex?h) also have many different forms.
 
-Readers may wonder that the function ![](http://latex.codecogs.com/gif.latex?f,h) we used do not seem to specify what the motion and observations exactly are. Besides, what are ![](http://latex.codecogs.com/gif.latex?\\bm{x}), ![](http://latex.codecogs.com/gif.latex?\\bm{y}), ![](http://latex.codecogs.com/gif.latex?\\bm{z}) here? In fact, according to the actual movement of Little Carrot and the type of sensor it carries, there are different ways for **parameterization**. What is parameterization then? For example, suppose the Little Carrot moves in a plane, then its pose (footnote: In this book, we use the word "pose" to refer to "position" plus "orientation".) is described by two position values and one angle, i.e. ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k=[x,y,\theta]_k^\mathrm{T}). At the same time, the motion sensor can measure the amount of change in the position and angle of Little Carrot at any time step interval ![](http://latex.codecogs.com/gif.latex?\\bm{u}_k=[\\Delta{x},\\Delta{y},\\Delta\\theta]_k^\\mathrm{T}). Then, the motion equation can be specified as
+Readers may wonder that the function ![](http://latex.codecogs.com/gif.latex?f,h) we used do not seem to specify what the motion and observations exactly are. Besides, what are ![](http://latex.codecogs.com/gif.latex?\\bm{x}), ![](http://latex.codecogs.com/gif.latex?\\bm{y}), ![](http://latex.codecogs.com/gif.latex?\\bm{z}) here? In fact, according to the actual movement of Little Carrot and the type of sensor it carries, there are different ways for **parameterization**. What is parameterization then? For example, suppose the Little Carrot moves in a plane, then its pose (footnote: In this book, we use the word "pose" to refer to "position" plus "orientation".) is described by two position values and one angle, i.e. ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k=[x,y,\theta]_k^\mathrm{T}). At the same time, the motion sensor can measure the amount of change in the position and angle of Little Carrot at any time step interval ![](http://latex.codecogs.com/gif.latex?\\bm{u}_k=[\\Delta{x},\\Delta{y},\\Delta\\theta]_k^\\mathrm{T}). Then, the motion equation can be specified as $$\bm{x}$$
 
-$$
-\begin{equation}
-{\left[ \begin{array}{l}
-	x\\
-	y\\
-	\theta
-	\end{array} \right]_k} = {\left[ \begin{array}{l}
-	x\\
-	y\\
-	\theta
-	\end{array} \right]_{k - 1}} + {\left[ \begin{array}{l}
-	\Delta x\\
-	\Delta y\\
-	\Delta \theta
-	\end{array} \right]_k} + {\bm{w}_k}.
-\end{equation}
-$$
