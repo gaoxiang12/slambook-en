@@ -148,5 +148,37 @@ Through the previous introduction, readers should have gained an intuitive under
 
 Assuming that our Little Carrot is moving in an unknown environment, carrying some sensors. How can this be described in mathematical language? First, since sensors usually collect data at different some points, we are only concerned with the locations and map at these moments. This turns a continuous period of time into discrete time steps ![](http://latex.codecogs.com/gif.latex?t=1,\\cdots,K), at which data sampling happens. We use ![](http://latex.codecogs.com/gif.latex?\\bm{x}) to indicate positions of Little Carrot. So the positions at different time steps can be written as ![](http://latex.codecogs.com/gif.latex?\\bm{x}_1,\\cdots,\\bm{x}_K), which constitute the trajectory of Little Carrot. In terms of the map, we assume that the map is made up of a number of **landmark**, and at each time step, the sensors can see a portion of the landmarks and record their observations. Assume there are in total ![](http://latex.codecogs.com/gif.latex?N) landmarks, and we will use ![](http://latex.codecogs.com/gif.latex?\\bm{y}_1,\\cdots,\\bm{y}_N) to represent them.
 
-With such a setting, "Little Carrot move in the environment with sensors" can be described by the following two things:
+With such a setting, "Little Carrot move in the environment with sensors" have two aspects to be described:
 
+1.  What is its **motion**? We want to describe how ![](http://latex.codecogs.com/gif.latex?\\bm{x}) is changed from time step ![](http://latex.codecogs.com/gif.latex?k-1) to ![](http://latex.codecogs.com/gif.latex?k).
+2.  What are the **observations**? Assuming that the Little Carrot detects a certain landmark ![](http://latex.codecogs.com/gif.latex?\\bm{y}_j) at position ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k) with a time stamp ![](http://latex.codecogs.com/gif.latex?k), we need to describe this event in mathematical language.
+
+Let's first take a look at motion. Typically, a robot always carries certain kind of sensors to measure its own movement, such as an encoder or inertial sensor. These sensors can measure readings regarding its motion, but not necessarily directly the location difference. Instead, readings could be acceleration, angular velocity and other information. However, no matter what the sensor is, we can use a common and abstract mathematical model to describe it:
+
+![](http://latex.codecogs.com/gif.latex?\\bm{x}_k=f\\left({{\\bm{x}_{k-1}},{\\bm{u}_k},\\bm{w}_k}\\right))
+
+Where ![](http://latex.codecogs.com/gif.latex?\\bm{u}_k) is the motion sensor reading (sometimes called the **input**), while ![](http://latex.codecogs.com/gif.latex?\\bm{w}_k) is noise. Note that we use a general function ![](http://latex.codecogs.com/gif.latex?f) to describe the process, instead of specifying the way ![](http://latex.codecogs.com/gif.latex?f) works. This allows the function to represent any motion sensor, rather than being limited to a particular one, and thus becoming a general equation, . We call it the **motion equation**.
+
+Corresponding to the motion equation, there is also a **observation equation**. The observation equation describes that when the Little Carrot sees a landmark point ![](http://latex.codecogs.com/gif.latex?\\bm{y}_j) at ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k) and generates an observation data ![](http://latex.codecogs.com/gif.latex?\\bm{z}_{k,j}). Likewise, we will describe this relationship with an abstract function ![](http://latex.codecogs.com/gif.latex?h):
+
+![](http://latex.codecogs.com/gif.latex?\\bm{z}_{k,j}=h\\left({{\\bm{y}_j},{\\bm{x}_k},\\bm{v}_{k,j}}\\right))
+
+Where, ![](http://latex.codecogs.com/gif.latex?\\bm{v}_{k,j}) is the noise in this observation. Since there are more forms of observation sensors, the observed data ![](http://latex.codecogs.com/gif.latex?\\bm{z}) and the observed equation ![](http://latex.codecogs.com/gif.latex?h) also have many different forms.
+
+Readers may wonder that the function ![](http://latex.codecogs.com/gif.latex?f,h) we used do not seem to specify what the motion and observations exactly are. Besides, what are ![](http://latex.codecogs.com/gif.latex?\\bm{x}), ![](http://latex.codecogs.com/gif.latex?\\bm{y}), ![](http://latex.codecogs.com/gif.latex?\\bm{z}) here? In fact, according to the actual movement of Little Carrot and the type of sensor it carries, there are different ways for **parameterization**. What is parameterization then? For example, suppose the Little Carrot moves in a plane, then its pose (footnote: In this book, we use the word "pose" to refer to "position" plus "orientation".) is described by two position values and one angle, i.e. ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k=[x,y,\theta]_k^\mathrm{T}). At the same time, the motion sensor can measure the amount of change in the position and angle of Little Carrot at any time step interval ![](http://latex.codecogs.com/gif.latex?\\bm{u}_k=[\\Delta{x},\\Delta{y},\\Delta\\theta]_k^\\mathrm{T}). Then, the motion equation can be specified as
+
+\begin{equation}
+{\left[ \begin{array}{l}
+	x\\
+	y\\
+	\theta
+	\end{array} \right]_k} = {\left[ \begin{array}{l}
+	x\\
+	y\\
+	\theta
+	\end{array} \right]_{k - 1}} + {\left[ \begin{array}{l}
+	\Delta x\\
+	\Delta y\\
+	\Delta \theta
+	\end{array} \right]_k} + {\bm{w}_k}.
+\end{equation}
