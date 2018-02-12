@@ -1,6 +1,6 @@
-## Preface
+## Kata Pengantar
 
-### What is this book about?
+### Buku apa ini?
 
 This is a book introducing visual SLAM, and it is probably the first Chinese book solely focused on this specific topic.
 
