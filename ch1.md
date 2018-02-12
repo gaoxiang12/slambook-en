@@ -2,7 +2,7 @@
 
 ### Buku apa ini?
 
-This is a book introducing visual SLAM, and it is probably the first Chinese book solely focused on this specific topic.
+Ini adalah buku yang memperkenalkan visual SLAM, dan ini mungkin buku China pertama yang hanya berfokus pada topik spesifik ini.
 
 So, what is SLAM?
 
