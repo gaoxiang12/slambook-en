@@ -1,5 +1,9 @@
 ## First Glance of Visual SLAM
 
+* content
+{:toc}
+
+
 ### Goal of Study
 
 1.  Understand what modules a visual SLAM framework consists of, and what task each module carries out.
@@ -102,11 +106,11 @@ Some background knowledge is needed to clarify this geometric relationship and t
 
 Now, assuming that we have a visual odometer, we are able to estimate camera movements between every two successive frames. If we connect the adjacent movements, this constitutes the movement of the robot trajectory, and therefore addresses the positioning problem. On the other hand, we can calculate the 3D position for each pixel according to the camera position at each time step, and they will form an map. Up to here, it seems with an VO, the SLAM problem is already solved. Or, is it?
 
-Visual odometer is indeed an key to solving visual SLAM, we will be spending a great part to explain it in details. However, using only a VO to estimate trajectories will inevitably cause **accumulative drift**. This is due to the fact that the visual odometer (in the simplest case) only estimates the movement between two frames. We know that each estimate is accompanied by a certain error, and because the way odometers work, errors from previous moments will be carried forward to the following moments, resulting in inaccurate estimation after a period of time (see figure [loopclosure]). For example, the robot first turns left ![](http://latex.codecogs.com/gif.latex?90^\\circ) and then turns right ![](http://latex.codecogs.com/gif.latex?90^\\circ). Due to error, we estimate the first ![](http://latex.codecogs.com/gif.latex?90^\\circ) as ![](http://latex.codecogs.com/gif.latex?89^\\circ). Then we will be embarrassed to find that after the right turn, the estimated position of the robot will not return to the origin. What's worse, even the following estimates are accurate, they will always be carrying the ![](http://latex.codecogs.com/gif.latex?1^\\circ) error compared to the ground-truth.
+Visual odometer is indeed an key to solving visual SLAM, we will be spending a great part to explain it in details. However, using only a VO to estimate trajectories will inevitably cause **accumulative drift**. This is due to the fact that the visual odometer (in the simplest case) only estimates the movement between two frames. We know that each estimate is accompanied by a certain error, and because the way odometers work, errors from previous moments will be carried forward to the following moments, resulting in inaccurate estimation after a period of time (see figure [loopclosure]). For example, the robot first turns left $90^\circ$ and then turns right $90^\circ$. Due to error, we estimate the first $90^\circ$ as $89^\circ$. Then we will be embarrassed to find that after the right turn, the estimated position of the robot will not return to the origin. What's worse, even the following estimates are accurate, they will always be carrying the $1^\circ$ error compared to the ground-truth.
 
 ![cameramotion](/resources/whatIsSLAM/loopclosure.jpg)
 
-This is the so-called **drift**. It will cause us unable to build a consistent map. You will find the original straight corridor oblique, and the original ![](http://latex.codecogs.com/gif.latex?90^\\circ) angle crooked - this is really an unbearable thing! In order to solve the drifting problem, we also need other two components: **back-end optimization** (footnote: usually know as the back end. Since it is often the optimization methods that's used in this part, it is also called back-end optimization.) and **loop closing**. Loop closing is responsible for detecting when a robot returns to its previous position, while the back-end optimization corrects the shape of the entire trajectory based on this information.
+This is the so-called **drift**. It will cause us unable to build a consistent map. You will find the original straight corridor oblique, and the original $90^\circ$ angle crooked - this is really an unbearable thing! In order to solve the drifting problem, we also need other two components: **back-end optimization** (footnote: usually know as the back end. Since it is often the optimization methods that's used in this part, it is also called back-end optimization.) and **loop closing**. Loop closing is responsible for detecting when a robot returns to its previous position, while the back-end optimization corrects the shape of the entire trajectory based on this information.
 
 #### Back-end Optimization
 
@@ -136,7 +140,7 @@ For maps, we have so many ideas and demands. So compared to the previously menti
 
 ##### Metric Map
 
-Metric maps emphasize the exact locations of objects in maps, are usually classified as either sparse or dense. Sparse metric maps abstract a scene into certain form, and do not express all the objects. For example, we can construct a sparse map by selecting representative landmarks such as road signs, and ignore other parts. In contrast, dense metric maps focus on modeling all the things that are seen. For positioning, sparse map is enough, while for navigation, a dense map is usually needed (otherwise we may hit a wall between two road signs). A dense map usually consists of a number of small pieces at a certain resolution. It can be small grids for 2D metric maps, or small voxels for 3D. Usually, a small piece may have three states to express whether an object is there: occupied, idle, and unknown. When a spatial location is queried, the map can give information about whether the location can be passed through. This type of maps can be used for a variety of navigation algorithms, such as A\*, D\* (footnote: [https://en.wikipedia.org/wiki/A*_search_algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm)), etc., and thus attracts the attention of researchers in robotics field. But we can also see that this map needs to store the state of each grid, and thus being storage expensive. Even worse, in most cases, a large portion of the map details is useless. On the other hand, there is sometimes a consistency issue with large-scale metric maps. A little bit of steering error may cause the walls of two rooms to overlap and thus making the map ineffective.
+Metric maps emphasize the exact locations of objects in maps, are usually classified as either sparse or dense. Sparse metric maps abstract a scene into certain form, and do not express all the objects. For example, we can construct a sparse map by selecting representative landmarks such as road signs, and ignore other parts. In contrast, dense metric maps focus on modeling all the things that are seen. For positioning, sparse map is enough, while for navigation, a dense map is usually needed (otherwise we may hit a wall between two road signs). A dense map usually consists of a number of small pieces at a certain resolution. It can be small grids for 2D metric maps, or small voxels for 3D. Usually, a small piece may have three states to express whether an object is there: occupied, idle, and unknown. When a spatial location is queried, the map can give information about whether the location can be passed through. This type of maps can be used for a variety of navigation algorithms, such as A\*, D\* (footnote: [https://en.wikipedia.org/wiki/A\*_search_algorithm](https://en.wikipedia.org/wiki/A\*_search_algorithm)), etc., and thus attracts the attention of researchers in robotics field. But we can also see that this map needs to store the state of each grid, and thus being storage expensive. Even worse, in most cases, a large portion of the map details is useless. On the other hand, there is sometimes a consistency issue with large-scale metric maps. A little bit of steering error may cause the walls of two rooms to overlap and thus making the map ineffective.
 
 ##### Topological Map
 
@@ -146,33 +150,52 @@ Compared to the accurate metric maps, topological maps emphasize the relationshi
 
 Through the previous introduction, readers should have gained an intuitive understanding of the modular composition of a SLAM system and the main functionality of each module. However, we cannot write runable programs only based on intuitive impressions. We want to rise it to a rational and rigorous level, that is, using mathematical language to formulate a SLAM process. We will be using variables and formulas, but please rest assured that we will try our best to keep it clear enough.
 
-Assuming that our Little Carrot is moving in an unknown environment, carrying some sensors. How can this be described in mathematical language? First, since sensors usually collect data at different some points, we are only concerned with the locations and map at these moments. This turns a continuous period of time into discrete time steps ![](http://latex.codecogs.com/gif.latex?t=1,\\cdots,K), at which data sampling happens. We use ![](http://latex.codecogs.com/gif.latex?\\bm{x}) to indicate positions of Little Carrot. So the positions at different time steps can be written as ![](http://latex.codecogs.com/gif.latex?\\bm{x}_1,\\cdots,\\bm{x}_K), which constitute the trajectory of Little Carrot. In terms of the map, we assume that the map is made up of a number of **landmark**, and at each time step, the sensors can see a portion of the landmarks and record their observations. Assume there are in total ![](http://latex.codecogs.com/gif.latex?N) landmarks, and we will use ![](http://latex.codecogs.com/gif.latex?\\bm{y}_1,\\cdots,\\bm{y}_N) to represent them.
+Assuming that our Little Carrot is moving in an unknown environment, carrying some sensors. How can this be described in mathematical language? First, since sensors usually collect data at different some points, we are only concerned with the locations and map at these moments. This turns a continuous period of time into discrete time steps $t=1,\cdots,K$, at which data sampling happens. We use $\boldsymbol{x}$ to indicate positions of Little Carrot. So the positions at different time steps can be written as $\boldsymbol{x}_1,\cdots,\boldsymbol{x}_K$, which constitute the trajectory of Little Carrot. In terms of the map, we assume that the map is made up of a number of **landmark**, and at each time step, the sensors can see a portion of the landmarks and record their observations. Assume there are in total $N$ landmarks, and we will use $\boldsymbol{y}_1,\cdots,\boldsymbol{y}_N$ to represent them.
 
 With such a setting, "Little Carrot move in the environment with sensors" have two aspects to be described:
 
-1.  What is its **motion**? We want to describe how ![](http://latex.codecogs.com/gif.latex?\\bm{x}) is changed from time step ![](http://latex.codecogs.com/gif.latex?k-1) to ![](http://latex.codecogs.com/gif.latex?k).
-2.  What are the **observations**? Assuming that the Little Carrot detects a certain landmark ![](http://latex.codecogs.com/gif.latex?\\bm{y}_j) at position ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k) with a time stamp ![](http://latex.codecogs.com/gif.latex?k), we need to describe this event in mathematical language.
+1.  What is its **motion**? We want to describe how $\boldsymbol{x}$ is changed from time step $k-1$ to $k$.
+2.  What are the **observations**? Assuming that the Little Carrot detects a certain landmark $\boldsymbol{y}_j$ at position $\boldsymbol{x}_k$ with a time stamp $k$, we need to describe this event in mathematical language.
 
 Let's first take a look at motion. Typically, a robot always carries certain kind of sensors to measure its own movement, such as an encoder or inertial sensor. These sensors can measure readings regarding its motion, but not necessarily directly the location difference. Instead, readings could be acceleration, angular velocity and other information. However, no matter what the sensor is, we can use a common and abstract mathematical model to describe it:
 
-![](http://latex.codecogs.com/gif.latex?\\bm{x}_k=f\\left({{\\bm{x}_{k-1}},{\\bm{u}_k},\\bm{w}_k}\\right))
+$$
+\boldsymbol{x}_k=f\left({\boldsymbol{x}_{k-1}},{\boldsymbol{u}_k},\boldsymbol{w}_k\right)
+$$
 
-Where ![](http://latex.codecogs.com/gif.latex?\\bm{u}_k) is the motion sensor reading (sometimes called the **input**), while ![](http://latex.codecogs.com/gif.latex?\\bm{w}_k) is noise. Note that we use a general function ![](http://latex.codecogs.com/gif.latex?f) to describe the process, instead of specifying the way ![](http://latex.codecogs.com/gif.latex?f) works. This allows the function to represent any motion sensor, rather than being limited to a particular one, and thus becoming a general equation, . We call it the **motion equation**.
+Where $\boldsymbol{u}_k$ is the motion sensor reading (sometimes called the **input**), while $\boldsymbol{w}_k$ is noise. Note that we use a general function $f$ to describe the process, instead of specifying the way $f$ works. This allows the function to represent any motion sensor, rather than being limited to a particular one, and thus becoming a general equation, . We call it the **motion equation**.
 
-Corresponding to the motion equation, there is also a **observation equation**. The observation equation describes that when the Little Carrot sees a landmark point ![](http://latex.codecogs.com/gif.latex?\\bm{y}_j) at ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k) and generates an observation data ![](http://latex.codecogs.com/gif.latex?\\bm{z}_{k,j}). Likewise, we will describe this relationship with an abstract function ![](http://latex.codecogs.com/gif.latex?h):
+Corresponding to the motion equation, there is also a **observation equation**.
+The observation equation describes that when the Little Carrot sees a landmark point $\boldsymbol{y}_j$
+at $\boldsymbol{x}_k$ and generates an observation data
+$${\boldsymbol z}_{k,j}$$. Likewise, we will describe this relationship with an abstract function h:
 
-![](http://latex.codecogs.com/gif.latex?\\bm{z}_{k,j}=h\\left({{\\bm{y}_j},{\\bm{x}_k},\\bm{v}_{k,j}}\\right))
+$$
+\boldsymbol{z}_{k,j}=h\left({\boldsymbol{y}_j},{\boldsymbol{x}_k},\boldsymbol{v}_{k,j}\right)
+$$
 
-Where, ![](http://latex.codecogs.com/gif.latex?\\bm{v}_{k,j}) is the noise in this observation. Since there are more forms of observation sensors, the observed data ![](http://latex.codecogs.com/gif.latex?\\bm{z}) and the observed equation ![](http://latex.codecogs.com/gif.latex?h) also have many different forms.
+Where, $\boldsymbol{v}_{k,j}$ is the noise in this observation. Since there are more forms of observation sensors, the observed data $\boldsymbol{z}$ and the observed equation $h$ also have many different forms.
 
-Readers may wonder that the function ![](http://latex.codecogs.com/gif.latex?f,h) we used do not seem to specify what the motion and observations exactly are. Besides, what are ![](http://latex.codecogs.com/gif.latex?\\bm{x}), ![](http://latex.codecogs.com/gif.latex?\\bm{y}), ![](http://latex.codecogs.com/gif.latex?\\bm{z}) here? In fact, according to the actual movement of Little Carrot and the type of sensor it carries, there are different ways for **parameterization**. What is parameterization then? For example, suppose the Little Carrot moves in a plane, then its pose (footnote: In this book, we use the word "pose" to refer to "position" plus "orientation".) is described by two position values and one angle, i.e. ![](http://latex.codecogs.com/gif.latex?\\bm{x}_k=[x,y,\theta]_k^\mathrm{T}). At the same time, the motion sensor can measure the amount of change in the position and angle of Little Carrot at any time step interval ![](http://latex.codecogs.com/gif.latex?\\bm{u}_k=[\\Delta{x},\\Delta{y},\\Delta\\theta]_k^\\mathrm{T}). Then, the motion equation can be specified as 
+Readers may wonder that the function $f,h$ we used do not seem to specify what the motion and observations exactly are. Besides, what are $\boldsymbol{x}$, $\boldsymbol{y}$, $\boldsymbol{z}$ here? In fact, according to the actual movement of Little Carrot and the type of sensor it carries, there are different ways for **parameterization**. What is parameterization then? For example, suppose the Little Carrot moves in a plane, then its pose (footnote: In this book, we use the word "pose" to refer to "position" plus "orientation".) is described by two position values and one angle, i.e. $\boldsymbol{x}_k=[x,y,\theta]_k^\mathrm{T}$. At the same time, the motion sensor can measure the amount of change in the position and angle of Little Carrot at any time step interval $\boldsymbol{u}_k=[\Delta{x},\Delta{y},\Delta\theta]_k^\mathrm{T}$. Then, the motion equation can be specified as
 
-![](http://latex.codecogs.com/gif.latex?{\\left[\\begin{array}{l}x\\\y\\\\\theta\\end{array}\\right]_k}={\\left[\\begin{array}{l}x\\\y\\\\\theta\\end{array}\\right]_{k-1}}+{\\left[\\begin{array}{l}\\Delta{x}\\\\\Delta{y}\\\\\Delta\\theta\\end{array}\\right]_k}+w_k)
+$$
+{\left[\begin{array}{l}x\\y\\ \theta\end{array}\right]_k}=
+{\left[\begin{array}{l}x\\y\\ \theta\end{array}\right]_{k-1}}
++{\left[\begin{array}{l}\Delta{x}\\ \Delta{y}\\ \Delta\theta \end{array}\right]_k}+w_k
+$$
 
-This is a simple linear relationship. However, not all of the sensors can directly measure the displacement and angle changes, so there are other forms of more complex equations of motion, then we may need to carry out dynamic analysis. On the observation equation, for example, a small radish carrying a two-dimensional laser sensor. We know that when a laser sensor observes a 2D punctuation, two quantities can be measured: the distance between the road sign and the radish body is $ r $ and the angle $$ \ phi $$. The observation data is $ \ bm {y} = [p_x, p_y] ^ \ mathrm {T} $ (for the sake of simplicity, omitting the subscript), the observation data is $ \ bm {z} = [r, \ phi] ^ \ Mathrm {T} $, then the observation equation is as follows:
+This is a simple linear relationship. However, not all of the sensors can directly measure the displacement and angle changes, so there are other forms of more complex equations of motion, then we may need to carry out dynamic analysis. On the observation equation, for example, a small radish carrying a two-dimensional laser sensor. We know that when a laser sensor observes a 2D punctuation, two quantities can be measured: the distance between the road sign and the radish body is $ r $ and the angle $$ \phi $$. The observation data is $\boldsymbol{y} = [p_x, p_y] ^\mathrm{T}$ (for the sake of simplicity, omitting the subscript), the observation data is $\boldsymbol{z} = [r, \phi]^\mathrm{T} $, then the observation equation is as follows:
 
-最后，我们在一个图片类别的evidence中加入偏置(bias)，加入偏置的目的是加入一些与输入独立无关的信息。所以图片类别的evidence为
+<!-- 最后，我们在一个图片类别的evidence中加入偏置(bias)，加入偏置的目的是加入一些与输入独立无关的信息。所以图片类别的evidence为 -->
 
-$$ evidence\_{i}=\sum \_{j}W\_{ij}x\_{j}+b\_{i} $$
+<!-- $$ evidence\_{i}=\sum \_{j}W\_{ij}x\_{j}+b\_{i} $$ -->
 
-其中，\\( W\_i \\) 和 \\( b\_i \\) 分别为类别 \\( i \\) 的权值和偏置。
+<!-- 其中，\\( W\_i \\) 和 \\( b\_i \\) 分别为类别 \\( i \\) 的权值和偏置。 -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+  });
+</script>
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML">
+</script>
