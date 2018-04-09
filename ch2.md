@@ -1,8 +1,10 @@
-## First Glance of Visual SLAM
+---
+layout: math
+title: First Glance of Visual SLAM
+---
 
 * content
 {:toc}
-
 
 ### Goal of Study
 
@@ -192,10 +194,3 @@ This is a simple linear relationship. However, not all of the sensors can direct
 
 <!-- 其中，\\( W\_i \\) 和 \\( b\_i \\) 分别为类别 \\( i \\) 的权值和偏置。 -->
 
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
-  });
-</script>
-<script type="text/javascript" async
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML">
-</script>
