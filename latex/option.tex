@@ -1,0 +1,84 @@
+%
+% .:: footmisc ::.
+%
+% Circled Digit，带圆圈数字
+\DefineFNsymbols{cd}{{\ding{172}}{\ding{173}}{\ding{174}}{\ding{175}}{\ding{176}}{\ding{177}}{\ding{178}}{\ding{179}}{\ding{180}}{\ding{181}}}
+% Negative Circled Digit，反白带圆圈数字
+\DefineFNsymbols{ncd}{{\ding{182}}{\ding{183}}{\ding{184}}{\ding{185}}{\ding{186}}{\ding{187}}{\ding{188}}{\ding{189}}{\ding{190}}{\ding{191}}}
+% Circled Sans-Serif Digit，带圆圈无衬线数字
+\DefineFNsymbols{cssd}{{\ding{192}}{\ding{193}}{\ding{194}}{\ding{195}}{\ding{196}}{\ding{197}}{\ding{198}}{\ding{199}}{\ding{200}}{\ding{201}}}
+% Negative Circled Sans-Serif Digit，反白带圆圈无衬线数字
+\DefineFNsymbols{ncssd}{{\ding{202}}{\ding{203}}{\ding{204}}{\ding{205}}{\ding{206}}{\ding{207}}{\ding{208}}{\ding{209}}{\ding{210}}{\ding{211}}}
+\setfnsymbol{cssd}
+\setlength\footnotemargin{.6em}
+
+% package: float
+\floatplacement{figure}{!ht}
+
+% package: booktab
+\setlength\aboverulesep{0sp}
+\setlength\belowrulesep{0sp}
+\setlength\cmidrulesep{0sp}
+
+% package: graphicx
+\graphicspath{{resources/}}
+
+% package: caption
+%\DeclareCaptionFont{31104}{\FZYZK}
+%\captionsetup{format=hang,labelsep=quad,font=31104}
+%\DeclareCaptionFormat{31104}{%
+%%	\bfseries\footnotesize#3
+%\footnotesize#3
+%}
+%\captionsetup[lstlisting]{format=31104,singlelinecheck=off}
+
+% package: enumitem
+%\setlist{noitemsep,partopsep=0pt}%,listparindent=\parindent
+%\setlist[1]{labelindent=\parindent}
+%\setlist[itemize]{topsep=0pt,parsep=.5\parskip,leftmargin=1.5em}
+%\setlist[itemize]{topsep=0pt,parsep=.5\parskip,leftmargin=3.5em}
+%\setlist[enumerate]{topsep=0pt,parsep=.5\parskip,labelsep=*,leftmargin=1.5em}
+%\setlist[enumerate,1]{topsep=0pt,parsep=.5\parskip,labelsep=*,leftmargin=3.5em}
+%\setlist[description]{topsep=0pt,parsep=.5\parskip,labelsep=.25em,leftmargin=*}
+
+% 图表编号分隔符
+\makeatletter
+\renewcommand\thefigure{\ifnum \c@chapter>\z@ \thechapter -\fi \@arabic\c@figure}
+\renewcommand\thetable{\ifnum \c@chapter>\z@ \thechapter -\fi \@arabic\c@table}
+\makeatother
+
+%\setlength{\parskip}{2em}
+
+% 代码风格
+\lstset{ %
+	language=C++,                % the language of the code
+	basicstyle=\scriptsize,           % the size of the fonts that are used for the code
+	numbers=left,                   % where to put the line-numbers
+	numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
+%	% will be numbered
+	numbersep=5pt,                  % how far the line-numbers are from the code
+	showspaces=false,               % show spaces adding particular underscores
+	showstringspaces=false,         % underline spaces within strings
+%	showtabs=false,                 % show tabs within strings adding particular underscores
+	frame=single,                   % adds a frame around the code
+%	%	rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. commens (green here))
+	tabsize=2,                      % sets default tabsize to 2 spaces
+	%	captionpos=b,                   % sets the caption-position to bottom
+	breaklines=true,                % sets automatic line breaking
+%	breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+%	title=\lstname,                   % show the filename of files included with \lstinputlisting;
+	% also try caption instead of title
+	keywordstyle=\textbf,          % keyword style
+}
+
+% 目录双栏
+\usepackage{multicol}
+\makeatletter
+\renewcommand\tableofcontents{%
+	\begin{multicols}{2}[%
+		\section*{%
+			\contentsname
+			\@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}}]%
+		\@starttoc{toc}%
+\end{multicols}}
+\makeatother

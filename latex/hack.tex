@@ -1,0 +1,122 @@
+\makeatletter
+
+\providecommand\optional{\stepcounter{enumi}\labelenumi\makebox[0pt][l]{$^*$}}
+
+% +----------------------------------------------+
+% : 重定义                                       :
+% +----------------------------------------------+
+\renewcommand{\figureautorefname}{\figurename}
+\renewcommand{\tableautorefname}{\tablename}
+
+
+% +----------------------------------------------+
+% : 废弃命令                                     :
+% +----------------------------------------------+
+\def\tightlist{}
+
+% +----------------------------------------------+
+% : 取消篇标题单独页                             :
+% +----------------------------------------------+
+\def\@endpart{}
+
+% +----------------------------------------------+
+% : PDF属性设置                                  :
+% +----------------------------------------------+
+\AtEndPreamble{
+	\hypersetup{
+		pdfinfo={
+			Title    = {\@title},
+			Author   = {\@author},
+			Creator  = {Adobe Acrobat 11.0},
+			Producer = {Acrobat Web Capture 11.0}
+		}
+	}
+}
+
+% +----------------------------------------------+
+% : tex.stackexchange.com/a/40363                :
+% +----------------------------------------------+
+\patchcmd{\@addtocurcol}%
+	{\vskip \intextsep}%
+	{\edef\save@first@penalty{\the\lastpenalty}\unpenalty
+		\ifnum \lastpenalty = \@M % hopefully the OR penalty
+			\unpenalty
+		\else
+			\penalty \save@first@penalty \relax % put it back
+		\fi
+		\ifnum \outputpenalty <-\@Mii
+			\addvspace\intextsep
+			\vskip\parskip
+		\else
+			\addvspace\intextsep
+		\fi}%
+	{\typeout{*** SUCCESS ***}}{\typeout{*** FAIL ***}}
+
+\patchcmd{\@addtocurcol}%
+	{\vskip\intextsep
+		\ifnum \outputpenalty <-\@Mii
+			\vskip -\parskip
+		\fi}%
+	{\ifnum \outputpenalty <-\@Mii
+		\aftergroup\vskip\aftergroup\intextsep
+		\aftergroup\nointerlineskip
+	\else
+		\vskip\intextsep
+	\fi}% was the float seen in vertical mode?
+	{\typeout{*** SUCCESS ***}}{\typeout{*** FAIL ***}}
+
+\patchcmd{\@getpen}{\@M}{\@Mi}
+	{\typeout{*** SUCCESS ***}}{\typeout{*** FAIL ***}}
+
+% +----------------------------------------------+
+% : Verbatim callouts                            :
+% +----------------------------------------------+
+
+% Counters for cross-referencing callouts
+\newcounter{cocnt}
+\newcounter{colref}
+
+% How to represent the <co> markup.
+% Big thanks to Jean-Côme Charpentier for his help.
+%
+\newlength{\co@width}
+\newlength{\co@height}
+\newlength{\balldiam}
+\newlength{\ballcentre}
+\newlength{\ballcenter}% 修正纵向位置
+
+\def\conum#1{%
+	\sbox{\z@}{\color{white}\sffamily\bfseries\tiny#1}% 
+	% Box sizes for any number with two digits
+	\sbox{\@ne}{\color{white}\sffamily\bfseries\tiny00}%
+	\settowidth{\co@width}{\usebox{\@ne}}%
+	\settoheight{\co@height}{\usebox{\@ne}}%
+	% Find out the biggest length, to define the circle diameter
+	\ifnum\co@width>\co@height
+		\setlength{\balldiam}{\co@width}%
+	\else
+		\setlength{\balldiam}{\co@height}%
+	\fi
+	\balldiam=1.45\balldiam
+	\ballcentre=0.5\balldiam
+	\ballcenter=0.3\balldiam% 修正纵向位置
+	\setlength{\unitlength}{1pt}% In the case it has been changed
+	\begin{picture}(\strip@pt\balldiam,\strip@pt\balldiam) %
+	\put(\strip@pt\ballcentre,\strip@pt\ballcenter){\circle*{\strip@pt\balldiam}}
+	\put(\strip@pt\ballcentre,\strip@pt\ballcenter){\makebox(0,0){\usebox{\z@}}}
+	\end{picture}%
+}
+
+% How to represent a <co> embedded in a listing
+\def\co#1{\refstepcounter{cocnt}\conum{#1}}
+
+% Make the <co> text and the label to link to
+\def\coref#1#2{\co{#1}\label{#2}}
+
+% Make only the <co> label to link to
+\def\colabel#1{\refstepcounter{cocnt}\label{#1}}
+
+% Make the <callout> label to link to
+\def\collabel#1{\refstepcounter{colref}\label{#1}}
+
+\makeatother

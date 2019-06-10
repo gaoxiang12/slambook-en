@@ -1,0 +1,33 @@
+% !Mode:: "TeX:UTF-8"
+\documentclass[a4paper,9pt,openleft]{book}
+\input{latex/package}
+\input{latex/option}
+\input{latex/hack}
+
+\begin{document}
+\title{14 Lectures on Visual SLAM: From Theory to Practice}
+\author{Xiang Gao, Tao Zhang, Qinrui Yan and Yi Liu}
+\date{\today}
+
+\frontmatter
+\maketitle
+\tableofcontents
+
+\mainmatter 
+\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+\hypersetup{bookmarksdepth=2}
+\include{chapters/preface-en}
+\include{chapters/preface}
+%\include{chapters/whatSlam}
+
+\appendix
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+\hypersetup{bookmarksdepth=2}
+
+
+\backmatter
+\small
+\bibliographystyle{ieeetr}
+\bibliography{ref}
+\newpage
+\end{document}
