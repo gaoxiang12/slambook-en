@@ -1,0 +1,67 @@
+% !Mode:: "TeX:UTF-8"
+\chapter{3D Rigid Body Motion}
+
+\begin{mdframed}
+	\textbf{Goal of Study}
+	\begin{enumerate}
+		\item Understand the description of rigid body motion in three-dimensional space: rotation matrix, transformation matrix, quaternion and Euler angle.
+		\item Understand the matrix and geometry module usage of the Eigen library.
+	\end{enumerate}
+\end{mdframed}
+
+In the last lecture, we explained the framework and content of visual SLAM. This lecture will introduce one of the basic problems of visual SLAM: \textbf{ How to describe the motion of a rigid body in three-dimensional space?} Intuitively, we certainly know that this consists of one rotation plus one translation. Translation does not really have much problem, but the processing of rotation is a hassle. We will introduce the meaning of rotation matrices, quaternions, Euler angles, and how they are computed and transformed. In the practice section, we will introduce the linear algebra library Eigen. It provides a C++ matrix calculation, and its Geometry module also provides the structure described quaternion like rigid body motion. Eigen's optimization is perfect, but there are some special places to use it, we will leave it to the program.
+
+\section{Rotation Matrix}
+\label{sec:3.1}
+\subsection{Point, Vector and Coordinate System}
+The space in our daily life is three-dimensional, so we are born to be used to the movement of three-dimensional space. The three-dimensional space consists of three axes, so the position of one spatial point can be specified by three coordinates. However, we should now consider \textbf{rigid body} , which has not only its position, but also its own posture. The camera can also be viewed as a rigid body in three dimensions, so the position is where the camera is in space, and the attitude is the orientation of the camera. Combined, we can say, "The camera is in the space $ ( 0, 0 , 0 ) $ point, facing the front". But this natural language is cumbersome, and we prefer to describe it in a mathematical language.
+
+We start with the most basic content: \textbf{points} and \textbf{vectors}. Points are the basic elements in space, no length, no volume. Connecting the two points forms a vector. A vector can be thought of as an arrow pointing from one point to another. We need to remind the reader that, please do not confuse the vector with its \textbf{coordinates}. A vector is one of the things in space, such as $ \mathbf{a}$ . Here $ \mathbf{a} $ does not need to be associated with several real numbers. Only when we specify a \textbf{coordinate system} in this three-dimensional space can we talk about the coordinates of the vector in this coordinate system, that is, find several real numbers corresponding to this vector.
+
+With the knowledge of linear algebra, the coordinates of a point in 3D space can also be described by $ \mathbb{R}^3$. How to describe it? Suppose that in this linear space, we find a set of \textbf{base} \footnote{Just a reminder here, the base is a set of linearly independent vectors in the space, normally being orthognal and has unit-length.} $ (\mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3) $ , then, the arbitrary vector $ \mathbf{a} $ has a \textbf{coordinate} under this set of bases:
+
+\begin{equation}
+\mathbf{a} = \left[ {{\mathbf{e}_1},{\mathbf{e}_2},{\mathbf{e}_3}} \right]\left[ \begin{array}{l}
+{a_1}\\
+{a_2}\\
+{a_3}
+\end{array} \right] = {a_1}{\mathbf{e}_1} + {a_2}{\mathbf{e}_2} + {a_3}{\mathbf{e}_3}.
+\end{equation}
+
+Here $ (a_ 1 , a_ 2 , a_ 3 )^ \mathrm {T} $ is called $\mathbf {a}$'s coordinates \footnote {We use column vectors in this book which is same as most of the  mathematics books.}. The specific values of the coordinates are related to the vector itself, and also the selection of the bases. In $\mathbb{R}^3$, the coordinate system usually consists of 3 orthogonal coordinate axes (although it can also be non-orthogonal, it is rare in practice). For example, given $ \mathbf {x} $ and $ \mathbf {y} $ axis, the $ \mathbf {z} $ axis can be found using the right-hand (or left-hand) rule by $ \mathbf {x} \times  \mathbf {y} $. According to different definitions, the coordinate system is divided into left-handed and right-handed. The third axis of the left hand system is opposite to the right hand system. Most 3D libraries use right-handed (such as OpenGL, 3D Max, etc.), and some libraries use left-handed (such as Unity, Direct3D, etc.).
+
+Based on basic linear algebra knowledge, we can talk about the operations between vectors/vectors, and vectors/numbers, such as scalar multiplication, vector addition, subtraction, inner product, outer product, and so on. Multiplication, addition and subtraction are fairly basic and intuitive. For example, the result of adding two vectors is to add their respective coordinates, subtraction, and so on. I won't go into details here. Internal and external products may be somewhat unfamiliar to the reader, and their calculations are given here. For $ \mathbf {a}, \mathbf {b} \in  \mathbb {R}^ 3 $ , in the usual sense \footnote {the inner product also has formal rules, but this book only discusses the usual inner product.} , the inner product of $\mathbf{a}, \mathbf{b}$ can be written as:
+
+\begin{equation}
+\mathbf{a} \cdot \mathbf{b} = { \mathbf{a}^\mathrm{T}}\mathbf{b} = \sum\limits_{i = 1}^3 {{a_i}{b_i}}  = \left| \mathbf{a} \right|\left| \mathbf{b} \right|\cos \left\langle {\mathbf{a},\mathbf{b}} \right\rangle ,
+\end{equation}
+where $ \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle $ refers to the angle between the vector $ \mathbf {a}, \mathbf {b} $ . The inner product can also describe the projection relationship between vectors. The outer product is like this:
+
+\begin{equation}
+\label{eq:cross}
+\mathbf{a} \times \mathbf{b} = \left\| {\begin{array}{*{20}{c}}
+	\mathbf{e}_1 & \mathbf{e}_2 & \mathbf{e}_3 \\
+	{{a_1}}&{{a_2}}&{{a_3}}\\
+	{{b_1}}&{{b_2}}&{{b_3}}
+	\end{array}} \right\| = \left[ \begin{array}{l}
+{a_2}{b_3} - {a_3}{b_2}\\
+{a_3}{b_1} - {a_1}{b_3}\\
+{a_1}{b_2} - {a_2}{b_1}
+\end{array} \right] = \left[ {\begin{array}{*{20}{c}}
+	0&{ - {a_3}}&{{a_2}}\\
+	{{a_3}}&0&{-{a_1}}\\  
+	{-{a_2}}&{{a_1}}&0  
+	\end{array}} \right] \mathbf{b} \buildrel \Delta \over = { \mathbf{a}^ \wedge } \mathbf{b}.
+\end{equation}
+
+The result of the outer product is a vector whose direction is perpendicular to the two vectors, and the length is $ \left | \mathbf{a} \right | \left | \mathbf{b} \right | \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle  $, which is also the area of the quadrilateral of the two vectors. For the outer product operations, we introduce the $ ^ \wedge $ operator here, which means writing $ \mathbf{a} $ as a matrix. In fact, it is a \textbf {skew-symmetric matrix}\footnote{Skew-symmetric matrix means $ \mathbf{A} $ satisfies $ \mathbf{A}^ \mathrm{T}=- \mathbf{A}$. }. You can take $ ^ \wedge $ as an skew-symmetric symbol. It turns the outer product $ \mathbf{a} \times  \mathbf{b} $ into the multiplication of the matrix and the vector $ { \mathbf{a}^ \wedge } \mathbf{b} $ , which turns it into a linear operator. This symbol will be used frequently in the following sections, and this symbol is a one-to-one mapping, meaning that for any vector, it corresponds to a unique anti-symmetric matrix, and vice versa:
+
+\begin{equation}
+\mathbf{a}^\wedge = \left[ {\begin{array}{*{20}{c}}
+	0&{-{a_3}}&{{a_2}}\\  
+	{{a_3}}&0&{ - {a_1}}\\
+	{ - {a_2}}&{{a_1}}&0
+	\end{array}} \right].
+\end{equation}
+
+At the same time, note that the vector operations such as addition, subtraction, internal and external products, can be calculated even when we do not have their coordinates. For example, although the inner product can be expressed by the sum of the product products of the two vectors when we know the coordinates, it can also be calculated by the length and the angle even if their coordinates are unknown. Therefore, the inner product result of the two vectors is independent of the selection of the coordinate system.
