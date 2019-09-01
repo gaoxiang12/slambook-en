@@ -328,4 +328,213 @@ As we thought, this program outputs "Hello SLAM!", telling us that it is running
 
 Please review what we did before. In this example, we used the editor to enter the source code for helloSLAM.cpp, then called the g++ compiler to compile it and get the executable. By default, g++ compiles the source file into a program of the name a.out (it is a bit weird, but acceptable). If we like, we can also specify the file name of this output. This is an extremely simple example, we actually \textbf{use a lot of hidden default parameters, almost omitting all intermediate steps}, in order to give the reader a simple impression (although you may not have realized it). Below we will use cmake to compile this program.
 
-\subsection{Using cmake}
+\subsection{Use cmake}
+Theoretically, any C++ program can be compiled with g++. But when the program size is getting bigger and bigger, a project may have many folders and source files, and the compiled commands will be longer and longer. Usually a small C++ project may contain more than a dozen classes, and there are complex dependencies between these classes. Some of them are compiled into executables, and some are compiled into libraries. If we only rely on the g++ command, we need to enter a lot of commands, and the whole compilation process will become very cumbersome. Therefore, for C++ projects, using some engineering management tools is more efficient. In history, engineers used \textbf{makefile} to compile automatically, but the cmake to be discussed below is more convenient than it. And cmake is widely used in engineering, we will see that most of the libraries mentioned later use cmake to manage the source code.
+
+In a cmake project, we will use the cmake command to generate a makefile, and then use the make command to compile the entire project based on the contents of the makefile. The reader may not know what a makefile is, but it doesn't matter, we will learn by example. Still taking the above helloSLAM.cpp as an example, this time we are not using g++ directly, but using cmake to build a project and then compiling it. Create a new CMakeLists.txt file in slambook2/ch2/ with the following contents:
+\begin{lstlisting}[language=Python,caption=slambook2/ch2/CMakeLists.txt]
+cmake_minimum_required( VERSION 2.8 )
+project( HelloSLAM )
+add_executable( helloSLAM helloSLAM.cpp )
+\end{lstlisting}
+
+The CMakeLists.txt file is used to tell cmake what we want to do with the files in this directory. The contents of the CMakeLists.txt file need to follow the cmake syntax. In this example, we demonstrate the most basic project: specifying a project name and an executable program. According to the comments, the reader should understand what each sentence does.
+
+Now, in the current directory (slambook2/ch2/), call cmake to compile the project: \footnote{Note that there's a dot at the end of the command, please don't forget it, which means using cmake in the current directory. }:
+\begin{lstlisting}[language=sh,caption=Terminal input]
+cmake .
+\end{lstlisting}
+cmake will output some compilation information, and then generate some intermediate files in the current directory, the most important of which is the makefile\footnote{Makefile is an automated compilation script, the reader can now understand it as a system automatically generated compiler instructions, without taking care of its content. }. Since MakeFile is automatically generated, we don't have to modify it. Now, compile the project with the make command.
+\begin{lstlisting}[language=sh,caption=Terminal input]
+% make
+Scanning dependencies of target helloSLAM
+[100%] Building CXX object CMakeFiles/helloSLAM.dir/helloSLAM.cpp.o
+Linking CXX executable helloSLAM
+[100%] Built target helloSLAM
+\end{lstlisting}
+The compiler will show a process percent during compilation. We then get the declared executable \textbf{helloSLAM} in our CMakeLists.txt if the compilation is successful. Just type:
+\begin{lstlisting}[language=sh,caption=Terminal Input]
+% ./helloSLAM
+Hello SLAM!
+\end{lstlisting}
+to run it. Because we didn't modify the source code, we got the same result as before. Please think about the difference between this practice and the previous use of g++ compiler. This time we used the cmake-make process. The cmake process handles the relationship between the project files, and the make process actually calls g++ to compile the program. By calling this cmake-make process, we have a good management for the project: \textbf{from inputting a string of g++ commands to maintaining several relatively intuitive CMakeLists.txt files}, which will obviously reduce the difficulty of maintaining the entire project. For example, if you want to add another executable file, just add a line "add\_executable" in CMakeLists.txt, and the subsequent steps are unchanged. Cmake will help us resolve code dependencies without having to type in a bunch of g++ commands.
+
+The only thing that is dissatisfied with this process is that the intermediate files generated by cmake are still in our code files. When we want to release the code, we don't want to publish these intermediate files together. At this time, we still need to delete them one by one, which is very inconvenient. A better approach is to have these intermediate files in an intermediate directory. After the compilation is successful, we will delete the intermediate directory. Therefore, the more common practice of compiling cmake projects is as follows:
+\begin{lstlisting}[language=sh,caption=Terminal input]
+mkdir build
+cd build
+cmake ..
+make
+\end{lstlisting}
+We created a new intermediate folder ``build'', and then entered the build folder, using the cmake .. command to compile the previous folder, which is the folder where the code is located. In this way, the intermediate files generated by cmake will be in the ``build'' folder, separate from the source code. When publishing the source code, we just delete the build folder. Please try to compile the code in ch2 in this way, and then call the generated executable (please remember to delete the intermediate file generated in the last section).
+
+\subsection{Use Libraries}
+In a C++ project, not all code is compiled into executables. Only executable files with the main function will generate executable programs. For other code, we just want to package them into a packet for other programs to call. This packet is called \textbf{library}.
+
+A library is often just a collection of many algorithms and programs, and we will be exposed to many libraries in later exercises. For example, the OpenCV library provides many computer vision related algorithms, while the Eigen library provides calculations of matrix algebra. Therefore, we need to learn how to use cmake to generate libraries and use the functions in the library. Now let's demonstrate how to write a library yourself. Write the following libHelloSLAM.cpp file:
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch2/libHelloSLAM.cpp]
+#include <iostream>
+using namespace std;
+
+// Just a funtion printing hello message
+void printHello() {
+    cout << "Hello SLAM" << endl;
+}
+\end{lstlisting}
+This library provides a printHello function that will output a message. But it doesn't have a main function, which means there are no executables in this library. We add the following to CMakeLists.txt:
+\begin{lstlisting}[language=sh,caption=slambook2/ch2/CMakeLists.txt]
+add_library( hello libHelloSLAM.cpp )
+\end{lstlisting}
+This line tells cmake that we want to compile this file into a library called ``hello''. Then, as above, compile the entire project using cmake:
+\begin{lstlisting}[language=sh,caption=Terminal input]
+cd build
+cmake ..
+make
+\end{lstlisting}
+At this point, a libhello.a file is generated in the build folder, which is the library we declared.
+
+In Linux, the library files are divided into \textbf{static library} and \textbf{shared library}. Static libraries have a .a extension and shared libraries end with .so. All libraries are collections of functions that are packaged. The difference is that \textbf{a static library will generate a copy each time it is called, and the shared library has only one copy}, which saves space. If you want to generate a shared library instead of a static library, just use the following statement:
+
+\begin{lstlisting}[language=sh,caption=slambook2/ch2/CMakeLists.txt]
+add_library( hello_shared SHARED libHelloSLAM.cpp )
+\end{lstlisting}
+Then we will get a libhello\_shared.so.
+
+The library file is a compressed package with compiled binary functions. However, if there is only a .a or .so library file, then we don't know what the function is and how to call it. In order for others (or ourselves) to use this library, we need to provide a \textbf{header file} to indicate what is in the library. Therefore, for the user of the library, \textbf{you can call this library as long as you get the header and library files}. Write the header file for libhello below.
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch2/libHelloSLAM.h]
+#ifndef LIBHELLOSLAM_H_
+#define LIBHELLOSLAM_H_
+
+// Declares a funtion in header file
+void printHello();
+
+#endif
+\end{lstlisting}
+
+In this way, according to this file and the library file we just compiled, you can use the printHello function. Finally, we write an executable program to call this simple function:
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch2/useHello.cpp]
+#include "libHelloSLAM.h"
+
+// Call printHello() in libHelloSLAM.h
+int main(int argc, char **argv) {
+    printHello();
+    return 0;
+}
+\end{lstlisting}
+
+Then, declare an executable in CMakeLists.txt and \textbf{link} it to the library: 
+\begin{lstlisting}[caption=slambook2/ch2/CMakeLists.txt]
+add_executable( useHello useHello.cpp )
+target_link_libraries( useHello hello_shared )
+\end{lstlisting}
+
+Through these two lines of statements, the useHello program can successfully use the code in the hello\_shared library. This small example demonstrates how to generate and call a library. Please note that for libraries provided by others, we can also call them in the same way and integrate them into our own programs.
+
+In addition to the features already demonstrated, cmake has many more syntax and options. Of course we can not list all of them here. In fact, cmake is very similar to a normal programming language, with variables and conditional control statements, so you can learn cmake just like learning programming. The exercises contain some reading materials for cmake, which can be read by interested readers. Now, a brief review of what we did before:
+
+\begin{enumerate}
+    \item First, the program code consists of a header file and a source file.
+    \item The source file with the main function is compiled into an executable program, and the other is compiled into a library file.
+    \item If the executable wants to call a function in the library file, it needs to refer to the header file provided by the library to understand the format of the call. Also, link the executable to the library file.
+\end{enumerate}
+
+These steps should be simple and clear, but you may encounter some problems in the actual operation. For example, what happens if the executable references a library function but we forget to link the library? Try removing the link command in CMakeLists.txt and see what happens. Can you understand the error message reported by cmake?
+
+\subsection{Use IDE}
+Finally, let's talk about how to use the Integrated Development Environments (IDEs). The previous programming can be done with a simple text editor. However, you may need to jump between files to query the declaration and implementation of a function. This can be a little annoying when there are too many files. The IDE provides developers with a lot of convenient functions such as jump, completion, breakpoint debugging, etc. Therefore, we recommend that the reader choose an IDE for development.
+
+There are many kinds of IDEs under Linux. Although there are still some gaps with the best IDE (I mean Visual Studio in Windows), there are several supported C++ developments, such as Eclipse, Qt Creator, Code::Blocks, Clion, Visual Studio Code, and so on. Again, we don't force readers to use a particular IDE, but only give our advice. We are using KDevelop and Clion (see \autoref{fig:kdevelop} and \autoref{fig:clion})\footnote{However, the recent Visual Studio Code is getting better and better. It's free. It's very popular among developers. You may have a try. }. KDevelop is a free software located in Ubuntu's software repository, meaning you can install it with apt-get; Clion is a paid software, but you can use the student mailbox for free for one year. Both are good C++ development environments, the advantages are listed below:
+
+\begin{enumerate}
+    \item Support cmake projects.
+    \item Support C++ better (including the 11 and later standards). There are highlighting, jumping, and finishing functions. Can automatically format the code.
+    \item Makes it easy to see individual files and directory trees.
+    \item Has one-click compilation, breakpoint debugging and other functions.
+\end{enumerate}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{whatIsSLAM/kdevelop.pdf}
+    \caption{Kdevelop in Ubuntu.}
+    \label{fig:kdevelop}
+\end{figure}
+
+Below we take a little bit of space to introduce KDevelop and Clion.
+
+\subsubsection{Use KDE}
+Kdevelop natively supports the cmake project. To do this, after creating CMakeLists.txt in the terminal, open CMakeLists.txt with ``Project $\rightarrow$Open/Import Project'' in KDevelop. The software will ask you a few questions, and by default create a build folder to help you call the cmake and make commands. These can be done automatically by pressing the shortcut key F8. The following section of \autoref{fig:kdevelop} shows the compilation information.
+
+We hand over the task of adapting to the IDE to the reader. If you are transferring from Windows, you will find its interface similar to Visual C++ or Visual Studio. Please use KDevelop to open the previous project and compile it to see what information it outputs. I believe you will feel more convenient than opening the terminal.
+
+Next, let's show to debug in the IDE. Most of the students who program under Windows will have experience of breakpoint debugging under Visual Studio. However, in Linux, the default debugging tool gdb only provides a text interface, which is not convenient for novices. Some IDEs provide breakpoint debugging (the bottom layer is still gdb), and KDevelop is one of them. To use KDevelop's breakpoint debugging feature, you need to do the following:
+
+\begin{enumerate}
+    \item Set the project to Debug compilation mode in CMakeLists.txt, and don't use optimization options (not used by default).
+    \item Tell KDevelop which program you want to run. If there are parameters, also configure its parameters and working directory.
+    \item Enter the breakpoint debugging interface, you can single step, see the value of the intermediate variable.
+\end{enumerate}
+
+%\clearpage
+
+The first step is to set the compilation mode by adding the following command to CMakeLists.txt:
+\begin{lstlisting}[caption=slambook2/ch2/CMakeLists.txt]
+Set( CMAKE_BUILD_TYPE "Debug" )
+\end{lstlisting}
+
+Cmake has some compilation-related built-in variables that give you more detailed control over the compilation process. For the compilation type, there is usually a Debug mode for debugging and a Release mode for publishing. In Debug mode, the program runs slower, but breakpoint debugging is possible, and you can see the values of the variables; while Release mode is faster, but there is probably no debugging information. We set the program to Debug mode and place the breakpoint. Next, tell KDevelop which program you want to launch.
+
+In the second step, open ``Run $\rightarrow$Configure Launcher'' and click on ``Add New$\rightarrow$Application'' on the left. In this step, our task is to tell KDevelop which program to launch. As shown in \autoref{fig:launchConfigure}, you can either select a cmake project target (that is, the executable we built with the add\_executable directive) or point to a binary file. The second approach is recommended, and in our experience, this is less of a problem.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{whatIsSLAM/launchConfigure.pdf}
+    \caption{Config launches. We can choose a launch target and set parameters here. }
+    \label{fig:launchConfigure}
+\end{figure}
+
+In the second column, you can set the program's parameters and working directory. Sometimes programs have runtime parameters that are passed in as arguments to the main function. If not, leave it blank, as is the working directory. After configuring these two items, click the "OK" button to save the configuration results.
+
+In just these steps we have configured an application startup item. For each startup item, we can click the "Execute" button to start the program directly, or click the "Debug" button to debug it. Readers can try to click the ``Execute'' button to see the results of the output. Now, to debug this program, click on the left side of the printHello line and add a breakpoint. Then, click on the ``Debug'' button and the program will wait at the breakpoint, as shown by \autoref{fig:debug}.
+
+\begin{figure}[!htp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{whatIsSLAM/debug.pdf}
+    \caption{Debug interface. }
+    \label{fig:debug}
+\end{figure}
+
+When debugging, KDevelop will switch to debug mode and the interface will change a bit. At the breakpoint, you can control the operation of the program with single step operation (F10 key), single step follow up (F11 key), and single step jump (F12 key) function. At the same time, you can click the interface on the left to view the value of the local variable. Or select the "Stop" button to end debugging. After debugging, KDevelop will return to the normal development interface.
+
+Now you should be familiar with the entire process of breakpoint debugging. In the future, if an error occurs during the running phase of the program, causing the program to crash, you can use breakpoint debugging to determine the location of the error, and then modify \footnote{ instead of directly sending us an email asking how to deal with the problem. }.
+
+\subsubsection{Use Clion}
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=1.0\textwidth]{whatIsSLAM/clion.pdf}
+    \caption{Clion interface}
+    \label{fig:clion}
+\end{figure}
+
+Clion is more complete than KDevelop, but it requires an user account, and the memory/CPU requirements for the host will be higher. \footnote{CLion is abnormally slow in the version after 2018. It is recommended that you use the release version around 2017. }. In Clion, you can also open a CMakeLists.txt or specify a directory. Clion will complete the cmake-make process for you. Its running interface is shown in \autoref{fig:clion}.
+
+Similarly, after opening Clion, you can select the programs you want to run or debug in the upper right corner of the interface, and adjust their startup parameters and working directory. Click the small beetle button in this column to start the breakpoint debugging mode. Clion also has a number of convenient features, such as automatically creating classes, changing functions, and automatically adjusting the coding style. Please try it.
+
+Ok, if you are already familiar with the use of the IDE, then the second chapter will stop here. You may already feel that I have talked too much, so in the following practice section, we will not introduce things like how to create a new build folder, call the cmake and make commands to compile the program. I believe that readers should master these simple steps. Similarly, since most of the third-party libraries used in this book are cmake projects, you will continue to be familiar with the compilation process. Next we will start the formal chapter and introduce some related mathematics.
+
+\section*{Exercises}
+\begin{enumerate}
+    \item Read the survey SLAM literature \cite{Liu2016} and \cite{Liang2013}, can you read the contents? (They are Chinese papers for beginners. For English reader, see the next  exercise.)
+    \item[\optional] Read SLAM's review literature, such as \cite{Cadena2016, Fuentes-Pacheco2015, Boal2014, Chen2012, Chen2007} and so on. What are the similarities and differences between these papers on SLAM and this book?
+    \item What are the parameters of the \item g++ command? If I want to change the generated program file name, how should I call g++?
+    \item Use the build folder to compile your cmake project, then try it in KDevelop.
+    \item Deliberately add some syntax errors to the code to see what information the build will generate. Can you read the error message of g++?
+    \item If you forgot to link the library to the executable, will the compiler report an error? What kind of mistakes are reported?
+    \item[\optional] Read ``cmake practice'' (or other cmake materials) to learn about the grammars of cmake.
+    \item[\optional] Improve the hello SLAM problem, make it a small library, and install it on your local hard drive. Then, create a new project, use find\_package to find the library and call it.
+    \item[\optional] Read other cmake instructional materials, such as \url{https://github.com/TheErk/CMake-tutorial}.
+    \item Find the official website of KDevelop and see what other features it has. Are you using it?
+    \item If you learned Vim in the last lecture, please try KDevelop's/Clion's Vim editing function.
+\end{enumerate}
