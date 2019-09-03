@@ -2,15 +2,15 @@
 % .:: footmisc ::.
 %
 % Circled Digit，带圆圈数字
-\DefineFNsymbols{cd}{{\ding{172}}{\ding{173}}{\ding{174}}{\ding{175}}{\ding{176}}{\ding{177}}{\ding{178}}{\ding{179}}{\ding{180}}{\ding{181}}}
-% Negative Circled Digit，反白带圆圈数字
-\DefineFNsymbols{ncd}{{\ding{182}}{\ding{183}}{\ding{184}}{\ding{185}}{\ding{186}}{\ding{187}}{\ding{188}}{\ding{189}}{\ding{190}}{\ding{191}}}
-% Circled Sans-Serif Digit，带圆圈无衬线数字
-\DefineFNsymbols{cssd}{{\ding{192}}{\ding{193}}{\ding{194}}{\ding{195}}{\ding{196}}{\ding{197}}{\ding{198}}{\ding{199}}{\ding{200}}{\ding{201}}}
-% Negative Circled Sans-Serif Digit，反白带圆圈无衬线数字
-\DefineFNsymbols{ncssd}{{\ding{202}}{\ding{203}}{\ding{204}}{\ding{205}}{\ding{206}}{\ding{207}}{\ding{208}}{\ding{209}}{\ding{210}}{\ding{211}}}
-\setfnsymbol{cssd}
-\setlength\footnotemargin{.6em}
+%\DefineFNsymbols{cd}{{\ding{172}}{\ding{173}}{\ding{174}}{\ding{175}}{\ding{176}}{\ding{177}}{\ding{178}}{\ding{179}}{\ding{180}}{\ding{181}}}
+%% Negative Circled Digit，反白带圆圈数字
+%\DefineFNsymbols{ncd}{{\ding{182}}{\ding{183}}{\ding{184}}{\ding{185}}{\ding{186}}{\ding{187}}{\ding{188}}{\ding{189}}{\ding{190}}{\ding{191}}}
+%% Circled Sans-Serif Digit，带圆圈无衬线数字
+%\DefineFNsymbols{cssd}{{\ding{192}}{\ding{193}}{\ding{194}}{\ding{195}}{\ding{196}}{\ding{197}}{\ding{198}}{\ding{199}}{\ding{200}}{\ding{201}}}
+%% Negative Circled Sans-Serif Digit，反白带圆圈无衬线数字
+%\DefineFNsymbols{ncssd}{{\ding{202}}{\ding{203}}{\ding{204}}{\ding{205}}{\ding{206}}{\ding{207}}{\ding{208}}{\ding{209}}{\ding{210}}{\ding{211}}}
+%\setfnsymbol{cssd}
+%\setlength\footnotemargin{.6em}
 
 % package: float
 \floatplacement{figure}{!ht}
@@ -52,7 +52,7 @@
 % 代码风格
 \lstset{ %
 	language=C++,                % the language of the code
-	basicstyle=\scriptsize,           % the size of the fonts that are used for the code
+	basicstyle=\scriptsize\fontspec{Monaco},           % the size of the fonts that are used for the code
 	numbers=left,                   % where to put the line-numbers
 	numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
 %	% will be numbered
