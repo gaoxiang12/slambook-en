@@ -405,3 +405,44 @@ Since the detailed comments are given in the code, each line of the statement is
 \end{enumerate}
 
 In the last piece of code, the efficiency of inversion and QR decomposition is compared. You can look at the time difference on your own machine. Is there a significant difference between the two methods?
+
+\section{Rotation Vector and Euler Angle}
+\subsection{Rotation Vector}
+Now let's return to the theoretical part. With a rotation matrix to describe the rotation, is it enough to use a $4 \times 4$ transformation matrix to describe a 6-degree-of-freedom 3D rigid body motion? Obviously the matrix representation has at least the following disadvantages:
+\begin{enumerate}
+    \item  $\mathrm{SO}( 3 ) $ has a rotation matrix of 9 quantities, but a 3D rotation only has 3 degrees of freedom. Therefore the matrix expression is redundant. Similarly, the transformation matrix expresses a 6 degree-of-freedom transformation with 16 quantities. So, is there a more compact representation?
+    \item The rotation matrix itself has constraints: it must be an orthogonal matrix with a determinant of 1. The same is true for the transformation matrix. These constraints make the solution more difficult when you want to estimate or optimize a rotation matrix/transform matrix.
+\end{enumerate}
+
+Therefore, we hope that there is a way to describe rotation and translation in a compact manner. For example, is it feasible to express rotation with a three-dimensional vector and express transformation with a six-dimensional vector? In fact, a rotation can be described by \textbf {a rotation axis and a rotation angle}. Thus, we can use a vector whose direction is parallel with the axis of rotation and the length is equal to the angle of rotation, which is called the \textbf {rotation vector} (or Angle-Axis/Axis-Angle), and only a three-dimensional vector is needed to describe the rotation. Similarly, for a transformation matrix, we use a rotation vector and a translation vector to express a transformation. The variable dimension at this time is exactly six dimensions.
+
+Consider a rotation represented by $ \mathbf{R} $. If described by a rotation vector, assuming that the rotation axis is a unit length vector $ \mathbf{n} $ and the angle is $ \theta $, then the vector $ \theta \mathbf{n} $ can also describe this rotation. So, we have to ask, what is the connection between the two expressions? In fact, it is not difficult to derive their conversion relationship. The conversion process from the rotation vector to the rotation matrix is shown by \textbf{Rodrigues's Formula}. Since the derivation process is a little complicated, it is not described here. Only the result of the conversion is given\footnote{For interested readers, please refer to \url{https://en.wikipedia.org/wiki/Rodrigues \% 27_rotation_formula}, in fact the next chapter will give a proof from the Lie algebra view.}:
+
+\begin{equation}
+\label{eq:rogridues}
+\mathbf{R} = \cos \theta \mathbf{I} + \left({ 1 - \cos \theta } \right) \mathbf{n} { \mathbf {n} ^ \mathrm{T} } + \sin \theta { \mathbf{n}^ \wedge }.
+\end{equation}
+
+The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formula \eqref{eq:cross}. Conversely, we can also calculate the conversion from a rotation matrix to a rotation vector. For the corner $ \theta $, take the \textbf{trace} \footnote {see \textbf{trace} on both sides to find the sum of the diagonal elements of the matrix. }, we have:
+
+\begin{equation}
+\begin{aligned}
+\mathrm{tr} \left( \mathbf{R} \right) &= \cos \theta \mathop{}\!\mathrm{tr}\left( \mathbf{I} \right) + \left( {1 - \cos \theta } \right) \mathop{}\!\mathrm{tr} \left( { \mathbf{n} {\mathbf{n}^\mathrm{T}}} \right) + \sin \theta \mathop{}\!\mathrm{tr} ({\mathbf{n}^ \wedge })\\
+&= 3\cos \theta  + (1 - \cos \theta )\\
+&= 1 + 2\cos \theta .
+\end{aligned} 
+\end{equation}
+
+therefore:
+\begin{equation}
+\label{eq:R2theta}
+\theta = \arccos ( \frac{\mathrm{tr}(\mathbf{R}) - 1}{2}  ) .
+\end{equation}
+
+Regarding the axis $ \mathbf{n} $ , since the vector on the rotation axis does not change after the rotation, it means:
+\begin{equation}
+\mathbf{R} \mathbf{n} = \mathbf{n}.
+\end{equation}
+
+Therefore, the axis $ \mathbf{n} $ is the eigen vector corresponding to the matrix $ \mathbf{R}$'s eigenvalue 1. Solving this equation and normalizing it gives the axis of rotation. By the way, the two conversion formulas here will still appear in the next lecture, and you will find that they are exactly the correspondence between Lie group and Lie algebra on $ \mathrm{SO}(3) $ .
+
