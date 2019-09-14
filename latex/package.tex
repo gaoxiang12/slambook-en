@@ -20,6 +20,10 @@ top=2.6 true cm,bottom=2.2 true cm,left=2.8 true cm,right=2.8 true cm]
 \usepackage{caption}
 \usepackage[perpage,symbol*, bottom,hang,stable,multiple]{footmisc}
 \usepackage[clearempty,pagestyles]{titlesec}
+\usepackage{titletoc}
+\titlecontents{section}[0pt]{\addvspace{2pt}\filright}
+{\contentspush{\thecontentslabel\ }}
+{}{\titlerule*[8pt]{.}\contentspage}
 \usepackage[cmyk,table,hyperref]{xcolor}
 \usepackage{tikz}
 \usepackage{tcolorbox}

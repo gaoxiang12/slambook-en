@@ -576,17 +576,434 @@ Then, their operations can be expressed as follows.
 
 \subsection{Use Quaternion to Represent Rotation}
 
-We can use a quaternion to express the rotation of a point. Suppose a spatial 3D point $ \bm{p} = [x,y,z]^\mathrm{T} \in  \mathbb {R}^3$, and a rotation is specified by a unit quaternion $ \bm{q}$. The 3D point $\bm{p}$ is rotated to become $\bm{p}'$ . If we use matrix, then there is $ \bm{p}'= \bm{R} \bm{p} $ . And if we use quaternion to describe rotation, how do we operate a 3D vector with a quaternion? 
+We can use a quaternion to express the rotation of a point. Suppose a spatial 3D point $ \mathbf{p} = [x,y,z]^\mathrm{T} \in  \mathbb {R}^3$, and a rotation is specified by a unit quaternion $ \mathbf{q}$. The 3D point $\mathbf{p}$ is rotated to become $\mathbf{p}'$ . If we use matrix, then there is $ \mathbf{p}'= \mathbf{R} \mathbf{p} $ . And if we use quaternion to describe rotation, how do we operate a 3D vector with a quaternion? 
 
 First, we use extends the 3D point to a imaginary quaternion:
-\[
-\bm{p} = [0, x, y, z]^\mathrm{T} = [0, \bm{v}]^\mathrm{T}. 
+\[s
+\mathbf{p} = [0, x, y, z]^\mathrm{T} = [0, \mathbf{v}]^\mathrm{T}. 
 \]
-We just put the three coordinates into the imaginary part and leave the real part to zero. Then, the rotated point $ \bm {p}' $ can be expressed as such a product:
+We just put the three coordinates into the imaginary part and leave the real part to zero. Then, the rotated point $ \mathbf {p}' $ can be expressed as such a product:
 
 \begin{equation}\label{eq:rotate-with-quaternion}
-\bm{p}' = \bm{q} \bm{p} \bm{q}^{-1}.
+\mathbf{p}' = \mathbf{q} \mathbf{p} \mathbf{q}^{-1}.
 \end{equation}
 
-The multiplication here is quaternion multiplication, and the result is also a quaternion. Finally, we take the imaginary part of $ \bm{p}' $ and get the coordinates of the point after the rotation. It can be easily verified (we leave as an exercise here) that the real part of the calculation is 0, so it is a pure imaginary quaternion.
+The multiplication here is quaternion multiplication, and the result is also a quaternion. Finally, we take the imaginary part of $ \mathbf{p}' $ and get the coordinates of the point after the rotation. It can be easily verified (we leave as an exercise here) that the real part of the calculation is 0, so it is a pure imaginary quaternion.
 
+\subsection{Conversion of Quaternions to Other Rotation Representations}
+
+An arbitrary unit quaternion describes a rotation, which can also be described by a rotation matrix or a rotation vector. Now let's examine the conversion relationship between quaternions and rotation vectors/matrices. Before that, we have to say that quaternion multiplication can also be written as a matrix multiplication. Let $\mathbf{q}=[s,\mathbf{v}]^\mathrm{T}$, then define the following symbols $^{+}$ and $^{\oplus}$ as \cite{Barfoot2011}:
+\begin{equation}
+	\mathbf{q}^{+}=\left[\begin{array}{cc}
+		s&-\mathbf{v}^\mathrm{T} \\
+		\mathbf{v}&s\mathbf{I}+\mathbf{v}^{\wedge}
+	\end{array}\right],\quad
+	\mathbf{q}^{\oplus}=
+	\left[\begin{array}{cc}
+		s & -\mathbf{v}^\mathrm{T} \\
+		\mathbf{v} & s\mathbf{I}-\mathbf{v}^{\wedge}
+	\end{array}\right],
+\end{equation}
+These two symbols map the quaternion to a matrix of 4$\times$4. Then quaternion multiplication can be written in the form of a matrix:
+\begin{equation}
+	\mathbf{q}_1^ + {\mathbf{q}_2} = \left[ {\begin{array}{*{20}{c}}
+			S_1&-\mathbf{v}_1^T\\
+			\mathbf{v}_1 & s_1 \mathbf{I} + \mathbf{v}_1^\wedge
+	\end{array}} \right]\left[ {\begin{array}{*{20}{c}}
+			{{s _2}} \\
+			{{\mathbf{v} _2}}
+	\end{array}} \right] = \left[ {\begin{array}{*{20}{c}}
+			{ - \mathbf{v} _1^T{\mathbf{v} _2} + {s _1}{s _2}} \\
+			{{s _1}{\mathbf{v} _2} + {s _2}{\mathbf{v} _1} + \mathbf{v} _1^ \wedge {\mathbf{v} _2}}
+	\end{array}} \right] = \mathbf{q}_1 \mathbf{q}_2
+\end{equation}
+We simply get:
+\begin{equation}
+	\mathbf{q}_1 \mathbf{q}_2 = \mathbf{q}_1^{+} \mathbf{q}_2 = \mathbf{q}_2^{\oplus} \mathbf{q}_1.
+\end{equation}
+
+Then, consider the problem of using a quaternion to rotate a spatial point. According to the previous section, we have:
+\begin{equation}
+	\begin{split}
+		\mathbf{p}' &= \mathbf{q} \mathbf{p} \mathbf{q}^{-1} = \mathbf{q}^+ \mathbf{p}^+ \mathbf{q}^{ -1} \\
+		&= \mathbf{q}^+ \mathbf{q}^{{-1}^{\oplus}} \mathbf{p}.
+	\end{split}
+\end{equation}
+Substituting the matrix corresponding to two symbols, we get:
+\begin{equation}\label{eq:quaternion-to-rotation-matrix-derive}
+	{\mathbf{q}^ + }{\left( {{\mathbf{q}^{ - 1}}} \right)^ \oplus } = \left[ \begin{array}{*{20}{c }}
+		s&-\mathbf{v}^T\\
+		\mathbf{v}&s\mathbf{I}+\mathbf{v}^\wedge
+	\end{array} \right]\left[\begin{array}{*{20}{c}}
+		s&{\mathbf{v} ^T}\\
+		{ - \mathbf{v} }&{s\mathbf{I} + \mathbf{v} ^ \wedge }
+	\end{array} \right] = \left[ \begin{array}{*{20}{c}}
+		1&\mathbf{0} \\
+		\mathbf{0}^\mathrm{T}&\mathbf{v}\mathbf{v}^\mathrm{T} + {s^2} \mathbf{I} + 2s\mathbf{v} ^ \wedge + {(\mathbf{v} ^ \wedge)}^2
+	\end{array} \right].
+\end{equation}
+Since $\mathbf{p}'$ and $\mathbf{p}$ are both imaginary quaternions, so in fact that the bottom right corner of the matrix gives the transformation of \textbf{from quaternion to rotation matrix} :
+\begin{equation}
+	\mathbf{R} = \mathbf{v} \mathbf{v}^\mathrm{T} + {s^2} \mathbf{I} + 2s\mathbf{v} ^ \wedge + {(\mathbf{v } ^ \wedge)}^2.
+\end{equation}
+In order to obtain the conversion formula of the quaternion to the rotation vector, we take the trace on both of two sides of the above formula:
+\begin{equation}
+	\begin{aligned}
+		\mathrm{tr}(\mathbf{R}) &= \mathrm{tr}(\mathbf{v}\mathbf{v}^\mathrm{T} + 3s^2 + 2s \cdot 0 + \mathrm{tr }((\mathbf{v}^\wedge)^2) \\
+		&= v_1^2+v_2^2+v_3^2 + 3s^2 - 2(v_1^2+v_2^2+v_3^2) \\
+		&= (1-s^2) + 3s^2 -2(1-s^2)\\
+		&= 4s^2 -1.
+	\end{aligned}
+\end{equation}
+Also obtained by the formula \eqref{eq:R2theta}:
+\begin{equation}
+	\begin{aligned}
+		\theta &= \arccos(\frac{\mathrm{tr}(\mathbf{R})-1}{2}) \\
+		&=\arccos(2s^2-1).
+	\end{aligned}
+\end{equation}
+which is
+\begin{equation}
+	\cos \theta =2s^2-1=2 \cos^2 \frac{\theta}{2} -1,
+\end{equation}
+and so we have:
+\begin{equation}
+	\theta = 2 \arccos s.
+\end{equation}
+For the rotation axis, if we replace $\mathbf{p}$ with the imaginary part of $\mathbf{q}$ in the formula \eqref{eq:quaternion-to-rotation-matrix-derive}, it is easy to know the imaginary part of  $\mathbf{q}$ is not moving when it is rotated, that is, it constitutes exactly the rotation axis. So we get the rotation axis just by normalizing $\mathbf{q}$'s imaginary part. In summary, the conversion formula for quaternion to rotation vector can be written as follows:
+\begin{equation}
+	\label{eq:rotationVector2Quaternion}
+	\begin{cases}
+		\theta = 2\arccos {q_0}\\
+		{\left[ {{n_x},{n_y},{n_z}} \right]^\mathrm{T}} = {{{\left[ {{q_1},{q_2},{q_3}} \right] }^\mathrm{T}}}/{\sin \frac{\theta }{2}}
+	\end{cases} .
+\end{equation}
+
+As for how to convert from other representations to quaternions, we only need to reversly follow the above steps. In actual programming, the library usually prepares for the conversion between various forms for us. Whether it's a quaternion, a rotation matrix, or an angle-axis, they can all be used to describe the same rotation. We should choose the most convenient form in practice without having to stick to a particular form. In the subsequent practices and exercises, we will demonstrate the transition between various expressions to deepen the reader's impression.
+
+\section{Affine and Projective Transformation}
+In addition to the Euclidean transformation, there are several other transformations in the 3D space, in which the Euclidean is the simplest. Some of them are related to the measurement geometry. We will introducte them in the following chapters, so here we only list their basic properties. The Euclidean transformation keeps the length and angle of the vector, which is equivalent to moving or rotating a rigid body without changing its appearance. The other transformations will change its shape, and they all have similar matrix representations.
+
+\begin{enumerate}
+	\item {\emph{Similarity transformation}}.
+	
+	The similarity transformation has one more degree of freedom than the Euclidean transformation, which allows the object to be uniformly scaled, and its matrix is ​​expressed as:
+	\begin{equation}
+	\mathbf{T}_S = \left[ {\begin{array}{*{20}{c}}
+		{s \mathbf{R}}& \mathbf{t}\\
+		{{ \mathbf{0}^\mathrm{T}}}&1
+		\end{array}} \right].
+	\end{equation}
+	
+	Notice that the rotation part has an extra scaling factor $s$, which means that we can evenly scale the three coordinates of $x, y, and z$ of a vector after it is rotated. Due to the scaling, the similar transformation no longer keeps the volumn of ​​the transformed boy unchanged. You can imagine a cube with a side length of 1 transforming into a side with a length of 10 (but still being a cube). The set of three-dimensional similar transforms is also called \textbf{similarity transform group}, which is denoted as $\mathrm{Sim}(3)$.
+	
+	\item {\emph{Affine transformation}}.
+	
+	The matrix form of the affine transformation is as follows:
+	\begin{equation}
+	\mathbf{T}_A = \left[ {\begin{array}{*{20}{c}}
+		\mathbf{A} & \mathbf{t}\\
+		{{\mathbf{0}^\mathrm{T}}} & 1
+		\end{array}} \right].
+	\end{equation}
+	
+	Unlike the Euclidean transformation, the affine transformation requires only $\mathbf{A}$ to be an invertible matrix, not necessarily an orthogonal matrix. An affine transformation is also called an orthogonal projection. After the affine transformation, the cube is no longer square, but the faces are still parallelograms.
+	
+	\item{ \emph{Perspective transformation}. }
+	
+	Perspective transformation is the most general transformation, its matrix form is
+	
+	\begin{equation}
+	{\mathbf{T}_P} = \left[ {\begin{array}{*{20}{c}}
+		\mathbf{A} & \mathbf{t}\\
+		{{\mathbf{a}^\mathrm{T}}} & v
+		\end{array}} \right].
+	\end{equation}
+	
+	Its upper left corner is the invertible matrix $\mathbf{A}$, the upper right corner is the translation $\mathbf{t}$, and the lower left corner is the scale $\mathbf{a}^\mathrm{T}$. Since the homogeneous coordinates are used, when $v \neq 0$, we can divide the entire matrix by $v$ to get a matrix with a bottom right corner of 1; otherwise, we get a matrix with a lower right corner of $0$. Therefore, the 2D perspective transformation has a total of 8 degrees of freedom, and 3D has a total of 15 degrees of freedom. Perspective transformation is the most general transformation that has been said so far. The transformation from the real world to a camera photo can be seen as a perspective transformation. The reader can imagine what a square tile would look like in a photo: first, it is no longer square. Due to the close part is larger then the far away part, it is not even a parallelogram, but an irregular quadrilateral.
+\end{enumerate}
+
+\autoref{table:common-transform} summarizes the properties of several transformations currently covered. Note that in the ``invariance'', there is an inclusion relationship from top to bottom. For example, in addition to maintaining volume, the Euclidean transformation also has the properties of parallelism, intersection, and the like.
+
+\begin{table}[!htp]
+	\centering
+	\caption{comparison of common transformation properties}
+	\label{table:common-transform}
+	\small
+	\begin{tabular}{c|c|c|c}
+		\toprule
+		Transform Name & Matrix Form & Degrees of Freedom & Invariance \\ \midrule
+		Euclidean \rule{0pt}{20 pt} & $\left[ {\begin{array}{*{20}{c}}
+			\mathbf{R} & \mathbf{t}\\
+			{{\mathbf{0}^\mathrm{T}}}&1
+			\end{array}} \right]$ & 6 & Length, Angle, Volume \\
+		Similarity \rule{0pt}{20 pt}& $ \left[ {\begin{array}{*{20}{c}}
+			{s \mathbf{R}}& \mathbf{t}\\
+			{{ \mathbf{0}^\mathrm{T}}}&1
+			\end{array}} \right]$ & 7 & Volume ratio \\
+		Affine \rule{0pt}{20 pt}& $ \left[ {\begin{array}{*{20}{c}}
+			\mathbf{A} & \mathbf{t}\\
+			{{\mathbf{0}^\mathrm{T}}} & 1
+			\end{array}} \right]$ & 12 & Parallelism, Volume ratio \\
+		Perspective \rule{0pt}{20 pt} & $ \left[ {\begin{array}{*{20}{c}}
+			\mathbf{A} & \mathbf{t}\\
+			{{\mathbf{a}^\mathrm{T}}} & v
+			\end{array}} \right]$ & 15 & Plane intersection and tangency \rule{0pt}{20 pt}\\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+We will introduce later that the transformation from the real world to the camera photo is a perspective transformation. If the focal length of the camera is infinity, then this transformation is an affine transformation. However, before we go into the details of the camera model, let's do some experiments to have a rough impression of these transformations.
+
+\section{Practice: Eigen Geometry Module}
+\subsection{Data demonstration of the Eigen geometry module}
+
+Now, let's actually practice the various rotation expressions mentioned earlier. We will use quaternions, Euler angles, and rotation matrices in Eigen to demonstrate how they are transformed. We will also give a visualization program to help the reader understand the relationship of these transformations.
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch3/useGeometry/useGeometry.cpp]
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+using namespace Eigen;
+// This program demonstrates how to use the Eigen geometry module
+
+int main(int argc, char **argv) {
+	// The Eigen/Geometry module provides a variety of rotation and translation representations
+	// 3D rotation matrix directly using Matrix3d or Matrix3f
+	Matrix3d rotation_matrix = Matrix3d::Identity();
+	// The rotation vector uses AngleAxis, the underlying layer is not directly Matrix, but the operation can be treated as a matrix (because the operator is overloaded)
+	AngleAxisd rotation_vector(M_PI / 4, Vector3d(0, 0, 1)); //Rotate 45 degrees along the Z axis
+	cout.precision(3);
+	cout << "rotation matrix = \n " << rotation_vector.matrix() << endl; //convert to matrix with matrix()
+	// can also be assigned directly
+	rotation_matrix = rotation_vector.toRotationMatrix();
+	// coordinate transformation with AngleAxis
+	Vector3d v(1, 0, 0);
+	Vector3d v_rotated = rotation_vector * v;
+	cout << "(1,0,0) after rotation (by angle axis) = " << v_rotated.transpose() << endl;
+	// Or use a rotation matrix
+	v_rotated = rotation_matrix * v;
+	cout << "(1,0,0) after rotation (by matrix) = " << v_rotated.transpose() << endl;
+	
+	// Euler angle: You can convert the rotation matrix directly into Euler angles
+	Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0); // ZYX order, ie roll pitch yaw order
+	cout << "yaw pitch roll = " << euler_angles.transpose() << endl;
+	
+	// Euclidean transformation matrix using Eigen::Isometry
+	Isometry3d T = Isometry3d::Identity(); // Although called 3d, it is essentially a 4*4 matrix
+	T.rotate(rotation_vector); // Rotate according to rotation_vector
+	T.pretranslate(Vector3d(1, 3, 4)); // Set the translation vector to (1,3,4)
+	cout << "Transform matrix = \n" << T.matrix() << endl;
+	
+	// Use the transformation matrix for coordinate transformation
+	Vector3d v_transformed = T * v; // Equivalent to R*v+t
+	cout << "v tranformed = " << v_transformed.transpose() << endl;
+	
+	// For affine and projective transformations, use Eigen::Affine3d and Eigen::Projective3d.
+	
+	// Quaternion
+	// You can assign AngleAxis directly to quaternions, and vice versa
+	Quaterniond q = Quaterniond(rotation_vector);
+	cout << "quaternion from rotation vector = " << q.coeffs().transpose() << endl; 
+	// Note that the order of coeffs is (x, y, z, w), w is the real part, the first three are the imaginary part
+	// can also assign a rotation matrix to it
+	q = Quaterniond(rotation_matrix);
+	cout << "quaternion from rotation matrix = " << q.coeffs().transpose() << endl;
+	// Rotate a vector with a quaternion and use overloaded multiplication
+	V_rotated = q * v; // Note that the math is qvq^{-1}
+	cout << "(1,0,0) after rotation = " << v_rotated.transpose() << endl;
+	// expressed by regular vector multiplication, it should be calculated as follows
+	cout << "should be equal to " << (q * Quaterniond(0, 1, 0, 0) * q.inverse()).coeffs().transpose() << endl;
+	
+	return 0;
+}
+\end{lstlisting}
+
+The various forms of expression in Eigen are summarized below. Note that each type has both single and double data types and, as before, cannot be automatically converted by the compiler. Taking the double precision as an example, you can simply change the last ``d'' to ``f'', which is a single-precision data structure.
+\begin{itemize}
+	\item Rotation matrix ( $ 3  \times  3 $ ): Eigen::Matrix3d.
+	\item Rotation vector ( $ 3  \times  1 $ ): Eigen::AngleAxisd.
+	\item Euler angle ( $ 3  \times  1 $ ): Eigen::Vector3d.
+	\item Quaternion ( $ 4  \times  1 $ ): Eigen::Quaterniond.
+	\item Euclidean transformation matrix ( $ 4  \times  4 $ ): Eigen::Isometry3d.
+	\item Affine transform ( $ 4  \times  4 $ ): Eigen::Affine3d.
+	\item Perspective transformation ( $ 4  \times  4 $ ): Eigen::Projective3d.
+\end{itemize}
+
+This program can be compiled by referring to the corresponding CMakeLists in the code. In this program, I demonstrate how to use the rotation matrix, rotation vectors (AngleAxis), Euler angles, and quaternions in Eigen. We use these rotations to rotate a vector $ \mathbf {v} $ and find that the result is the same. At the same time, it also demonstrates how to convert these expressions in the program. Readers who want to learn more about Eigen's geometry modules can refer to \url {http://eigen.tuxfamily.org/dox/group__TutorialGeometry.html}.
+
+Note that the \textbf {program code has some subtle differences from the mathematical representation}. For example, by operator overloading in C++, quaternions and three-dimensional vectors can directly be multiplied, but mathematically, the vector needs to be converted into a imaginary quaternion like we talked in the last section, and then quaternion multiplication is used for calculation. The same applies to the transformation matrix multiplying with a three-dimensional vector. In general, the usage in the program is more flexible than the mathematical formula.
+
+\subsection{Coordinate Transformation Example}
+
+Let's take a small example to demonstrate the coordinate transformation.
+
+\noindent  \textbf{Example 1}. \quad  The robot No. 1 and the robot No. 2 are located in the world coordinate system. We use the world coordinate system as $W$ , robot coordinate system as $R_1 $ and $R_2$ . The pose of the robot No. 1 is $ \mathbf {q}_ 1 = [ 0.35 , 0.2 , 0.3 , 0.1 ]^ \mathrm{T}, \mathbf{t}_ 1 = [ 0.3 , 0.1 , 0.1 ]^ \mathrm{T} $ . The pose of the robot No. 2 is $ \mathbf{q}_2 = [ - 0.5 , 0.4 , - 0.1 , 0.2 ]^ \mathrm{T}, \mathbf{t}_ 2 = [- 0.1 , 0.5 , 0.3 ]^ \mathrm{T} $ . Here $ \mathbf {q} $ and $ \mathbf{t} $ express $ \mathbf{T}_{R_k, W}, k= 1 , 2 $ , which is the world coordinate system to the robot coordinate system. Now, assume that robot No. 1 sees a point in its own coordinate system with coordinates of $ \mathbf{p}_{R_1} = [ 0.5 .0 , 0.2 ]^ \mathrm{T} $ , find the coordinates of the vector in the radish No. 2 coordinate system. 
+
+This is a very simple but representative example. In actual scenarios you often need to convert coordinates between different parts of the same robot or between different robots. Below we write a program to demonstrate this calculation.
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch3/examples/coordinateTransform.cpp]
+#include<iostream>
+#include<vector>
+#include<algorithm>
+#include<Eigen/Core>
+#include<Eigen/Geometry>
+
+using namespace std;
+using namespace Eigen;
+
+int main(int argc, char** argv) {
+	Quaterniond q1(0.35, 0.2, 0.3, 0.1), q2(-0.5, 0.4, -0.1, 0.2);
+	q1.normalize();
+	q2.normalize();
+	Vector3d t1(0.3, 0.1, 0.1), t2(-0.1, 0.5, 0.3);
+	Vector3d p1(0.5, 0, 0.2);
+	
+	Isometry3d T1w(q1), T2w(q2);
+	T1w.pretranslate (t1);
+	T2w.pretranslate (t2);
+	
+	Vector3d p2 = T2w * T1w.inverse() * p1;
+	cout << endl << p2.transpose() << endl;
+	return 0;
+}
+\end{lstlisting}
+
+The answer to the program is $ [- 0.0309731 , 0.73499 , 0.296108 ]^ \mathrm{T}$, and the calculation process is very simple, just by calculating $$ \mathbf{p}_{R_2} = \mathbf{T}_{ R_2, W} \mathbf{T}_{W, R_1} \mathbf{p}_{R_1}. $$ Note that the quaternion needs to be normalized before use.
+
+\section{Visualization Demo}
+\subsection{Plotting Trajectory}
+
+If you are new to the concepts of rotation and translation, you may find that their form looks a little complicated. There are so many representation methods and we need to convert to a preferred one if necessary. Fortunately, although the values of the rotation and transformation matrix may not be intuitive enough, we can easily draw them in a 3D window.
+
+In this section we demonstrate two visual examples. First, let's say that we recorded the trajectory of a robot in some way, and now I want to draw it in a figure. Suppose the trajectory file is stored in a text file called ``trajectory.txt'', and each line is stored in the following format: $$ \mathrm {time}, t_x, t_y, t_z, q_x, q_y, q_z, q_w, $$ where $ \mathrm {time} $ refers the recording time of this pose, $ \mathbf {t} $ is translation, $ \mathbf {q} $ is the quaternion, all recorded in the world coordinate system to the robot coordinate system. Below we read these tracks from the file and display them in a window. In principle, if we just talk about ``robot pose'', then we can use any one of $ \mathbf {T}_{WR} $ or $ \mathbf {T}_{RW} $ because they are just the inverse of each other. It means that knowing one of them makes it easy to get the other. If we want to store \textbf {robot's trajectory}, then saving $ \mathbf {T}_{WR} $ or $ \mathbf {T}_{RW} $ doesn't make much difference.
+
+When drawing the trajectory, we should draw the ``trajectory'' as a sequence of points, which is similar to the ``trajectory'' we imagined. Strictly speaking, this is actually the \textbf {the coordinates of the origin of the robot in the world coordinate system}. Consider the origin of the robot coordinate system, i.e., $ \mathbf {O}_{R}$ , then the $ \mathbf{O}_{W}$ at this time is the coordinates of the origin in the world coordinate system:
+\begin{equation}
+\mathbf{O} _ {W} = \mathbf{T} _ {WR} \mathbf {O} _R = \mathbf {t} _ {WR}.
+\end{equation}
+This is exactly the translation part of $ \mathbf {T}_{WR} $ . So, you can see \textbf {where the camera is} directly from $ \mathbf {T}_{WR} $. Therefore, in most of the public datasets, the trajectory file stores $ \mathbf {T}_{WR} $ instead of $ \mathbf {T}_{RW} $ .
+
+Finally, we need a library that supports 3D drawing. There are many libraries that support 3D drawing, such as the famous matlab, python matplotlib, OpenGL and so on. In linux, a common library is OpenGL-based Pangolin library \footnote{See \url {https://github.com/stevenlovegrove/Pangolin}.}, which provides some drawing operations based on OpenGL. In the second edition of the book, we used git's submodule feature to manage the third-party libraries that this book relies on. Readers can go directly to the 3rdparty folder to install the required libraries, and git guarantees that I am consistent with the version you are using.
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch3/examples/plotTrajectory.cpp]
+#include <pangolin/pangolin.h>
+#include <Eigen/Core>
+#include <unistd.h>
+
+using namespace std;
+using namespace Eigen;
+
+// path to trajectory file
+string trajectory_file = "./examples/trajectory.txt";
+
+void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>>);
+
+int main(int argc, char **argv) {
+	vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses;
+	ifstream fin(trajectory_file);
+	if (!fin) {
+		cout << "cannot find trajectory file at " << trajectory_file << endl;
+		return 1;
+	}
+	
+	while (!fin.eof()) {
+		double time, tx, ty, tz, qx, qy, qz, qw;
+		fin >> time >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
+		Isometry3d Twr(Quaterniond(qw, qx, qy, qz));
+		Twr.pretranslate(Vector3d(tx, ty, tz));
+		poses.push_back(Twr);
+	}
+	cout << "read total " << poses.size() << " pose entries" << endl;
+	
+	// draw trajectory in pangolin
+	DrawTrajectory(poses);
+	return 0;
+}
+
+void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses) {
+	// create pangolin window and plot the trajectory
+	pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	pangolin::OpenGlRenderState s_cam(
+	pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
+	pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
+	);
+	
+	pangolin::View &d_cam = pangolin::CreateDisplay()
+	.SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f)
+	.SetHandler(new pangolin::Handler3D(s_cam));
+	
+	while (pangolin::ShouldQuit() == false) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		d_cam.Activate(s_cam);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glLineWidth(2);
+		for (size_t i = 0; i < poses.size(); i++) {
+			// draw three axes of each pose
+			Vector3d Ow = poses[i].translation();
+			Vector3d Xw = poses[i] * (0.1 * Vector3d(1, 0, 0));
+			Vector3d Yw = poses[i] * (0.1 * Vector3d(0, 1, 0));
+			Vector3d Zw = poses[i] * (0.1 * Vector3d(0, 0, 1));
+			glBegin(GL_LINES);
+			glColor3f(1.0, 0.0, 0.0);
+			glVertex3d (Ow [0], Ow [1], Ow [2]);
+			glVertex3d (Xw [0], Xw [1], Xw [2]);
+			glColor3f(0.0, 1.0, 0.0);
+			glVertex3d (Ow [0], Ow [1], Ow [2]);
+			glVertex3d (Is [0], Is [1], Is [2]);
+			glColor3f(0.0, 0.0, 1.0);
+			glVertex3d (Ow [0], Ow [1], Ow [2]);
+			glVertex3d (Zw [0], Zw [1], Zw [2]);
+			glEnd();
+		}
+		// draw a connection
+		for (size_t i = 0; i < poses.size(); i++) {
+			glColor3f(0.0, 0.0, 0.0);
+			glBegin(GL_LINES);
+			auto p1 = poses[i], p2 = poses[i + 1];
+			glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
+			glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
+			glEnd();
+		}
+		pangolin::FinishFrame();
+		usleep(5000);   // sleep 5 ms
+	}
+}
+\end{lstlisting}
+
+This program demonstrates how to draw a 3D pose in Pangolin. We draw the three axes of each pose in red, green, and blue (actually we calculate the world coordinates of each axis), and then connect the poses with black lines. The result is shown in \autoref {fig:trajectory}.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=0.8\textwidth]{rigidMotion/trajectory.pdf}
+	\caption {Results of pose visualization}
+	\label{fig:trajectory}
+\end{figure}
+
+\subsection{Displaying Camera Pose}
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=0.8\textwidth]{rigidMotion/visualizeGeometry.pdf}
+	\caption {Visualization program for rotation matrix, Euler angle, quaternion. }
+	\label{fig:visualizeGeometry}
+\end{figure}
+
+In addition to displaying the trajectory, we can also display the pose of the camera in the 3D window. In slambook2/ch3/visualizeGeometry, we visualize various expressions of camera poses (see \autoref{fig:visualizeGeometry}). When the reader uses the mouse to move the camera, the box on the left side will display the rotation matrix, translation, Euler angle and quaternion of the camera pose in real time. You can see how the data changes. According to our experience, it is hard to infer the exact rotation from quaternions or matrices. However, although the rotation matrix or transformation matrix is not intuitive, it is not difficult to visually display them. This program uses the Pangolin library as a 3D display library. Please refer to Readme.txt to compile the program.
+
+\section*{Exercises}
+\begin{enumerate}
+	\item Verify that the rotation matrix is an orthogonal matrix.
+	\item Prove the Rodrigues formula.
+	\item Verify that after the quaternion rotates a point, the result is a imaginary quaternion (the real part is zero), so it still corresponds to a three-dimensional space point, see \eqref{eq:rotate-with-quaternion}.
+	\item Draw a table that summarizes the conversion relationship of the rotation matrix, rotation angle, Euler angle and quaternion.
+	\item Suppose there is a large Eigen matrix, we want to know the value in the top left $3 \times 3$ blocks, and then assign it to $\mathbf{I}_{3 \times 3}$ . Please implement it in C++.
+	\item When does a general linear equation $\mathbf{A} \mathbf{x}=\mathbf{b}$ has an unique solution of $\mathbf{x}$? How to solve it numerically? Can you implement it in Eigen?
+\end{enumerate}
