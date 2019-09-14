@@ -446,3 +446,147 @@ Regarding the axis $ \mathbf{n} $ , since the vector on the rotation axis does n
 
 Therefore, the axis $ \mathbf{n} $ is the eigen vector corresponding to the matrix $ \mathbf{R}$'s eigenvalue 1. Solving this equation and normalizing it gives the axis of rotation. By the way, the two conversion formulas here will still appear in the next lecture, and you will find that they are exactly the correspondence between Lie group and Lie algebra on $ \mathrm{SO}(3) $ .
 
+\subsection{Euler Angle}
+
+Let's talk about the Euler angle.
+
+Whether it is a rotation matrix or a rotation vector, although they can describe the rotation, they are very unintuitive to us humans. When we see a rotation matrix or a rotation vector, it is hard to imagine what this rotation is like. When they change, we don't know which direction the object is turning. The Euler angle provides a very intuitive way to describe rotation—it uses \textbf{3 primal axes} to decompose a rotation into three rotations around different axes. Humans can easily understand the process of rotating around a single axis. However, due to the variety of decomposition methods, there are many different and confusing definition methods for Euler angles. For example, we can first rotate around the $X$ axis, then around the $Y$ axis, and finally around the $Z$ axis, and by this way we get a rotation like $XYZ$ order. Similarly, you can define rotation orders such as $ZYZ$ and $ZYX$. You also need to distinguish whether it is rotated around the \textbf{fixed axis} or around the \textbf{axis after rotation}, which will also give a different definition.
+
+This uncertainty in the axis orders brings many practical difficulties. Fortunately, in certain research areas, Euler angles usually have a uniform definition. You may have heard the words ``pitch angle'' and ``yaw angle'' of an aircraft. One of the most commonly used Euler angles is the yaw-pitch-roll angles. Since it is equivalent to the rotation of the $ZYX$ axis, the $ZYX$ is taken as an example. Suppose the front of a rigid body (toward our direction) is the $X$ axis, the right side is the $Y$ axis, and the top is the $Z$ axis, as shown by \autoref{fig:eulerAngles}. Then, the $ZYX$ angle is equivalent to decompose any rotation into the following three axes:
+
+\begin{enumerate}
+    \item Rotate around the $Z$ axis of the object to get the yaw angle $\theta_{\mathrm{yaw}}=y$;
+    \item Rotate around the $Y$ axis of \textbf{after rotation} to get the pitch angle $\theta_{\mathrm{pitch}}=p$;
+    \item Rotate around the $X$ axis of \textbf{after rotation} to get the roll angle $\theta_{\mathrm{roll}}=r$.
+\end{enumerate}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=1.0\textwidth]{rigidMotion/eulerAngles.pdf}
+    \caption{Euler angles. The top is defined for the ZYX order (rpy order). The bottoms shows when pitch=$90^\circ$, the third rotation is using the same axis as the first one, causing the system to lose a degree of freedom. If you don't understand the universal lock, please take a look at the related videos and it will be more convenient to understand. }
+    \label{fig:eulerAngles}
+\end{figure}
+
+By this way, you can use a three-dimensional vector such as $[r,p,y]^\mathrm{T}$ to describe any rotation. This vector is very intuitive, we can imagine the rotation process from this vector. The other Euler angles are also decomposed into three axes to obtain a three-dimensional vector, but the axes and order maybe different. The $rpy$ angle introduced here is a widely used one, and only a few Euler angles have such a popular name as $rpy$. Different Euler angles are referred to in the order of the axes of rotation. For example, the rotation order of the rpy angle is $ZYX$. Similarly, there are Euler angles like $XYZ, ZYZ$ - but they don't have a specific name. It is worth mentioning that most areas have their own coordinate directions and order habits when using Euler angles, not necessarily the same as we said here.
+
+A major drawback of Euler Angle is that it encounters the famous \textbf{Gimbal Lock} \footnote{\url{https://en.wikipedia.org/wiki/Gimbal_lock}.}): in $rpy$'s case, when the pitch angle is $\pm 90 ^\circ $, the first rotation and the third rotation will use the same axis, causing the system to lose a degree of freedom (from 3 rotations to 2 rotations). This is called the singularity problem and also exists in other forms of Euler Angles. In theory, it can be proved that as long as you want to use three real numbers to express the three-dimensional rotation, you will inevitably encounter the singularity problem\footnote{The rotation vector also has singularity, which occurs when the angle $\theta$ exceeds $2\pi$. Obviously rotating $2\pi$ is same with no rotation.}. Due to this principle, Euler angles are not suitable for interpolation and iteration, and are often only used in human-computer interaction. We also rarely use Euler angles to express poses directly in the SLAM program, nor do we use Euler angles to express rotation in filtering or optimization (because it has singularity). However, if you want to verify that your algorithm is correct or not, converting to Euler angles can help you quickly determine if the results are correct. In some cases where the main body is mainly 2D motion (such as sweepers, self-driving vehicles), we can also decompose the rotation into three Euler angles, and then take one of them (such as the yaw angle) as the positioning information output.
+
+\section{Quaternion}
+
+The rotation matrix describes the rotation of 3 degrees of freedom with 9 quantities, with redundancy; the Euler angles and the rotation vectors are compact but has singularity. In fact, we \textbf{cannot find a three-dimensional vector description without singularity}\cite{Stuelpnagel1964}. This is somewhat similar to using two coordinates to represent the Earth's surface (such as longitude and latitude), and there will be singularity (longitude is meaningless when latitude is $ \pm  90 ^ \circ $ ).
+
+Recall the complex number that we have studied before. We use the complex set $ \mathbb {C} $ to represent the vector on the 2D complex plane, and the complex multiplication with an unit complex number can represent the rotation on the 2D plane: for example, multiplying the complex $i$ is equivalent to rotating a complex vector counterclockwise by $ 90 ^ \circ $. Similarly, when expressing a three-dimensional space rotation, there is also an algebra similar to a complex number: \textbf{quaternions}. The quaternion is an extended complex number found by Hamilton. It \textbf{ is both compact and not singular}. If we must find some shortcomings, the quaternion is not intuitive enough, and its operation is a bit more complicated.
+
+Comparing quaternions to complex numbers can help you understand quaternions faster. For example, when we want to rotate the vector of a complex plane by $\theta$ , we can multiply this complex vector by $\mathrm{e}^{i \theta}$, which is a complex number represented by polar coordinates. It can also be written in the usual form like the famous Euler equation:
+\begin{equation}
+\mathrm{e}^{i\theta} = \cos \theta + i \sin \theta.
+\end{equation}
+This is a unit length complex number. Therefore, in the case of two dimensions, the rotation can be described by \textbf{unit complex number}. Similarly, we will see that 3D rotation can be described by a \textbf{unit quaternion}.
+
+A quaternion $ \mathbf{q} $ has a real part and three imaginary parts. We write the real part in the front (and there are also some books where the real part is written in the last), like this:
+\begin{equation}
+\mathbf{q} = q_0 + q_1 i + q_2 j + q_3 k,
+\end{equation}
+Where $ i,j,k $ are the three imaginary parts of the quaternion. These three imaginary parts satisfy the following relationship:
+\begin{equation}
+\label{eq:quaternionVirtual}
+\left\{ \begin{array}{l}
+{i^2} = {j^2} = {k^2} =  - 1\\
+ij = k, ji = - k \\
+jk = i,kj =  - i\\
+ki = j, i = - j
+\end{array} \right. .
+\end{equation}
+If we look at $ i, j, k $ as three axes, they are the same as their own multiplications and complex numbers, and the multiplication and outer product are the same. Sometimes people also use a scalar and a vector to express quaternions:
+\[
+\mathbf{q} = \left[ s, \mathbf{v} \right]^\mathrm{T}, \quad s=q_0 \in \mathbb{R},\quad \mathbf{v} = [q_1, q_2, q_3]^\mathrm{T} \in \mathbb{R}^3,
+\]
+Here, $ s $ is the real part of the quaternion, and $ \mathbf {v} $ is its imaginary part. If the imaginary part of a quaternion is $ \mathbf {0} $ , it is called \textbf{real quaternion}. Conversely, if its real part is $ 0 $ , it is called \textbf{imaginary quaternion}.
+
+We can use a \textbf{unit quaternion} to represent any rotation in 3D space, but this expression is subtly different from the complex numbers. In the complex, multiplying by $ i $ means rotating $ 90 ^ \circ $ . Does this mean that in the quaternion, multiplied by $ i $ is rotated around the $ i $ axis by $ 90 ^ \circ $ ? So, does $ ij = k $ mean, first rotating around the $ i $ by $ 90 ^ \circ $ , then around $j$ by $ 90 ^ \circ $ , is equivalent to rotating around $ k$ by $ 90 ^ \circ $ ? Readers can use a cell phone to simulate that, then you will find that this is not the case. The correct situation should be that multiplying $ i $ corresponds to rotating $ 180 ^ \circ $ , in order to guarantee the nature of $ ij=k $ . And $ i^ 2 =- 1 $ means that after rotating $ 360 ^ \circ $ around the $ i $ axis, we get an opposite thing. This thing has to be rotated for 720 $^\circ$ to be equal to its original appearance.
+
+This seems a bit mysterious, the complete explanation needs too much extra things, let's calm down and come back to the quaternions. At least, we know that a unit quaternion can express the rotation of a three-dimensional space. So what are the properties of the quaternions? And how can they operate with each other?
+
+\subsection{Quaternion Operations}
+
+Quaternions are very similar to complex numbers, and a series of operations can be performed. We can easily plus, minus, multiplies to quaternions just like doing with two complex numbers. Assume there are two quaternions $ \mathbf{q}_a, \mathbf{q}_b $ , whose vectors are represented as $ [s_a, \mathbf {v}_a]^ \mathrm {T}, [s_b, \mathbf{v}_b]^ \mathrm {T} $ , or the original quaternion is expressed as:
+\[
+\mathbf{q} _a = s_a + x_ai + y_a + z_ak, \quad  \mathbf {q} _b = s_b + x_bi + y_bj + z_bk.
+\]
+Then, their operations can be expressed as follows.
+
+\begin{enumerate}
+    \item { \emph {Addition and Subtraction}.} The addition and subtraction of the quaternion $ \mathbf {q}_a, \mathbf {q}_b $ is:
+    \begin{equation} 	
+    \mathbf{q}_a \pm \mathbf{q}_b = \left[ s_a \pm s_b, \mathbf{v}_a \pm \mathbf{v}_b \right]^\mathrm{T}.
+    \end{equation}
+    \item { \emph {Multiplication}}. Multiplication is the multiplication of each item of $ \mathbf {q}_a $ with each item of $ \mathbf {q}_b $ , and finally, the imaginary part is done according to the formula \eqref {eq:quaternionVirtual}:
+    \begin{equation}
+    \begin{aligned}
+    \mathbf{q}_a \mathbf{q}_b &= {s_a}{s_b} - {x_a}{x_b} - {y_a}{y_b} - {z_a}{z_b}\\
+    &+ \left( {{s_a}{x_b} + {x_a}{s_b} + {y_a}{z_b} - {z_a}{y_b}} \right)i\\
+    &+ \left( {{s_a}{y_b} - {x_a}{z_b} + {y_a}{s_b} + {z_a}{x_b}} \right)j\\
+    &+ \left( {{s_a}{z_b} + {x_a}{y_b} - {y_a}{x_b} + {z_a}{s_b}} \right)k.
+    \end{aligned}
+    \end{equation}
+    Although a little complicated, the form is neat and orderly. If written in vector form and using inner and outer product operations, the expression will be more concise:
+    \begin{equation}
+    \mathbf{q}_a \mathbf{q}_b = \left[ s_a s_b - \mathbf{v}_a^\mathrm{T} \mathbf{v}_b, s_a\mathbf{v}_b + s_b\mathbf{v}_a + \mathbf{v}_a \times \mathbf{v}_b \right]^\mathrm{T}.
+    \end{equation}
+    Under this multiplication definition, the product of two real quaternion is still real, which is also consistent with the real number multiplication. However, note that due to the existence of the last outer product, quaternion multiplication is usually not commutative unless $ \mathbf {v}_a $ and $ \mathbf {v}_b $ at $ \mathbb {R}^ 3 $ are parallel which means the outer product term is zero.
+    
+    \item { \emph {Length}. } The length of a quaternion is defined as:
+    \begin{equation}
+    \| \mathbf{q}_a \| = \sqrt{ s_a^2 + x_a^2 + y_a^2 + z_a^2 }.
+    \end{equation}
+    It can be verified that the length of the product is the product of the length. This makes the unit quaternion keep unit length when multiplied by another unit quaternion:
+    \begin{equation}
+    \| \mathbf{q}_a \mathbf{q}_b \| = \|\mathbf{q}_a \| \| \mathbf{q}_b \|.
+    \end{equation}
+    
+    \item { \emph {Conjugate}}. The conjugate of a quaternion is to take the imaginary part as the opposite:
+    \begin{equation}
+    \mathbf{q}_a ^ * = s_a - x_ai - y_aj - z_ak = [s_a, - \mathbf{v}_a] ^ \mathrm{T}.
+    \end{equation}
+    We get a real quaternion if the quaternion is multiplied by its conjugate. The real part is the square of its length:
+    \begin{equation}
+    \mathbf{q}^* \mathbf{q} = \mathbf{q} \mathbf{q}^* = [s_a^2+\mathbf{v}^\mathrm{T} \mathbf{v}, \mathbf{0} ]^\mathrm{T}.
+    \end{equation}
+    
+    \item { \emph{Inverse}}. The inverse of a quaternion is:
+    \begin{equation}
+    \label{eq:quaternionInverse}
+    \mathbf{q} ^ { - 1 } = \mathbf{q} ^ * / \| \mathbf{q} \| ^ 2 .       
+    \end{equation}
+    According to this definition, the product of the quaternion and its inverse is the real quaternion $ \mathbf {1} $ :
+    \begin{equation}
+    \mathbf{q} \mathbf{q}^{-1} = \mathbf{q}^{-1} \mathbf{q} = \mathbf{1}.
+    \end{equation}
+    
+    If $ \mathbf{q} $ is a unit quaternion, its inverse and conjugate are the same. So the inverse of the product has properties similar to matrices:
+    \begin{equation}
+    \left( \mathbf{q}_a \mathbf{q}_b \right)^{-1} = \mathbf{q}_b^{-1} \mathbf{q}_a^{-1}.
+    \end{equation}
+    
+    \item { \emph {Scalar Multiplication}.} Similar to vectors, quaternions can be multiplied by numbers:
+    \begin{equation}
+    k \mathbf{q} = \left[ ks, k\mathbf{v} \right]^\mathrm{T}.
+    \end{equation}
+\end{enumerate}
+
+\subsection{Use Quaternion to Represent Rotation}
+
+We can use a quaternion to express the rotation of a point. Suppose a spatial 3D point $ \bm{p} = [x,y,z]^\mathrm{T} \in  \mathbb {R}^3$, and a rotation is specified by a unit quaternion $ \bm{q}$. The 3D point $\bm{p}$ is rotated to become $\bm{p}'$ . If we use matrix, then there is $ \bm{p}'= \bm{R} \bm{p} $ . And if we use quaternion to describe rotation, how do we operate a 3D vector with a quaternion? 
+
+First, we use extends the 3D point to a imaginary quaternion:
+\[
+\bm{p} = [0, x, y, z]^\mathrm{T} = [0, \bm{v}]^\mathrm{T}. 
+\]
+We just put the three coordinates into the imaginary part and leave the real part to zero. Then, the rotated point $ \bm {p}' $ can be expressed as such a product:
+
+\begin{equation}\label{eq:rotate-with-quaternion}
+\bm{p}' = \bm{q} \bm{p} \bm{q}^{-1}.
+\end{equation}
+
+The multiplication here is quaternion multiplication, and the result is also a quaternion. Finally, we take the imaginary part of $ \bm{p}' $ and get the coordinates of the point after the rotation. It can be easily verified (we leave as an exercise here) that the real part of the calculation is 0, so it is a pure imaginary quaternion.
+
