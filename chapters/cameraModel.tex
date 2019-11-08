@@ -19,7 +19,7 @@ We can see a lot of photos in real life. In a computer, a photo consists of mill
 \section{Pin-hole Camera Models}
 The process of projecting a 3D point (in meters) to a 2D image plane (in pixels) can be described by a geometric model. Actually there are several models to describe this, the simplest of which is called the \textbf{pinhole model}. We will start from this pin-hole projection. At the same time, due to the presence of the lens on the camera lens, \textbf{distortion} is generated during the projection. Therefore, we are going to use the pin-hold model plus with a distortion model to describe the entire projection process.
 
-\subsection{pinhole camera model}
+\subsection{Pinhole Camera Geometry}
 Most of us have seen the candle projection experiment in the physics class of high school: a lit candle is placed in front of a dark box, and the light of the candle is projected through a small hole in the dark box on the rear plane of the black box. Then an inverted candle image is formed on this plane. In this process, the small hole is able to project a candle in a three-dimensional world onto a two-dimensional imaging plane. For the same reason, we can use this simple model to explain the imaging process of the camera, as shown in \autoref{fig:cameraModel}.
 
 \begin{figure}[!ht]
@@ -53,3 +53,129 @@ X' = f\frac{X}{Z}\\
 Y' = f\frac{Y}{Z}
 \end{array}.
 \end{equation}
+
+Readers may ask why can we seem to arbitrarily move the imaging plane to the front? In fact this is just a mathematical approach to handle the camera projection, and most of the images captured by the camera are not upside-down - the camera's software will flip the image for you, so what we actually get is the image on the symmetric plane. So, although from the physical principle, the pin-hold image should be inverted, but since we have pre-processed the image, it is not bad to take the symmetric one. Therefore, without causing ambiguity, we often emit the minus symbol in the pinhole model.
+
+The formula \eqref{eq:P2Pprime} describes the spatial relationship between the point $P$ and its image, where the units of all points are meters,  for example, a focal length may be 0.2 meters and $X'$ be 0.14 meters. However, in the camera, we end up with pixels, where we need to sample and quantize the pixels on the imaging plane. In order to describe the process by which the sensor converts the perceived light into image pixels, we set a pixel plane $o-u-v$ fixed on the physical imaging plane. Finally we get \textbf{pixel coordinates} of $P'$ in the pixel plane: $[u,v]^\mathrm{T}$.
+
+The usual definition ot the \textbf{pixel coordinate system}\footnote{ Or image coordinate system, see section 2 of this lecture. } is : the origin $o'$ is in the upper left corner of the image, the $u$ axis is parallel to the $x$ axis, and the $v$ axis is parallel to the $y$ axis. Between the pixel coordinate system and the imaging plane, there is an obvious \textbf{zoom} and a \textbf{translation of the origin}. We set the pixel coordinates to scale $\alpha$ times on the $u$ axis and $\beta$ times on $v$. At the same time, the origin is translated by $[c_x, c_y]^\mathrm{T}$. Then, the relationship between the coordinates of $P'$ and the pixel coordinate $[u,v]^\mathrm{T}$ is:
+\begin{equation}
+\label{eq:project2pixel1} 
+\left\{
+\begin{matrix} 
+u=\alpha X' + c_x\\ 
+v=\beta Y' + c_y
+\end{matrix}
+\right. .
+\end{equation}
+
+Put it into \eqref{eq:P2Pprime} and set $\alpha f$ as $f_x$, $\beta f$ as $f_y$:
+\begin{equation}
+\left\{
+\begin{matrix} 
+u=f_x\frac{X}{Z} + c_x\\ 
+v=f_y\frac{Y}{Z} + c_y
+\end{matrix}
+\right. ,
+\end{equation}
+where $f$ is the focal length in meters, $\alpha, and \beta$ is in pixels/meter, so $f_x, f_y$ and $c_x, c_y$ are in pixels. It would be more compact to write this form as a matrix, but we need to use homogeneous coordinates on the left and non-homogeneous coordinates on the right:
+\begin{equation}
+\label{eq:intrinmatrix} 
+\begin{pmatrix} u\\ v\\ 1 \end{pmatrix}=\frac{1}{Z}\begin{pmatrix} f_x & 0&c_x \\ 0& f_y& c_y\\ 0&0 & 1 \end{pmatrix}\begin{pmatrix} X\\ Y\\ Z \end{pmatrix} 
+\buildrel \Delta \over =\frac{1}{Z} \mathbf{K} \mathbf{P}.
+\end{equation}
+
+Let put $Z$ to the left side as in most books:
+\begin{equation}
+Z \begin{pmatrix} u\\ v\\ 1 \end{pmatrix}= \begin{pmatrix} f_x & 0&c_x \\ 0& f_y& c_y\\ 0&0 & 1 \end{pmatrix}\begin{pmatrix} X\\ Y\\ Z \end{pmatrix} 
+\buildrel \Delta \over = \mathbf{K} \mathbf{P}.
+\end{equation}
+
+In this equation, we refer to the matrix composed of the middle quantities as the camera's \textbf{inner parameter matrix} (o Intrinsics)$\mathbf{K}$. It is generally believed that the internal parameters of the camera are fixed after manufacturing and will not change during usage. Some camera manufacturers will tell you the internal parameters of the camera, and sometimes you need to estimate the internal parameters by yourself, which is called \textbf{calibration}. In view of the maturity of the calibration algorithm (such as the famous Zhang Zhengyou's calibration \textsuperscript{\cite{Zhang1999}}), it will not be introduced here \footnote{I'm sure professor Zhang has a copy of this book now.}. 
+
+There are internal parameters, and naturally there must be something like ``external parameters''. In the equation ~\eqref{eq:intrinmatrix}~, we use the coordinates of $P$ in the camera coordinate system, but in fact the  coordinates of $P$ should be its world coordinates because the camera is moving (we use symbol $\mathbf{P}_w$). It should be converted to the camera coordinate system based on the current pose of the camera. The pose of the camera is described by its rotation matrix $\mathbf{R}$ and the translation vector $\mathbf{t}$. Then there are:
+
+\begin{equation}
+\label{eq:cameraprojection}
+Z \mathbf{P}_{uv}=
+Z \left[ \begin{array}{l}
+u\\
+v\\
+1
+\end{array} \right] = \mathbf{K} \left( {\mathbf{R}{ \mathbf{P}_w} + \mathbf{t}} \right) =  \mathbf{K} \mathbf{T} \mathbf{P}_w .
+\end{equation}
+
+Note that the latter formula implies a conversion from homogeneous to non-homogeneous coordinates (can you see it?)\footnote{We use homogeneous coordinates in $\mathbf{T}\mathbf{P}$ , then convert to non-homogeneous coordinates, and then multiply it by $\mathbf{K}$. }. It describes the projection relationship of world coordinates to pixel coordinates of $P$. Among them, the camera's pose $\mathbf{R}, \mathbf{t}$ is also called the camera's \textbf{extrinsics} \footnote{In robots or autonomous vehicles, the extrinsics is sometimes explained the transform between the camera coordinate system and the robot body coordinate system, describing ``where the camera is installed''. }. Compared with the intrinsics, the extrinsics may change with the camera installation, and is also the target to be estimated in the SLAM if we only have a camera.
+
+The projection process can also be viewed from another perspective. The formula \eqref{eq:cameraprojection} shows that we can convert a world coordinate point to the camera coordinate system first, and then remove the value of its last dimension (that is, the depth of the point from the imaging plane of the camera), which is equivalent to the \textbf{normalization} on the last dimension. By this way we get the projection of the point $P$ on the camera \textbf{normalized plane}:
+\begin{equation}
+\left( {\mathbf{R}{\mathbf{P}_w} + \mathbf{t}} \right) = \underbrace{\left[ X,Y,Z\right]^\mathrm{T}}_{\text{Camera Coordinates}} \to \underbrace {\left[ {X/Z,Y/Z,1} \right]^\mathrm{T}}_{\text{Normalized Coordinates}}.
+\end{equation}
+
+The \textbf{normalized coordinates} can be seen as a point in the $z=1$ plane in front of the camera\footnote{Note that in the actual calculation, it is necessary to check whether $Z$ is positive, because the negative $Z$ can also get a point on the normalized plane by this method. However, the camera does not capture the scene behind the imaging plane. }.This $z=1$ plane is also called \textbf{normalized plane}. We normalize the coordinates and then multiply it with the intrinsic matrix, yielding the pixel coordinates, so we can also consider the pixel coordinates $[u,v]^\mathrm{T}$ as the result of quantitative measurements on points on the normalized plane. It can also be seen from this model that if the camera coordinates are multiplied by any non-zero constant at the same time, the normalized coordinates are the same, which means that the \textbf{depth is lost during the projection process}, so in monocular vision the depth value of the pixel cannot be obtained by a single image.
+
+\subsection{Distortion}
+In order to get a larger FoV (Field-of-View), we normally add a lens in front of the camera. The addition of the lens has an influence on the propagation of light during imaging: (1) the shape of lens may affect the propagation way of light, (2) during the mechanical assembly, the lens and the imaging plane are not completely parallel, which also makes the projected position change.
+
+There are some mathematical models to describe the \textbf{distortion} caused by the shape of the lens. In the pinhole model, a straight line keeps straight when projected onto the pixel plane. However, in real photos, the lens of the camera tends to make a straight line in the real environment become a curve \footnote{Yes, it is no longer straight, but becomes curved. If it makes an inside curve, it is called barrel-like distortion; otherwise if the curve looks outward, it is cushion-like distortion. }. The closer to the edge of the image, the more obvious this phenomenon is. Since the lenses actually produced are often center-symmetrical, this makes the irregular distortion generally radially symmetrical. They fall into two main categories: \textbf{barrel-like distortion} and \textbf{cushion-like distortion}, as shown by \autoref{fig:distortion}.
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.7\textwidth]{cameraModel/distortion.pdf}
+	\caption{The radical distortion.}
+	\label{fig:distortion}
+\end{figure}
+
+In barrel distortion the radius of pixels decreases as the distance from the optical axis increases, while the cushion distortion is just the opposite. In both distortions, the line that intersects the intersection of the center of the image and the optical axis remains the same.
+
+In addition to the shape of the lens, which introduces radial distortion, \textbf{tangential distortion} is introduced in during assembly of the camera because the lens and the imaging surface cannot be strictly parallel, as shown by \autoref{fig:tangen}.
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.7\textwidth]{cameraModel/tangen.pdf}
+	\caption{Tangential distortion.}
+	\label{fig:tangen}
+\end{figure}
+
+To better understand radial and tangential distortion, we describe them in more rigorous mathematical form. Consider any point on the \textbf{normalized plane}, $\mathbf{p}$, whose coordinates are $[x,y]^\mathrm{T}$, or $[r, \theta]^\mathrm{T}$ in the form of polar coordinates, where $r$ represents the distance between the point $\mathbf{p}$ and the origin of the coordinate system, and $\theta$ represents the angle to the horizontal axis. Radial distortion can be seen as a change in the coordinate point along the length, that is, its radius from the origin. Tangential distortion can be seen as a change in the coordinate point along the tangential direction, that is, the horizontal angle has changed. It is generally assumed that these distortions are polynomial, namely:
+\begin{equation}
+\label{eq:distortion} 
+\begin{matrix}
+x_\mathrm{distorted} = x(1+k_1r^2+k_2r^4+k_3r^6)\\
+y_\mathrm{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)
+\end{matrix},
+\end{equation}
+where $[x_\mathrm{distorted}, y_\mathrm{distorted}]^\mathrm{T}$ is the \textbf{normalized coordinates} of the point after distortion. On the other hand, for \textbf{tangential distortion}, we can use the other two parameters $p_1,p_2$ to describe it:
+\begin{equation}
+\label{eq:tangen} 
+\begin{matrix}
+x_\mathrm{distorted} = x+2p_1xy+p_2(r^2+2x^2)\\
+y_\mathrm{distorted} = y+p_1(r^2+2y^2)+2p_2xy
+\end{matrix}. 
+\end{equation}
+Put \eqref{eq:distortion} and \eqref{eq:tangen} together we get a joint model with 5 distortion coefficients. The complete form is:
+\begin{equation}
+\left\{\begin{matrix} x_\mathrm{distorted} =x(1+k_1r^2+k_2r^4+k_3r^6)+2p_1xy+p_2(r^2+2x^2)\\ 
+y_\mathrm{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)+p_1(r^2+2y^2)+2p_2xy
+\end{matrix}\right. .
+\end{equation}
+
+In the above process of correcting distortion, we used 5 distortion coefficients. In practical applications, you can flexibly choose to number of parameters, for example, only selecting $k_1, p_1, p_2$, or use $k_1, k_2, p_1, p_2$, etc.
+
+In this section, we modeled the camera's imaging process using a pinhole model and described the radial and tangential distortions caused by the lens. In the actual image system, researchers have proposed many other models, such as the affine model and perspective model, and there are many other types of distortion. In most of the visual SLAM systems, pinhole models and rad-tan distortion models are sufficient, so we will not describe other one.
+
+It is worth mentioning that there are two ways of undistortion (or correction). We can choose to undistort the entire image first, get the corrected image, and then discuss the spatial position of the points on the image. Alternatively, we can also discuss some feature points in the distorted image, and find its real position through the distortion equation. Both are feasible, but the former seems to be more common in visual SLAM. Therefore, when an image is undistorted, we can directly establish a projection relationship with the pinhole model without considering distortion. Therefore, in the discussion that follows, we can directly assume that the image has been undistorted.
+
+Finally, let's summarize the imaging process of a monocular camera:
+
+\begin{enumerate}
+	\item First, there is a point $P$ in the world coordinate system, and its world coordinates are $\mathbf{P}_w$.
+	\item Since the camera is moving, its motion is described by $\mathbf{R}, \mathbf{t}$ or  transform matrix $\mathbf{T} \in \mathrm{SE}(3)$. The camera coordinates for $P$ are $\mathbf{\tilde{P}}_c = \mathbf{R} \mathbf{P}_w + \mathbf{t}$.
+	\item The $\mathbf{\tilde{P}}_c$ component is $X,Y,Z$, and they are projected onto the normalized plane $Z=1$ to get the normalized coordinates: $\mathbf{P}_c = [X/Z, Y/Z, 1]^\mathrm{T}$\footnote{Note that $Z$ may be less than 1, indicating that the point is behind the normalization plane and it should not be projected on the camera plane.}.
+	\item If the image is distorted, the coordinates of $\mathbf{P}_c$ after distortion are calculated according to the distortion parameters.
+	\item Finally, the distorted coordinates of $P$ pass through the intrinsics and we find its pixel coordinates: $\mathbf{P}_{uv} = \mathbf{K} \mathbf{P}_c$.
+\end{enumerate}
+
+In summary, we have talked about four coordinates: the world coordinates, the camera coordinates, the normalized coordinates, and the pixel coordinates. Readers should clarify their relationship, which reflects the entire imaging process and will be used in future.
+
+
+
