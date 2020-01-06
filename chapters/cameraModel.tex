@@ -177,5 +177,59 @@ Finally, let's summarize the imaging process of a monocular camera:
 
 In summary, we have talked about four coordinates: the world coordinates, the camera coordinates, the normalized coordinates, and the pixel coordinates. Readers should clarify their relationship, which reflects the entire imaging process and will be used in future.
 
+\subsection{Stereo Cameras}
+The pinhole camera model describes the imaging model of a single camera. However, we cannot determine the specific location of a spatial point on by a single pixel. This is because all points on the line from the camera's optical center to the normalized plane can be projected onto that pixel. Only when the depth of $P$ is determined (such as through a binocular or RGB-D camera) can we know exactly its spatial location, as shown in \autoref {fig:pixelLocation}~.
 
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cameraModel/pixelLocation.pdf}
+    \caption{The possible location of a single pixel.}
+    \label{fig:pixelLocation}
+\end{figure}
+
+There are many ways to measure the pixel distance (or depth). For example, the human eye can judge the distance of the object according to the difference (or parallax) of the scene seen by the left and right eyes. The principle of the binocular camera is also the same: by simultaneously acquiring the images of the left and right cameras, and calculating the parallax/disparity between the images, the depth of each pixel is estimated. In the following paragraph we  briefly describe the imaging principle of the stereo camera (as shown in \autoref{fig:stereoCamera}~).
+
+A binocular camera is generally composed of a left-eye camera and a right-eye camera. Of course, it can also be made up and down, but the mainstream binoculars we've seen are all left and right. In left and right cameras are often regarded as simple pin-hole cameras. They are synchrozied and placed horizontally, meaning that the centers of both cameras are on the same $x$ axis. The distance between the two centers is called \textbf {baseline} (denoted as $b$), which is an important parameter.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cameraModel/stereoCamera.pdf}
+    \caption{Geometry model of stereo cameras from upside down. The $O_L,O_R$ are left and right optical centers. $f$ is the focal length, $u_L$ and $u_R$ are pixel corrdinates of a same point along $x$ axis. Note that $u_R$ should be a negative value in this figure, so the pysical distance should be $-u_R$.}
+    \label{fig:stereoCamera}
+\end{figure}
+
+Now consider a 3D point $P$, which is projected into the left-eye and the right-eye, written as $P_L, P_R$. Due to the presence of the camera baseline, these two imaging positions are different. Ideally, since the left and right cameras are only shifted on the $x$ axis, the image of $P$ also differs only on the $x$ axis (corresponding to the $u$ axis of the image). Take the left pixel coordinate as $u_L$ and the right coordinate as $u_R$. The geometric relationship is shown on the right of \autoref{fig:stereoCamera}. According to the similarity relationship between $ \triangle P P_L P_R$ and $\triangle P O_L O_R$, there are:
+
+\begin{equation}
+\frac{{z - f}}{z} = \frac{{b - {u_L} + {u_R}}}{b}.
+\end{equation}
+
+Rearrangle it and we have:
+\begin{equation}
+z = \frac{{fb}}{d}, \quad d \buildrel \Delta \over = {u_L} - {u_R},
+\end{equation}
+where $d$ is defined as the difference between the horizontal coordinates of the left and right figures, and is called \textbf{disparity} or \textbf{parallax}. Based on parallax, we can estimate the distance between a pixel and the camera. Parallax is inversely proportional to distance: the larger the parallax is, the closer the distance is \footnote {Readers can simulate it with your own eyes.}. At the same time, since the parallax is at least one pixel, there is a theoretical maximum value for the binocular depth, which is determined by $fb$. We see that the in order to see the far away things, we need a larger stereo camera; conversely, small binocular devices can only measure very close distances. By analogy, when the human eye looks at a very distant object (such as a very distant airplane), it is usually impossible to accurately determine its distance.
+
+Although the formula for calculating the depth from parallax is simple, the calculation of parallax $d$ itself is more difficult. We need to know exactly where a pixel of the left-eye image appears in the right-eye image (that is, the corresponding relationship). This also belongs to the kind of task that is ``easy for humans but difficult for computers''. When we want to calculate the depth of each pixel in an image, the calculation amount and accuracy will become a problem, and the parallax can be calculated only in the place where the image texture is rich. Due to the amount of calculation, binocular depth estimation still needs to use GPU or FPGA to make the distance calculation run in real time. This will be mentioned in lecture 13.
+
+\subsection{RGB-D Cameras}
+Compared to the binocular camera's way of calculating depth, the RGB-D camera's approach is more ``active'': it can actively measure the depth of each pixel. The current RGB-D cameras can be divided into two categories according to their principle (see \autoref {fig:RGBDCamera} ~):
+
+\begin{enumerate}
+\item The first kind of RGB-D sensor uses \textbf{Infrared Structured Light} (Structured Light) to measure pixel distance. Many of the old RGB-D sensors are belong to this kind, for example, the Kinect 1st generation, Project Tango 1st generation, Intel RealSense, etc.
+\item The second kind measures pixel distance using the \textbf{Time-of-flight (ToF)}. Examples are Kinect 2 and some existing ToF sensors.
+\end{enumerate}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cameraModel/rgbdCamera.pdf}
+    \caption{RGB-D Cameras}
+    \label{fig:RGBDCamera}
+\end{figure}
+
+Regardless of the type, the RGB-D camera needs to emit a beam of light (usually infrared light) to the target object. In the principle of structured light, the camera calculates the distance between the object and itself based on the returned structured light pattern. In the ToF principle, the camera emits light pulse to the target, and then determines the distance according to the time of flight of the beam. The ToF principle is very similar to the laser sensor, except that the laser obtains the distance by scanning point by point (or line by line), and the ToF camera can obtain the pixel depth of the entire image, which is also the characteristics of the RGB-D camera. So, if you take apart an RGB-D camera, you will usually find that there will be at least one transmitter and one receiver in addition to the ordinary camera.
+
+After measuring the depth, the RGB-D camera usually completes the pairing between the depth and color map pixels according to the position of each camera at the time of production, and outputs a pixel-to-pixel corresponding color image and depth image. We can read the color information and distance information at the same image position, calculate the 3D camera coordinates of the pixels, and generate a point cloud. RGB-D data can be processed either at the image level or the point cloud level. The second experiment of this lecture will demonstrate the point cloud construction of RGB-D cameras.
+
+The RGB-D camera can measure the distance of each pixel in real time. However, due to this measurement of transmitting and receiving, its range of use is limited. RGB-D cameras that use infrared light for depth measurement are susceptible to interference from infrared light emitted by daylight or other sensors, so they cannot be used outdoors. Without modulation, multiple RGB-D cameras can interfere with each other. For transmissive objects, the position of these points cannot be measured because they cannot receive reflected light. In addition, RGB-D cameras have some disadvantages in terms of cost and power consumption.
 
