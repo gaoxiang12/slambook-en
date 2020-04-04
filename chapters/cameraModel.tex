@@ -233,3 +233,62 @@ After measuring the depth, the RGB-D camera usually completes the pairing betwee
 
 The RGB-D camera can measure the distance of each pixel in real time. However, due to this measurement of transmitting and receiving, its range of use is limited. RGB-D cameras that use infrared light for depth measurement are susceptible to interference from infrared light emitted by daylight or other sensors, so they cannot be used outdoors. Without modulation, multiple RGB-D cameras can interfere with each other. For transmissive objects, the position of these points cannot be measured because they cannot receive reflected light. In addition, RGB-D cameras have some disadvantages in terms of cost and power consumption.
 
+\section{Images}
+Cameras and lens convert the information in the three-dimensional world into a photo composed of pixels, which is then stored in the computer as a data source for subsequent processing. In mathematics, images can be described by a matrix; in computers, they occupy a continuous disk or memory space, which can be represented by a two-dimensional array. In this way, the program does not have to distinguish whether they are dealing with a numerical matrix or a meaningful image.
+
+In this section, we will introduce some basic operations of computer image processing. In particular, we are going to introduce the basic steps of processing images with OpenCV, and lay the foundation for subsequent chapters. Let's start with the simplest case, the grayscale image. In a grayscale image, each pixel position $ (x, y) $ corresponds to a grayscale value of $ I $. Therefore, an image with a width of $ w $ and a height of $ h $ can be mathematically written as a function:
+\[
+(I) (x, y): \mathbb {R} ^ 2 \mapsto \mathbb {R},
+\]
+where $ (x, y) $ is the coordinate of the pixel. However, computers cannot express real space, so we need to quantify the subscripts and image readings within a certain range. For example, $ x, y $ are usually integers starting with 0 to $w-1, h-1$. In common grayscale images, an integer of $0 \textasciitilde 255$ (that is, an unsigned char in C++, 1 byte) is used to express the grayscale reading of the image. Then, a grayscale image with a width of 640 pixels and a height of 480 pixels can be expressed as:
+\begin{lstlisting}[language=C++, caption=Use 2D array to express an image]
+unsigned char image[480][640];
+\end{lstlisting}
+
+Why does the two-dimensional array here has the size of 480 $ \times $ 640? Because in the program, the first index of 2D array is the row, and the second index is the column. In an image, the number of rows (or the $y$ axis) in the array corresponds to the height of the image, and the number of columns (or the $x$ axis) corresponds to the width of the image.
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.84\textwidth]{cameraModel/image.pdf}
+    \caption{Pixels in an image.}
+    \label{fig:imagesInComputer}
+\end{figure}
+
+Let's examine the content of this image. Images are naturally made up of pixels. When accessing a certain pixel, you need to specify its coordinates, as shown in \autoref{fig:imagesInComputer}~. The left side of the figure shows how the traditional pixel coordinate system is defined. The origin is in the upper left corner of the image, $X$ axis is from left to right, and $Y$ is top-down. If it has a third axis, the $ Z $ axis, then according to the right-hand rule, the $ Z $ axis should be from outside to inside (or front in 3D space). This definition is consistent with the camera coordinate system. The width or number of columns of an image corresponds to the $ X $ axis; the number of rows, or the height of an image corresponds to its $ Y $ axis.
+
+According to this definition, if we discuss a pixel located at $x,y$, then the code of accessing its memory in computer should be:
+\begin{lstlisting}[language = C++, caption = Accessing image pixels]
+unsigned char pixel = image[y][x];
+\end{lstlisting}
+
+It corresponds to the reading of the gray value $ I(x,y) $. Please note the order of $ x $ and $ y $ here. Although we tirelessly discuss the problem of coordinate systems, errors like this index sequence will still be one of the most common errors encountered by novices during debugging. If you accidentally change the coordinates of $ x, y $ when writing a program, the compiler cannot provide any useful information, and all you can see is an segment fault in runtime.
+
+The gray scale of a pixel can be recorded as an 8-bit unsigned integer, which is a value of 0\textasciitilde 255. If we have more information to record, one byte is probably not enough. For example, in the depth map of an RGB-D camera, the distance between each pixel is recorded. This distance is usually measured in millimeters, and the range of RGB-D cameras is usually around a dozen meters, exceeding 255. At this time, people will use 16-bit integers (unsigned short in C++) to record the depth map information, that is, the value at 0\textasciitilde 65535. When converted to meters, it can represent up to 65 meters, which is enough for RGB-D cameras.
+
+The representation of a color image requires the concept of a channel. In computers, we use a combination of three colors: red, green, and blue to express any color. Therefore, for each pixel, three values ​​of R, G, and B are recorded, and each value is called a channel. For example, the most common color image has three channels, each of which is represented by an 8-bit integer. Under this rule, one pixel occupies 24-bit space.
+
+The number and order of channels can be freely defined. In OpenCV color images, the default order of channels is B, G, R. That is, when we get a 24-bit pixel, the first 8 bits represent the blue value, the middle 8 bits represent the green value, and the last 8 bits represent the red value. In the same way, the order of R, G, and B can also be used to represent a color image. If you want to express the transparency of the image, use R, G, B, A four channels.
+
+\section{Practice: Images in Computer Vision}
+\subsection{Basic Usage of OpenCV}
+The following is a demo program to understand how to access the image in OpenCV, and how to visit its pixels.
+
+\subsubsection{Install OpenCV}
+OpenCV \footnote {Official homepage: \url{http://opencv.org}. } provides a large number of open source image algorithms, and is a very widely used image processing algorithm library in computer vision. This book also uses OpenCV for basic image processing. Before using, readers must install it from library or from source code. Under Ubuntu, there are two options: \textbf{install from source code} or \textbf {only install binary library files}:
+
+\begin{enumerate}
+\item Install from source means to download all OpenCV source code from the OpenCV website, compile and install on the machine for usage. The advantage is that you can freely choose which version to install, and the source code is accessible, but it takes some compilation time.
+\item Or, we can only installs the binary library file, which means it was pre-compiled by the Ubuntu community, so that there is no need to recompile it.
+\end{enumerate}
+
+Since we use a newer version of OpenCV, we must install it from the source code. First, you can adjust some compilation options to match the programming environment (for example, whether you need GPU acceleration, etc.); furthermore, from the source code installation we can use some additional functions. OpenCV currently maintains two major versions, divided into OpenCV 2.4 series and OpenCV 3 series \footnote{In 2020 we can also use version 4.0 or higher.}. This book uses the OpenCV \textbf {3} series.
+
+Because the OpenCV project is relatively large, it will not be placed under 3rdparty in this book. Readers can download it from ~ \url{http://opencv.org/downloads.html}~ and select the OpenCV for Linux version. You will get a compressed package like opencv-3.1.0.zip. Unzip it to any directory, we found that OpenCV is also a cmake project.
+
+Before compiling, first install the dependencies of OpenCV:
+\begin{lstlisting}[language=sh, caption=Terminal input:]
+sudo apt-get install build-essential libgtk2.0-dev libvtk5-dev libjpeg-dev libtiff4-dev libjasper-dev libopenexr-dev libtbb-dev
+\end{lstlisting}
+
+In fact, OpenCV has many dependencies, and the lack of certain compilation items will affect some of its functions (but we will not use all the functions). OpenCV will check whether the dependencies will be installed during cmake and adjust its own functions. If you have a GPU on your computer and the relevant dependencies are installed, OpenCV will also enable GPU acceleration. But for this book, the above dependencies are sufficient.
+
+Subsequent compilation and installation are the same as ordinary cmake projects. After make, please call ``sudo make install'' to install OpenCV on your machine (instead of just compiling it). Depending on the machine configuration, this compilation process may take from 20 minutes to an hour. If your CPU is strong, you can use commands like "make -j4" to call multiple threads to compile (the parameter after -j is the number of threads used). After installation, OpenCV is stored in the /usr/local directory by default. You can look for the installation location of OpenCV header files and library files to see where they are. In addition, if you have installed the OpenCV 2 series before, it is recommended that you install OpenCV 3 elsewhere (think about how this should be done).
