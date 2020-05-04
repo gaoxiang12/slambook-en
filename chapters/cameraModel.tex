@@ -292,3 +292,325 @@ sudo apt-get install build-essential libgtk2.0-dev libvtk5-dev libjpeg-dev libti
 In fact, OpenCV has many dependencies, and the lack of certain compilation items will affect some of its functions (but we will not use all the functions). OpenCV will check whether the dependencies will be installed during cmake and adjust its own functions. If you have a GPU on your computer and the relevant dependencies are installed, OpenCV will also enable GPU acceleration. But for this book, the above dependencies are sufficient.
 
 Subsequent compilation and installation are the same as ordinary cmake projects. After make, please call ``sudo make install'' to install OpenCV on your machine (instead of just compiling it). Depending on the machine configuration, this compilation process may take from 20 minutes to an hour. If your CPU is strong, you can use commands like "make -j4" to call multiple threads to compile (the parameter after -j is the number of threads used). After installation, OpenCV is stored in the /usr/local directory by default. You can look for the installation location of OpenCV header files and library files to see where they are. In addition, if you have installed the OpenCV 2 series before, it is recommended that you install OpenCV 3 elsewhere (think about how this should be done).
+
+\subsection{Basic OpenCV Images Operations}
+Now let's go through the basic image operations in OpenCV from a simple example.
+
+\begin{lstlisting}[language=C++,caption=slambook/ch5/imageBasics/imageBasics.cpp]
+#include <iostream>
+#include <chrono>
+
+using namespace std;
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+int main(int argc, char **argv) {
+    // Read the image in argv[1]
+    cv::Mat image;
+    image = cv::imread(argv[1]); // call cv::imread to read the image from file
+    
+    // check the data is correctly loaded
+    if (image.data == nullptr) { // maybe the file does not exist
+        cerr << "file" << argv[1] << " not exist." << endl;
+        return 0;
+    }
+    
+    // print some basic information
+    cout << "Image cols: " << image.cols << ", rows: " << image.rows 
+    << ", channels: " << image.channels() << endl;
+    cv::imshow("image", image);      // use cv::imshow to show the image
+    cv::waitKey(0);                  // display and wait for a keyboard input
+    
+    // check image type
+    if (image.type() != CV_8UC1 && image.type() != CV_8UC3) {
+        // we need grayscale image or RGB image
+        cout << "image type incorrect." << endl;
+        return 0;
+    }
+    
+    // check hte pixels
+    chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+    for (size_t y = 0; y < image.rows; y++) {
+        // use cv::Mat::ptr to get the pointer of each row
+        unsigned char *row_ptr = image.ptr<unsigned char>(y);  // row_ptr is the pointer to y-th row
+        for (size_t x = 0; x < image.cols; x++) {
+            // read the pixel on (x,y), x=column, y=row
+            unsigned char *data_ptr = &row_ptr[x * image.channels()]; // data_ptr is the pointer to (x,y)
+            // visit the pixel in each channel
+            for (int c = 0; c != image.channels(); c++) {
+                unsigned char data = data_ptr[c]; // data should be pixel of I(x,y) in c-th channel
+            }
+        }
+    }
+    chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
+    chrono::duration<double> time_used = chrono::duration_cast < chrono::duration < double >> (t2 - t1);
+    cout << "time used: " << time_used.count() << " seconds." << endl;
+    
+    // copying cv::Mat
+    // operator = will not copy the image data, but only the reference
+    cv::Mat image_another = image;
+    // changing image_another will also change image 
+    image_another(cv::Rect(0, 0, 100, 100)).setTo(0); // set top-left 100*100 block to zero
+    cv::imshow("image", image);
+    cv::waitKey(0);
+    
+    // use cv::Mat::clone to actually clone the data
+    cv::Mat image_clone = image.clone();
+    image_clone(cv::Rect(0, 0, 100, 100)).setTo(255);
+    cv::imshow("image", image);
+    cv::imshow("image_clone", image_clone);
+    cv::waitKey(0);
+    
+    // We are not going to copy the OpenCV's documentation here
+    // please take a look at it for other image operations like clipping, rotating and scaling.
+    
+    cv::destroyAllWindows();
+    return 0;
+}
+\end{lstlisting}
+
+In this example, we demonstrated the following operations: image reading, displaying, pixel vising, copying, assignment, etc. When compiling the program, you need to add the OpenCV header file in your CMakeLists.txt, and then link the program to the OpenVC's library. At the same time, due to the use of C ++ 11 standards (such as nullptr and chrono), you also need to set up the c++ standard in compiler flag:
+
+\begin{lstlisting}[language=Python,caption=slambook/ch5/imageBasics/CMakeLists.txt]
+# use c++11 standard
+set( CMAKE_CXX_FLAGS "-std=c++11" )
+
+# find OpenCV
+find_package( OpenCV REQUIRED )
+# include its headers
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+
+add_executable( imageBasics imageBasics.cpp )
+
+# link the exe to opencv's libs
+target_link_libraries( imageBasics ${OpenCV_LIBS} )
+\end{lstlisting}
+
+Let's give some notes for the code:
+\begin{enumerate}
+\item The program reads the image position from argv[1], the first parameter on the command line. We prepared an image (ubuntu.png, an Ubuntu wallpaper, I hope you like it) for readers to test. Therefore, after compilation, use the following command to call this program:
+\begin{lstlisting}[language=sh, caption=Terminal input:]
+./build/imageBasics ubuntu.png
+\end{lstlisting}
+If you call this program in the IDE, be sure to give it parameters at the same time. This can be configured in the launch configuration dialog if you are using Clion.
+\item In line 10 \textasciitilde to 18, use the cv::imread function to read the image, and display the image and basic information.
+\item In line 35 \textasciitilde 46, we iterate over all pixels in the image and calculates the time spent in the entire loop. Please note that the pixel visiting method is not unique, and the method given by the example is not the most efficient way. OpenCV provides an iterator of cv::Mat, you can traverse the pixels of the image through the iterator. Or, cv::Mat::data provides a raw pointer to the beginning of the image data, you can directly calculate the offset through this pointer, and then get the actual memory location of the pixel. The method used in the example is to facilitate the reader to understand the structure of the image.
+
+On the author's machine (virtual machine), it takes about 12.74ms to traverse this image. You can compare the speed on your machine. However, we are using the default debug mode of cmake, which is much slower than the release mode.
+
+\item OpenCV provides many functions for manipulating images, we will not list them one by one, otherwise this book will become an OpenCV operation manual. The example shows the most common things like image reading and displaying, as well as the deep copy function in cv::Mat. During the programming process, readers will also encounter operations such as image rotation and interpolation. At this time, you should refer to the corresponding documentation of the function to understand their principles and usage.
+\end{enumerate}
+
+It should be noted that OpenCV is not the only image library, it is just one of the more widely used one. However, most image libraries have the similar image operations. We hope that readers can understand the representation of images in other libraries after understanding the representation of images in OpenCV, so that they can quickly adjust to any other libraries. In addition, since cv::Mat is also a matrix class, in addition to representing images, we can also use it to store matrix data such as rotation matrix. But it is generally believed that Eigen is more efficient for use with fixed-size matrices.
+
+\subsection{Image Undistortion}
+We've introduced the rad-tan distortion model in previous section, now let write an example to show the implementation. OpenCV has provided the cv::Undistort function for us, but we will also give a hand-written undistortion function to show the principles.
+
+\begin{lstlisting}[language=C++,caption=slambook/ch5/imageBasics/undistortImage.cpp]
+#include <opencv2/opencv.hpp>
+#include <string>
+using namespace std;
+string image_file = "./distorted.png";   // the distorted image 
+
+int main(int argc, char **argv) {
+    // In thie program we implement the undistortion by ourselves rather than using opencv
+    // rad-tan model params
+    double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;
+    // intrinsics
+    double fx = 458.654, fy = 457.296, cx = 367.215, cy = 248.375;
+    
+    cv::Mat image = cv::imread(image_file, 0);   // the image type is CV_8UC1
+    int rows = image.rows, cols = image.cols;
+    cv::Mat image_undistort = cv::Mat(rows, cols, CV_8UC1);   // the undistorted image
+    
+    // computate the pixels in the undistorted one
+    for (int v = 0; v < rows; v++) {
+        for (int u = 0; u < cols; u++) {
+            // note we are computing the pixel of (u,v) in the undistorted image
+            // according to the rad-tan model, compute the coordinates in the distorted image
+            double x = (u - cx) / fx, y = (v - cy) / fy;
+            double r = sqrt(x * x + y * y);
+            double x_distorted = x * (1 + k1 * r * r + k2 * r * r * r * r) + 2 * p1 * x * y + p2 * (r * r + 2 * x * x);
+            double y_distorted = y * (1 + k1 * r * r + k2 * r * r * r * r) + p1 * (r * r + 2 * y * y) + 2 * p2 * x * y;
+            double u_distorted = fx * x_distorted + cx;
+            double v_distorted = fy * y_distorted + cy;
+            
+            // check if the pixel is in the image boarder
+            if (u_distorted >= 0 && v_distorted >= 0 && u_distorted < cols && v_distorted < rows) {
+                image_undistort.at<uchar>(v, u) = image.at<uchar>((int) v_distorted, (int) u_distorted);
+            } else {
+                image_undistort.at<uchar>(v, u) = 0;
+            }
+        }
+    }
+    
+    // show the undistorted image
+    cv::imshow("distorted", image);
+    cv::imshow("undistorted", image_undistort);
+    cv::waitKey();
+    return 0;
+}
+\end{lstlisting}
+
+Please check the difference between two images by yourself.
+
+\section{Practice: 3D Vision}
+\subsection{Stereo Vision}
+We have introduced the imaging principle of stereo vision. Now we start from the left and right images, calculate the disparity map corresponding to the left eye, and then calculate the coordinates of each pixel in the camera coordinate system, which will form a \textbf{point cloud}. We have prepared left and right images for the readers, as shown in \autoref {fig:stereoExample}. The following code demonstrates the calculation of disparity map and point cloud:
+
+\begin{lstlisting}[language=C++,caption=slambook/ch5/stereoVision/stereoVision.cpp (Part)]
+int main(int argc, char **argv) {
+    // intrinsics
+    double fx = 718.856, fy = 718.856, cx = 607.1928, cy = 185.2157;
+    // baseline
+    double b = 0.573;
+    
+    cv::Mat left = cv::imread(left_file, 0);
+    cv::Mat right = cv::imread(right_file, 0);
+    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(
+        0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);    // SGBM is senstive to parameters
+    cv::Mat disparity_sgbm, disparity;
+    sgbm->compute(left, right, disparity_sgbm);
+    disparity_sgbm.convertTo(disparity, CV_32F, 1.0 / 16.0f);
+    
+    // compute the point cloud
+    vector<Vector4d, Eigen::aligned_allocator<Vector4d>> pointcloud;
+    
+    // change v++ and u++ to v+=2, u+=2 if your machine is slow to get a sparser cloud
+    for (int v = 0; v < left.rows; v++)
+    for (int u = 0; u < left.cols; u++) {
+        if (disparity.at<float>(v, u) <= 10.0 || disparity.at<float>(v, u) >= 96.0) continue;
+        
+        Vector4d point(0, 0, 0, left.at<uchar>(v, u) / 255.0); // the first three dimensions are xyz, the 4-th is the color
+        
+        // compute the depth from disparity
+        double x = (u - cx) / fx;
+        double y = (v - cy) / fy;
+        double depth = fx * b / (disparity.at<float>(v, u));
+        point[0] = x * depth;
+        point[1] = y * depth;
+        point[2] = depth;
+        
+        pointcloud.push_back(point);
+    }
+    
+    cv::imshow("disparity", disparity / 96.0);
+    cv::waitKey(0);
+    
+    // show the point cloud in pangolin
+    showPointCloud(pointcloud);
+    return 0;
+}
+\end{lstlisting}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.9\textwidth]{cameraModel/stereoExample.pdf}
+    \caption{Stereo image example. Top-left: left image, top-right: right image, mid: SGBM disparity map, bottom: point cloud. Note that since some of the pixels in the left image is not seen in the right one, so the disparity map will have some empty values.}
+    \label{fig:stereoExample}
+\end{figure}
+
+In this example, we call the SGBM (Semi-global Batch Matching) \textsuperscript{\cite{Hirschmuller2008}} algorithm implemented by OpenCV to calculate the disparity of the left and right images, and then transform it into the 3D space of the camera through the geometric model of the binocular camera . We use a classic parameter configuration from internet, and we mainly adjust the maximum and minimum disparity. The disparity data combined with the camera's internal parameters and baseline can determine the position of each point in three-dimensional space. We omit the code related to displaying the point cloud to save some space.
+
+This book is not going to introduce the disparity calculation algorithm of the binocular camera. Interested readers can read the relevant references \textsuperscript{\cite{Scharstein2002, Seitz2006}}. In addition to the binocular algorithm implemented by OpenCV, there are many other libraries focused on achieving efficient parallax calculations. It is still an active and complex subject today.
+
+\subsection{RGB-D Vision}
+\label{sec:join-point-cloud}
+Finally, we demonstrate an example of RGB-D vision. The convenience of RGB-D cameras is that they can obtain pixel depth information through physical methods. If the internal and external parameters of the camera are known, we can calculate the position of any pixel in the world coordinate system, thereby creating a point cloud map. Now let's demonstrate how to do it.
+
+We have prepared 5 pairs of images, located in the slambook2/ch5/rgbd folder. There are 5 RGB images from 1.png to 5.png under the color/ directory, and 5 corresponding depth images under the depth/. At the same time, the pose.txt file gives the camera poses of the 5 images (in the form of $ \mathbf{T}_\mathrm{wc} $). The form of the pose record is the same as before, with the translation vector plus a rotation quaternion:
+\[
+[x, y, z, q_x, q_y, q_z, q_w],
+\]
+where $q_w$ is the real part of the quaternion. For example, the parameters of the first pair of image are:
+\[
+[-0.228993, 0.00645704, 0.0287837, -0.0004327, -0.113131, -0.0326832, 0.993042].
+\]
+
+Below we write a program to accomplish two things: (1). Calculate the point cloud corresponding to each pair of RGB-D images based on internal parameters; (2). According to the camera pose of each image (that is, external parameters), put the points to a global cloud by the camera poses.
+
+\begin{lstlisting}[language=C++,caption=slambook/ch5/rgbd/jointMap.cpp (Part)]
+int main(int argc, char **argv) {
+    vector<cv::Mat> colorImgs, depthImgs;
+    TrajectoryType poses;         // camera poses
+    
+    ifstream fin("./pose.txt");
+    if (!fin) {
+        cerr << "Please run the program in the directory that has pose.txt" << endl;
+        return 1;
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        boost::format fmt("./%s/%d.%s"); // the image format
+        colorImgs.push_back(cv::imread((fmt % "color" % (i + 1) % "png").str()));
+        depthImgs.push_back(cv::imread((fmt % "depth" % (i + 1) % "pgm").str(), -1)); // use -1 flag to load the depth image
+        
+        double data[7] = {0};
+        for (auto &d:data) fin >> d;
+        Sophus::SE3d pose(Eigen::Quaterniond(data[6], data[3], data[4], data[5]),
+        Eigen::Vector3d(data[0], data[1], data[2]));
+        poses.push_back(pose);
+    }
+    
+    // compute the point cloud using camera intrinsics
+    double cx = 325.5;
+    double cy = 253.5;
+    double fx = 518.0;
+    double fy = 519.0;
+    double depthScale = 1000.0;
+    vector<Vector6d, Eigen::aligned_allocator<Vector6d>> pointcloud;
+    pointcloud.reserve(1000000);
+    
+    for (int i = 0; i < 5; i++) {
+        cout << "Converting RGBD images " << i + 1 << endl;
+        cv::Mat color = colorImgs[i];
+        cv::Mat depth = depthImgs[i];
+        Sophus::SE3d T = poses[i];
+        for (int v = 0; v < color.rows; v++)
+        for (int u = 0; u < color.cols; u++) {
+            unsigned int d = depth.ptr<unsigned short>(v)[u]; // depth value is 16-bit
+            if (d == 0) continue; // 0 means no valid value
+            Eigen::Vector3d point;
+            point[2] = double(d) / depthScale;
+            point[0] = (u - cx) * point[2] / fx;
+            point[1] = (v - cy) * point[2] / fy;
+            Eigen::Vector3d pointWorld = T * point;
+            
+            Vector6d p;
+            p.head<3>() = pointWorld;
+            p[5] = color.data[v * color.step + u * color.channels()];   // blue
+            p[4] = color.data[v * color.step + u * color.channels() + 1]; // green
+            p[3] = color.data[v * color.step + u * color.channels() + 2]; // red
+            pointcloud.push_back(p);
+        }
+    }
+    
+    cout << "global point cloud has " << pointcloud.size() << " points." << endl;
+    showPointCloud(pointcloud);
+    return 0;
+}
+\end{lstlisting}
+
+We can see the point cloud in Pangolin after building it (see \autoref{fig:pointcloudmapping}). 
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cameraModel/pointcloud.pdf}
+    \caption{See the global point cloud by 5 RGBD image pairs.}
+    \label{fig:pointcloudmapping}
+\end{figure}
+
+Through these examples, we demonstrated some common monocular, binocular, and depth camera algorithms in computer vision. We hope readers can understand the meaning of the intrinsics, extrinsics and distortion model through these simple examples.
+
+\section * {Exercise}
+\begin{enumerate}
+\item[\optional] Find a camera (use the camera of your mobile phone or laptop if you don't have one) and calibrate its internal parameters You may use a calibration board, or print out a checkerboard for calibration.
+\item Describes the physical meaning of the camera's intrinsics. If the resolution of a camera is doubled and the rest is unchanged, how does its intrinsics change?
+\item Search for the calibration method of special cameras (fisheye or panoramic cameras). Where are the differences between them and the pinhole models? 
+\item Investigate the similarities and differences between a global shutter camera and a rolling shutter camera. What are their advantages and disadvantages in SLAM?
+\item How are RGB-D cameras calibrated? Taking Kinect as an example, what parameters need to be calibrated? (Refer to \url{https://github.com/code-iai/iai_kinect2}.)
+\item In addition to the way of traversing the image demonstrated by the sample program, what other methods can you give to traverse the image?
+\item[\optional] Read the official OpenCV tutorial to learn its basic usage.
+\end{enumerate}
+
