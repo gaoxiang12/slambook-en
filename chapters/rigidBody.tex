@@ -14,11 +14,11 @@ In the last lecture, we explained the framework and content of visual SLAM. This
 \section{Rotation Matrix}
 \label{sec:3.1}
 \subsection{Point, Vector and Coordinate System}
-The space in our daily life is three-dimensional, so we are born to be used to the movement of three-dimensional space. The three-dimensional space consists of three axes, so the position of one spatial point can be specified by three coordinates. However, we should now consider \textbf{rigid body} , which has not only its position, but also its own posture. The camera can also be viewed as a rigid body in three dimensions, so the position is where the camera is in space, and the attitude is the orientation of the camera. Combined, we can say, "The camera is in the space $ ( 0, 0 , 0 ) $ point, facing the front". But this natural language is cumbersome, and we prefer to describe it in a mathematical language.
+The space in our daily life is three-dimensional, so we are born to be used to the movement of three-dimensional space. The three-dimensional space consists of three axes, so the position of one spatial point can be specified by three coordinates. However, we should now consider \textbf{rigid body}, which has not only its position, but also its own posture. The camera can also be viewed as a rigid body in three dimensions, so the position is where the camera is in space, and the attitude is the orientation of the camera. Combined, we can say, ``The camera is in the space $( 0, 0, 0)$ point, facing the front''. But this natural language is cumbersome, and we prefer to describe it in a mathematical language.
 
-We start with the most basic content: \textbf{points} and \textbf{vectors}. Points are the basic elements in space, no length, no volume. Connecting the two points forms a vector. A vector can be thought of as an arrow pointing from one point to another. We need to remind the reader that, please do not confuse the vector with its \textbf{coordinates}. A vector is one of the things in space, such as $ \mathbf{a}$ . Here $ \mathbf{a} $ does not need to be associated with several real numbers. Only when we specify a \textbf{coordinate system} in this three-dimensional space can we talk about the coordinates of the vector in this coordinate system, that is, find several real numbers corresponding to this vector.
+We start with the most basic content: \textbf{points} and \textbf{vectors}. Points are the basic elements in space, no length, no volume. Connecting the two points forms a vector. A vector can be thought of as an arrow pointing from one point to another. We need to remind the reader that, please do not confuse the vector with its \textbf{coordinates}. A vector is one of the things in space, such as $ \mathbf{a}$. Here $ \mathbf{a} $ does not need to be associated with several real numbers. Only when we specify a \textbf{coordinate system} in this three-dimensional space can we talk about the coordinates of the vector in this coordinate system, that is, find several real numbers corresponding to this vector.
 
-With the knowledge of linear algebra, the coordinates of a point in 3D space can also be described by $ \mathbb{R}^3$. How to describe it? Suppose that in this linear space, we find a set of \textbf{base} \footnote{Just a reminder here, the base is a set of linearly independent vectors in the space, normally being orthognal and has unit-length.} $ (\mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3) $ , then, the arbitrary vector $ \mathbf{a} $ has a \textbf{coordinate} under this set of bases:
+With the knowledge of linear algebra, the coordinates of a point in 3D space can also be described by $ \mathbb{R}^3$. How to describe it? Suppose that in this linear space, we find a set of \textbf{base} \footnote{Just a reminder here, the base is a set of linearly independent vectors in the space, normally being orthognal and has unit-length.} $ (\mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3) $, then, the arbitrary vector $ \mathbf{a} $ has a \textbf{coordinate} under this set of bases:
 
 \begin{equation}
 \mathbf{a} = \left[ {{\mathbf{e}_1},{\mathbf{e}_2},{\mathbf{e}_3}} \right]\left[ \begin{array}{l}
@@ -28,14 +28,14 @@ With the knowledge of linear algebra, the coordinates of a point in 3D space can
 \end{array} \right] = {a_1}{\mathbf{e}_1} + {a_2}{\mathbf{e}_2} + {a_3}{\mathbf{e}_3}.
 \end{equation}
 
-Here $ (a_ 1 , a_ 2 , a_ 3 )^ \mathrm {T} $ is called $\mathbf {a}$'s coordinates \footnote {We use column vectors in this book which is same as most of the  mathematics books.}. The specific values of the coordinates are related to the vector itself, and also the selection of the bases. In $\mathbb{R}^3$, the coordinate system usually consists of 3 orthogonal coordinate axes (although it can also be non-orthogonal, it is rare in practice). For example, given $ \mathbf {x} $ and $ \mathbf {y} $ axis, the $ \mathbf {z} $ axis can be found using the right-hand (or left-hand) rule by $ \mathbf {x} \times  \mathbf {y} $. According to different definitions, the coordinate system is divided into left-handed and right-handed. The third axis of the left hand system is opposite to the right hand system. Most 3D libraries use right-handed (such as OpenGL, 3D Max, etc.), and some libraries use left-handed (such as Unity, Direct3D, etc.).
+Here $ (a_ 1, a_ 2, a_ 3 )^ \mathrm {T} $ is called $\mathbf {a}$'s coordinates \footnote {We use column vectors in this book which is same as most of the  mathematics books.}. The specific values of the coordinates are related to the vector itself, and also the selection of the bases. In $\mathbb{R}^3$, the coordinate system usually consists of 3 orthogonal coordinate axes (although it can also be non-orthogonal, it is rare in practice). For example, given $ \mathbf {x} $ and $ \mathbf {y} $ axis, the $ \mathbf {z} $ axis can be found using the right-hand (or left-hand) rule by $ \mathbf {x} \times  \mathbf {y} $. According to different definitions, the coordinate system is divided into left-handed and right-handed. The third axis of the left hand system is opposite to the right hand system. Most 3D libraries use right-handed (such as OpenGL, 3D Max, etc.), and some libraries use left-handed (such as Unity, Direct3D, etc.).
 
-Based on basic linear algebra knowledge, we can talk about the operations between vectors/vectors, and vectors/numbers, such as scalar multiplication, vector addition, subtraction, inner product, outer product, and so on. Multiplication, addition and subtraction are fairly basic and intuitive. For example, the result of adding two vectors is to add their respective coordinates, subtraction, and so on. I won't go into details here. Internal and external products may be somewhat unfamiliar to the reader, and their calculations are given here. For $ \mathbf {a}, \mathbf {b} \in  \mathbb {R}^ 3 $ , in the usual sense \footnote {the inner product also has formal rules, but this book only discusses the usual inner product.} , the inner product of $\mathbf{a}, \mathbf{b}$ can be written as:
+Based on basic linear algebra knowledge, we can talk about the operations between vectors/vectors, and vectors/numbers, such as scalar multiplication, vector addition, subtraction, inner product, outer product, and so on. Multiplication, addition and subtraction are fairly basic and intuitive. For example, the result of adding two vectors is to add their respective coordinates, subtraction, and so on. I won't go into details here. Internal and external products may be somewhat unfamiliar to the reader, and their calculations are given here. For $ \mathbf {a}, \mathbf {b} \in  \mathbb {R}^ 3 $, in the usual sense \footnote {the inner product also has formal rules, but this book only discusses the usual inner product.}, the inner product of $\mathbf{a}, \mathbf{b}$ can be written as:
 
 \begin{equation}
 \mathbf{a} \cdot \mathbf{b} = { \mathbf{a}^\mathrm{T}}\mathbf{b} = \sum\limits_{i = 1}^3 {{a_i}{b_i}}  = \left| \mathbf{a} \right|\left| \mathbf{b} \right|\cos \left\langle {\mathbf{a},\mathbf{b}} \right\rangle ,
 \end{equation}
-where $ \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle $ refers to the angle between the vector $ \mathbf {a}, \mathbf {b} $ . The inner product can also describe the projection relationship between vectors. The outer product is like this:
+where $ \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle $ refers to the angle between the vector $ \mathbf {a}, \mathbf {b} $. The inner product can also describe the projection relationship between vectors. The outer product is like this:
 
 \begin{equation}
 \label{eq:cross}
@@ -54,7 +54,7 @@ where $ \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle $ refers to the
 	\end{array}} \right] \mathbf{b} \buildrel \Delta \over = { \mathbf{a}^ \wedge } \mathbf{b}.
 \end{equation}
 
-The result of the outer product is a vector whose direction is perpendicular to the two vectors, and the length is $ \left | \mathbf{a} \right | \left | \mathbf{b} \right | \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle  $, which is also the area of the quadrilateral of the two vectors. For the outer product operations, we introduce the $ ^ \wedge $ operator here, which means writing $ \mathbf{a} $ as a matrix. In fact, it is a \textbf {skew-symmetric matrix}\footnote{Skew-symmetric matrix means $ \mathbf{A} $ satisfies $ \mathbf{A}^ \mathrm{T}=- \mathbf{A}$. }. You can take $ ^ \wedge $ as an skew-symmetric symbol. It turns the outer product $ \mathbf{a} \times  \mathbf{b} $ into the multiplication of the matrix and the vector $ { \mathbf{a}^ \wedge } \mathbf{b} $ , which turns it into a linear operator. This symbol will be used frequently in the following sections, and this symbol is a one-to-one mapping, meaning that for any vector, it corresponds to a unique anti-symmetric matrix, and vice versa:
+The result of the outer product is a vector whose direction is perpendicular to the two vectors, and the length is $ \left | \mathbf{a} \right | \left | \mathbf{b} \right | \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle  $, which is also the area of the quadrilateral of the two vectors. For the outer product operations, we introduce the $ ^ \wedge $ operator here, which means writing $ \mathbf{a} $ as a matrix. In fact, it is a \textbf {skew-symmetric matrix}\footnote{Skew-symmetric matrix means $ \mathbf{A} $ satisfies $ \mathbf{A}^ \mathrm{T}=- \mathbf{A}$. }. You can take $ ^ \wedge $ as an skew-symmetric symbol. It turns the outer product $ \mathbf{a} \times  \mathbf{b} $ into the multiplication of the matrix and the vector $ { \mathbf{a}^ \wedge } \mathbf{b} $, which turns it into a linear operator. This symbol will be used frequently in the following sections, and this symbol is an one-to-one mapping, meaning that for any vector, it corresponds to a unique anti-symmetric matrix, and vice versa:
 
 \begin{equation}
 \mathbf{a}^\wedge = \left[ {\begin{array}{*{20}{c}}
@@ -72,13 +72,13 @@ We often define a variety of coordinate systems in the real scene. In robotics, 
 \begin{figure}[!htp]
     \centering
     \includegraphics[width=0.7\textwidth]{rigidMotion/axisTransform.pdf}
-    \caption {Coordinate transformation. For the same vector $ \mathbf{p}$ , it coordinates in the world $\mathbf{p}_W$ and coordinates in the camera system $ \mathbf{p}_C$ is different. This transformation relationship is described by the transform matrix $ \mathbf{T} $ . }
+    \caption {Coordinate transformation. For the same vector $ \mathbf{p}$, its coordinates in the world $\mathbf{p}_W$ and the coordinates in the camera system $ \mathbf{p}_C$ are different. This transformation relationship is described by the transform matrix $ \mathbf{T} $.}
     \label{fig:axisTransform}
 \end{figure}
 
-Intuitively, the motion between two coordinate systems consists of a rotation plus a translation, which is called \textbf {rigid body motion}. Obviously, the camera movement is a rigid body one. During the rigid body motion, the length and angle of the a vector will not change. Imagine you throw your phone into the air and \footnote {Please don't put it into practice because it will fall on the ground and crash.}, there may only be differences in spatial position and posture, and its own length, angle of each face, etc. will not change. The phone will not be squashed like an eraser or be stretched during this motion. At this point, we say that the phone's motion is a \textbf {Euclidean Transform}.
+Intuitively, the motion between two coordinate systems consists of a rotation plus a translation, which is called \textbf {rigid body motion}. Obviously, the camera movement is a rigid body one. During the rigid body motion, the length and angle of the \textbf{a} vector will not change. Imagine you throw your phone into the air and \footnote {Please don't put it into practice because it will fall on the ground and crash.}, there may only be differences in spatial position and posture, and its own length, angle of each face, etc. will not change. The phone will not be squashed like an eraser or be stretched during this motion. At this point, we say that the phone's motion is an \textbf {Euclidean Transform}.
 
-The Euclidean transform consists of rotation and translation. Let's first consider about the rotation. We have an unit-length orthogonal base $ ( \mathbf {e}_ 1 , \mathbf {e}_ 2 , \mathbf {e}_ 3 ) $. After a rotation it becomes $ ( \mathbf {e}_ 1 ' , \mathbf {e}_ 2 ', \mathbf {e}_ 3 ') $ . Then, for the same vector $ \mathbf {a} $ (the vector does not move with the rotation of the coordinate system), its coordinates in two coordinate systems are $ [a_ 1 , a_ 2 , a_ 3 ] ^ \mathrm {T} $ and $[a'_ 1 , a'_ 2 , a'_ 3 ]^ \mathrm {T} $ . Because the vector itself has not changed, according to the definition of coordinates, there are:
+The Euclidean transform consists of rotation and translation. Let's first consider about the rotation. We have a unit-length orthogonal base $ ( \mathbf {e}_ 1, \mathbf {e}_ 2, \mathbf {e}_ 3 ) $. After a rotation it becomes $ ( \mathbf {e}_ 1 ', \mathbf {e}_ 2 ', \mathbf {e}_ 3 ') $. Then, for the same vector $ \mathbf {a} $ (the vector does not move with the rotation of the coordinate system), its coordinates in these two coordinate systems are $ [a_ 1, a_ 2, a_ 3 ] ^ \mathrm {T} $ and $[a'_ 1, a'_ 2, a'_ 3 ]^ \mathrm {T} $. Because the vector itself has not changed, according to the definition of coordinates, there are:
 
 \begin{equation}
 \left[ \mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3 \right]\left[ \begin{array}{l}
@@ -96,7 +96,7 @@ To describe the relationship between the two coordinates, we multiply the left a
 \mathbf{e}_1^\mathrm{T}\\
 \mathbf{e}_2^\mathrm{T}\\
 \mathbf{e}_3^\mathrm{T}
-\end {array} \right ] $ , then the coefficient on the left becomes the identity matrix, so:
+\end {array} \right ] $, then the coefficient on the left becomes the identity matrix, so:
 
 \begin{equation}
 \left[ \begin{array}{l}
@@ -113,7 +113,7 @@ a_2'\\
 a_3'
 \end{array} \right] \buildrel \Delta \over = \mathbf{R} \mathbf{a}'.
 \end{equation}
-We take the intermediate matrix out and define it as a matrix $ \mathbf{R} $ . This matrix consists of the inner product between the two sets of bases, describing the coordinate transformation relationship of the same vector before and after the rotation. As long as the rotation is the same, this matrix is the same. It can be said that the matrix $ \mathbf{R} $ describes the rotation itself. So we call it the \textbf{rotation matrix}. At the same time, the components of the matrix are the inner product of the two coordinate system bases. Since the length of the base vector is 1, it is actually the cosine of the angle between the base vectors. So this matrix is also called \textbf{Direction Cosine Matrix}. We will call it the rotation matrix in the following.
+We take the intermediate matrix out and define it as a matrix $ \mathbf{R} $. This matrix consists of the inner product between the two sets of bases, describing the coordinate transformation relationship of the same vector before and after the rotation. As long as the rotation is the same, this matrix is the same. It can be said that the matrix $ \mathbf{R} $ describes the rotation itself. So we call it the \textbf{rotation matrix}. At the same time, the components of the matrix are the inner product of the two coordinate system bases. Since the length of the base vector is 1, it is actually the cosine of the angle between the base vectors. So this matrix is also called \textbf{Direction Cosine Matrix}. We will call it the rotation matrix in the following.
 
 The rotation matrix has some special properties. In fact, it is an orthogonal matrix with a determinant of 1 \footnote{Orthogonal matrix is a matrix whose inverse is its transpose. The orthogonality of the rotation matrix can be derived directly from the definition. } \footnote{The determinant is 1 is artificially defined. In fact, its determinant is $\pm 1 $, but the rotation with determinant $ - 1 $ is called improper rotation, that is, one rotation plus one reflection. }. Conversely, an orthogonal matrix with a determinant of 1 is also a rotation matrix. So, you can define a collection of $n$ dimensional rotation matrices as follows:
 \begin{equation}
@@ -128,21 +128,21 @@ Since the rotation matrix is an orthogonal matrix, its inverse (ie, transpose) d
 \end{equation}
 Obviously $ \mathbf{R}^\mathrm{T} $ portrays an opposite rotation.
 
-In the Euclidean transformation, there is translation in addition to rotation. Consider the vector $ \mathbf{a} $ in the world coordinate system , after a rotation (depicted by $ \mathbf{R} $) and a translation of $ \mathbf{t} $ , you get $ \mathbf{a}' $ , then put the rotation and translation together, there are:
+In the Euclidean transformation, there is translation in addition to rotation. Consider the vector $ \mathbf{a} $ in the world coordinate system, after a rotation (depicted by $ \mathbf{R} $) and a translation of $ \mathbf{t} $, you get $ \mathbf{a}' $, then put the rotation and translation together, there are:
 \begin{equation}
 \label{eq:RT}
 \mathbf{a} '= \mathbf{R} \mathbf{a} + \mathbf{t}.
 \end{equation}
-Where $ \mathbf{t} $ is called a translation vector. Compared to rotation, the translation part simply adds the translation vector to the coordinates after the rotation, which is very simple. By the above formula, we completely describe the coordinate transformation relationship of an Euclidean space using a rotation matrix $ \mathbf{R} $ and a translation vector $ \mathbf{t}$. In practice, we will define the coordinate system 1, coordinate system 2, then the vector $ \mathbf{a} $ under the two coordinates is $ \mathbf{a}_1 , \mathbf{a}_2 $ , they are The relationship between the two, in accordance with the complete writing, should be:
+Where $ \mathbf{t} $ is called a translation vector. Compared to rotation, the translation part simply adds the translation vector to the coordinates after the rotation, which is very simple. By the above formula, we completely describe the coordinate transformation relationship of an Euclidean space using a rotation matrix $ \mathbf{R} $ and a translation vector $ \mathbf{t}$. In practice, we will define the coordinate system 1, coordinate system 2, then the vector $ \mathbf{a} $ under the two coordinates is $ \mathbf{a}_1, \mathbf{a}_2 $, they are the relationship between the two, in accordance with the complete writing, should be:
 \begin{equation}
 \mathbf{a}_1 = \mathbf{R}_{12} \mathbf{a}_2 + \mathbf{t}_{12}.
 \end{equation}
-Here $ \mathbf{R}_{12} $ means ``rotation the vector from coordinate system 2 to coordinate system 1''. Since the vector is multiplied to the right of this matrix, its subscript is \textbf{read from right to left}. This is just a customary way of writing this book. Coordinate transformations are easy to confuse, especially if multiple coordinate systems exist. Similarly, if we want to express ``rotation matrix from 1 to 2'', we write it as $ \mathbf{R}_{21}$. The reader must be clear about the notation here, because different books have different notations, some will be recorded as the top left/subscript, and the text will be written on the right side.
+Here $ \mathbf{R}_{12} $ means ``rotation of the vector from coordinate system 2 to coordinate system 1''. Since the vector is multiplied to the right of this matrix, its subscript is \textbf{read from right to left}. This is just a customary way of writing this book. Coordinate transformations are easy to confuse, especially if multiple coordinate systems exist. Similarly, if we want to express ``rotation matrix from 1 to 2'', we write it as $ \mathbf{R}_{21}$. The reader must be clear about the notation here, because different books have different notations, some will be recorded as the top left/subscript, and the text will be written on the right side.
 
-About $\mathbf{t}_{12}$ , it actually corresponds a vector from the coordinate system 1 origin pointing to the coordinate system 2 origin, whose \textbf{coordinates are taken under coordinate system 1}, so I suggest readers to put it as ``a vector from 1 to 2''. But the reverse $ \mathbf{t}_{21} $ , which is a vector from 2's origin to 1's origin, whose \textbf{coordinates are taken in coordinate system 2}, is not equal to $-\mathbf{t}_{12}$, but is also related to the rotation of the two systems\footnote{Although from the vector level, they are indeed inverse relations, but the coordinates of the two vectors are not opposite. Can you find out why it looks like this? }. Therefore, when beginners ask the question ``Where is my coordinates?'', we need to clearly explain the meaning of this sentence. Here ``my coordinates'' normally refers to the vector from the world system pointing to the origin of the robot system, and then take the coordinates in the world's base. Corresponding to the mathematical symbol, it should be the value of $ \mathbf{t}_{WC} $ . For the same reason, it is not $ - \mathbf {t}_{CW}$, but actually $-\mathbf{R}_{CW}^T \mathbf{t}_{CW}$.
+About $\mathbf{t}_{12}$, it actually corresponds a vector from the coordinate system 1 origin pointing to the coordinate system 2 origin, whose \textbf{coordinates are taken under coordinate system 1}, so I suggest readers to put it as ``a vector from 1 to 2''. But the reverse $ \mathbf{t}_{21} $, which is a vector from 2's origin to 1's origin, whose \textbf{coordinates are taken in coordinate system 2}, is not equal to $-\mathbf{t}_{12}$, but is also related to the rotation of the two systems\footnote{Although from the vector level, they are indeed inverse relations, but the coordinates of the two vectors are not opposite. Can you find out why it looks like this? }. Therefore, when beginners ask the question ``Where is my coordinates?'', we need to clearly explain the meaning of this sentence. Here ``my coordinates'' normally refers to the vector from the world system pointing to the origin of the robot system, and then take the coordinates in the world's base. Corresponding to the mathematical symbol, it should be the value of $ \mathbf{t}_{WC} $. For the same reason, it is not $ - \mathbf {t}_{CW}$, but actually $-\mathbf{R}_{CW}^T \mathbf{t}_{CW}$.
 
 \subsection{Transform Matrix and Homogeneous Coordinates}
-The formula \eqref{eq:RT} fully expresses the rotation and translation of Euclidean space, but there is still a small problem: the transformation relationship here is not a linear relationship. Suppose we made two transformations: $ \mathbf {R}_ 1 , \mathbf {t}_ 1 $ and $ \mathbf {R}_ 2 , \mathbf {t}_ 2 $:
+The formula~\eqref{eq:RT} fully expresses the rotation and translation of Euclidean space, but there is still a small problem: the transformation relationship here is not a linear relationship. Suppose we made two transformations: $ \mathbf {R}_ 1, \mathbf {t}_ 1 $ and $ \mathbf {R}_ 2, \mathbf {t}_ 2 $:
 
 \[
 \mathbf{b} = {\mathbf{R}_1} \mathbf{a} + {\mathbf{t}_1}, \quad \mathbf{c} = {\mathbf{R}_2} \mathbf{b} + {\mathbf{t}_2}.
@@ -151,7 +151,7 @@ So, the transformation from $ \mathbf{a} $ to $ \mathbf{c} $ is:
 \[
 \mathbf{c} = {\mathbf{R}_2}\left( {{\mathbf{R}_1} \mathbf{a} + {\mathbf{t}_1}} \right) + {\mathbf{t}_2}.
 \]
-This form is not elegant after multiple transformations. Therefore, we introduce homogeneous coordinates and transformation matrices, rewriting the form \eqref{eq:RT}:
+This form is not elegant after multiple transformations. Therefore, we introduce homogeneous coordinates and transformation matrices, rewriting the form~\eqref{eq:RT}:
 \begin{equation}
 \left[\begin{array}{l} 
 \mathbf {a} ' \\
@@ -176,7 +176,7 @@ We temporarily use $  \tilde { \mathbf {a} } $ to represent the homogeneous coor
 \begin{equation}
 \tilde{\mathbf{b}} = \mathbf{T}_1 \tilde{\mathbf{a}}, \  \tilde{\mathbf{c}} = \mathbf{T}_2 \tilde{\mathbf{b}} \quad \Rightarrow \tilde{\mathbf{c}} = \mathbf{T}_2 \mathbf{T_1} \tilde{\mathbf{a}}.
 \end{equation}
-But the symbols that distinguish between homogeneous and non-homogeneous coordinates make us annoyed, because here we only need to add 1 at the end of the vector or remove 1 to make it a normal one\footnote {But the purpose of the homogeneous coordinates is not limited to this, we will come back to it in Chapter 7.}. So, without ambiguity, we will write it directly as $ \mathbf {b}= \mathbf {T} \mathbf {a} $ , and by default we just assume a homogeneous coordinate conversion is made if needed\footnote { Note that if homogeneous coordinate transformation is not performed, the matrix multiplication here does not make sense. }.
+But the symbols that distinguish between homogeneous and non-homogeneous coordinates make us annoyed, because here we only need to add 1 at the end of the vector or remove 1 to make it a normal one\footnote {But the purpose of the homogeneous coordinates is not limited to this, we will come back to it in Chapter 7.}. So, without ambiguity, we will write it directly as $ \mathbf {b}= \mathbf {T} \mathbf {a} $, and by default we just assume a homogeneous coordinate conversion is made if needed\footnote { Note that if homogeneous coordinate transformation is not performed, the matrix multiplication here does not make sense. }.
 
 Regarding the transformation matrix $ \mathbf{T} $, it has a special structure: the upper left corner is the rotation matrix, the right side is the translation vector, the lower left corner is $ \mathbf{0} $ vector, and the lower right corner is 1. This matrix is also known as the Special Euclidean Group:
 
@@ -188,7 +188,7 @@ Regarding the transformation matrix $ \mathbf{T} $, it has a special structure: 
 \in \mathbb{R}^{4 \times 4} | \mathbf{R} \in \mathrm{SO}(3), \mathbf{t} \in \mathbb{R}^3\right\} .
 \end{equation}
 
-Like $ \mathrm{SO}( 3 ) $ , solving the inverse of the matrix represents an inverse transformation:
+Like $ \mathrm{SO}( 3 ) $, solving the inverse of the matrix represents an inverse transformation:
 
 \begin{equation}
 { \mathbf{T}^{ - 1}} = \left[ {\begin{array}{*{20}{c}}
@@ -197,9 +197,9 @@ Like $ \mathrm{SO}( 3 ) $ , solving the inverse of the matrix represents an inve
     \end{array}} \right].
 \end{equation}
 
-Again, we use the notation of $ \mathbf{T}_{12} $ to represent a transformation from 2 to 1. Moreover, in order to keep the symbol concise, in the case of no ambiguity, the symbols of the homogeneous coordinates and the ordinary coordinates are not deliberately distinguished in the later sections. For example, when we write $ \mathbf {T} \mathbf{a} $ , we use homogeneous coordinates (otherwise we can't calculate). When you write $ \mathbf{Ra} $ , you use non-homogeneous coordinates. If they are written in the same equation, it is assumed that the conversion from homogeneous coordinates to normal coordinates is already done - because the conversion between homogeneous and non-homogeneous coordinates is actually very easy. In C++ programs. You can do this with \textbf{operator overloading} to ensure that the operations you see in the program are correct.
+Again, we use the notation of $ \mathbf{T}_{12} $ to represent a transformation from 2 to 1. Moreover, in order to keep the symbol concise, in the case of no ambiguity, the symbols of the homogeneous coordinates and the ordinary coordinates are not deliberately distinguished in the later sections. For example, when we write $ \mathbf {T} \mathbf{a} $, we use homogeneous coordinates (otherwise we can't calculate). When you write $ \mathbf{Ra} $, you use non-homogeneous coordinates. If they are written in the same equation, it is assumed that the conversion from homogeneous coordinates to normal coordinates is already done - because the conversion between homogeneous and non-homogeneous coordinates is actually very easy. In C++ programs. You can do this with \textbf{operator overloading} to ensure that the operations you see in the program are correct.
 
-Let's take a review now. First, we introduce the vector and its coordinate representation, and introduce the operation between the vectors; then, the motion between the coordinate systems is described by the Euclidean transformation, which consists of translation and rotation. The rotation can be described by the rotation matrix $ \mathrm{SO}( 3 ) $ , while the translation is directly described by a $ \mathbb{R}^ 3 $ vector. Finally, if the translation and rotation are placed in a matrix, the transformation matrix $ \mathrm{SE}( 3 ) $ is formed .
+Let's take a review now. First, we introduce the vector and its coordinate representation, and introduce the operation between the vectors; then, the motion between the coordinate systems is described by the Euclidean transformation, which consists of translation and rotation. The rotation can be described by the rotation matrix $ \mathrm{SO}( 3 ) $, while the translation is directly described by a $ \mathbb{R}^ 3 $ vector. Finally, if the translation and rotation are placed in a matrix, the transformation matrix $ \mathrm{SE}( 3 ) $ is formed .
 
 \section{Practice: Using Eigen}
 The practical part of this lecture has two sections. In the first part, we will explain how to use Eigen to represent matrices and vectors, and then extend to the calculation of rotation matrix and transformation matrix. The code for this section is in \textbf{slambook2/ch3/useEigen}.
@@ -212,7 +212,7 @@ Eigen may not be installed on your PC. Please enter the following command to ins
 sudo apt-get install libeigen3-dev
 \end{lstlisting}
 
-Most of the commonly used libraries in our book are available in the Ubuntu software source. Later, if you want to install a library, you may want to search for the Ubuntu software source. With the apt command, we can easily install Eigen. Looking back at the previous lesson, we know that a library consists of header files and library files. The default location of the Eigen header file should be in "/usr/include/eigen3/". If you are not sure, you can find it by entering the following command:
+Most of the commonly used libraries in our book are available in the Ubuntu software source. Later, if you want to install a library, you may want to search for the Ubuntu software source. With the apt command, we can easily install Eigen. Looking back at the previous lesson, we know that a library consists of header files and library files. The default location of the Eigen header file should be in ``/usr/include/eigen3/''. If you are not sure, you can find it by entering the following command:
 
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 sudo locate eigen3
@@ -397,9 +397,9 @@ Since the detailed comments are given in the code, each line of the statement is
     
     \item The matrix implementation inside  Eigen is more complicated. I won't introduce it here. We hope that you can use Eigen's matrix like the built-in data types like float and double. This should be in line with the original intention of its design.
     
-    \item The  Eigen matrix does not support automatic type promotion, which is quite different from C++'s built-in data types. In a C++ program, we can add and multiply a float variable and double variable, and \textbf{the compiler will automatically cast the data type to the most appropriate one}. In Eigen, for performance reasons, you must \textbf{explicitly} convert the matrix type. And if you forget to do this, Eigen will (not very friendly) prompt you with a very long "YOU MIXED DIFFERENT NUMERIC TYPES ..." compilation error. You can try to find out which part of the error message this message appears in. If the error message is too long, it is best to save it to a file and find it.
+    \item The  Eigen matrix does not support automatic type promotion, which is quite different from C++'s built-in data types. In a C++ program, we can add and multiply a float variable and double variable, and \textbf{the compiler will automatically cast the data type to the most appropriate one}. In Eigen, for performance reasons, you must \textbf{explicitly} convert the matrix type. And if you forget to do this, Eigen will (not very friendly) prompt you with a very long ``YOU MIXED DIFFERENT NUMERIC TYPES ...'' compilation error. You can try to find out which part of the error message this message appears in. If the error message is too long, it is best to save it to a file and find it.
     
-    \item Is the same, in the calculation process also need to ensure the correctness of the matrix dimension, otherwise there will be "YOU MIXED MATRICES OF DIFFERENT SIZES" error. Please don't complain about this kind of error prompting. For C++ template meta-programming, it is very lucky to be able to prompt the information that can be read. Later, if you find some compilation error about Eigen, you can directly look for the uppercase part and figure out what the problem is.
+    \item Is the same, in the calculation process also need to ensure the correctness of the matrix dimension, otherwise there will be ``YOU MIXED MATRICES OF DIFFERENT SIZES'' error. Please don't complain about this kind of error prompting. For C++ template meta-programming, it is very lucky to be able to prompt the information that can be read. Later, if you find some compilation error about Eigen, you can directly look for the uppercase part and figure out what the problem is.
     
     \item Our routines only cover basic matrix operations. You can read more about Eigen by reading the Eigen official website tutorial: \\ { \url{http://eigen.tuxfamily.org/dox-devel/modules.html} }. Only the simplest part is demonstrated here. It is not equal to the fact that you can understand Eigen.
 \end{enumerate}
@@ -416,14 +416,14 @@ Now let's return to the theoretical part. With a rotation matrix to describe the
 
 Therefore, we hope that there is a way to describe rotation and translation in a compact manner. For example, is it feasible to express rotation with a three-dimensional vector and express transformation with a six-dimensional vector? In fact, a rotation can be described by \textbf {a rotation axis and a rotation angle}. Thus, we can use a vector whose direction is parallel with the axis of rotation and the length is equal to the angle of rotation, which is called the \textbf {rotation vector} (or Angle-Axis/Axis-Angle), and only a three-dimensional vector is needed to describe the rotation. Similarly, for a transformation matrix, we use a rotation vector and a translation vector to express a transformation. The variable dimension at this time is exactly six dimensions.
 
-Consider a rotation represented by $ \mathbf{R} $. If described by a rotation vector, assuming that the rotation axis is a unit length vector $ \mathbf{n} $ and the angle is $ \theta $, then the vector $ \theta \mathbf{n} $ can also describe this rotation. So, we have to ask, what is the connection between the two expressions? In fact, it is not difficult to derive their conversion relationship. The conversion process from the rotation vector to the rotation matrix is shown by \textbf{Rodrigues's Formula}. Since the derivation process is a little complicated, it is not described here. Only the result of the conversion is given\footnote{For interested readers, please refer to \url{https://en.wikipedia.org/wiki/Rodrigues \% 27_rotation_formula}, in fact the next chapter will give a proof from the Lie algebra view.}:
+Consider a rotation represented by $ \mathbf{R} $. If described by a rotation vector, assuming that the rotation axis is a unit-length vector $ \mathbf{n} $ and the angle is $ \theta $, then the vector $ \theta \mathbf{n} $ can also describe this rotation. So, we have to ask, what is the connection between the two expressions? In fact, it is not difficult to derive their conversion relationship. The conversion process from the rotation vector to the rotation matrix is shown by \textbf{Rodrigues' Formula}. Since the derivation process is a little complicated, it is not described here. Only the result of the conversion is given\footnote{For interested readers, please refer to \url{https://en.wikipedia.org/wiki/Rodrigues \% 27_rotation_formula}, in fact the next chapter will give a proof from the Lie algebra view.}:
 
 \begin{equation}
 \label{eq:rogridues}
 \mathbf{R} = \cos \theta \mathbf{I} + \left({ 1 - \cos \theta } \right) \mathbf{n} { \mathbf {n} ^ \mathrm{T} } + \sin \theta { \mathbf{n}^ \wedge }.
 \end{equation}
 
-The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formula \eqref{eq:cross}. Conversely, we can also calculate the conversion from a rotation matrix to a rotation vector. For the corner $ \theta $, take the \textbf{trace} \footnote {see \textbf{trace} on both sides to find the sum of the diagonal elements of the matrix. }, we have:
+The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formula~\eqref{eq:cross}. Conversely, we can also calculate the conversion from a rotation matrix to a rotation vector. For the corner $ \theta $, take the \textbf{trace} \footnote {see \textbf{trace} on both sides to find the sum of the diagonal elements of the matrix. }, we have:
 
 \begin{equation}
 \begin{aligned}
@@ -439,7 +439,7 @@ therefore:
 \theta = \arccos ( \frac{\mathrm{tr}(\mathbf{R}) - 1}{2}  ) .
 \end{equation}
 
-Regarding the axis $ \mathbf{n} $ , since the vector on the rotation axis does not change after the rotation, it means:
+Regarding the axis $ \mathbf{n} $, since the vector on the rotation axis does not change after the rotation, it means:
 \begin{equation}
 \mathbf{R} \mathbf{n} = \mathbf{n}.
 \end{equation}
@@ -475,13 +475,13 @@ A major drawback of Euler Angle is that it encounters the famous \textbf{Gimbal 
 
 The rotation matrix describes the rotation of 3 degrees of freedom with 9 quantities, with redundancy; the Euler angles and the rotation vectors are compact but has singularity. In fact, we \textbf{cannot find a three-dimensional vector description without singularity}\cite{Stuelpnagel1964}. This is somewhat similar to using two coordinates to represent the Earth's surface (such as longitude and latitude), and there will be singularity (longitude is meaningless when latitude is $ \pm  90 ^ \circ $ ).
 
-Recall the complex number that we have studied before. We use the complex set $ \mathbb {C} $ to represent the vector on the 2D complex plane, and the complex multiplication with an unit complex number can represent the rotation on the 2D plane: for example, multiplying the complex $i$ is equivalent to rotating a complex vector counterclockwise by $ 90 ^ \circ $. Similarly, when expressing a three-dimensional space rotation, there is also an algebra similar to a complex number: \textbf{quaternions}. The quaternion is an extended complex number found by Hamilton. It \textbf{ is both compact and not singular}. If we must find some shortcomings, the quaternion is not intuitive enough, and its operation is a bit more complicated.
+Recall the complex number that we have studied before. We use the complex set $ \mathbb {C} $ to represent the vector on the 2D complex plane, and the complex multiplication with a unit complex number can represent the rotation on the 2D plane: for example, multiplying the complex $i$ is equivalent to rotating a complex vector counterclockwise by $ 90 ^ \circ $. Similarly, when expressing a three-dimensional space rotation, there is also an algebra similar to a complex number: \textbf{quaternions}. The quaternion is an extended complex number found by Hamilton. It \textbf{ is both compact and not singular}. If we must find some shortcomings, the quaternion is not intuitive enough, and its operation is a bit more complicated.
 
-Comparing quaternions to complex numbers can help you understand quaternions faster. For example, when we want to rotate the vector of a complex plane by $\theta$ , we can multiply this complex vector by $\mathrm{e}^{i \theta}$, which is a complex number represented by polar coordinates. It can also be written in the usual form like the famous Euler equation:
+Comparing quaternions to complex numbers can help you understand quaternions faster. For example, when we want to rotate the vector of a complex plane by $\theta$, we can multiply this complex vector by $\mathrm{e}^{i \theta}$, which is a complex number represented by polar coordinates. It can also be written in the usual form like the famous Euler equation:
 \begin{equation}
 \mathrm{e}^{i\theta} = \cos \theta + i \sin \theta.
 \end{equation}
-This is a unit length complex number. Therefore, in the case of two dimensions, the rotation can be described by \textbf{unit complex number}. Similarly, we will see that 3D rotation can be described by a \textbf{unit quaternion}.
+This is a unit-length complex number. Therefore, in the case of two dimensions, the rotation can be described by \textbf{unit complex number}. Similarly, we will see that 3D rotation can be described by a \textbf{unit quaternion}.
 
 A quaternion $ \mathbf{q} $ has a real part and three imaginary parts. We write the real part in the front (and there are also some books where the real part is written in the last), like this:
 \begin{equation}
@@ -494,24 +494,24 @@ Where $ i,j,k $ are the three imaginary parts of the quaternion. These three ima
 {i^2} = {j^2} = {k^2} =  - 1\\
 ij = k, ji = - k \\
 jk = i,kj =  - i\\
-ki = j, i = - j
+ki = j, ik = - j
 \end{array} \right. .
 \end{equation}
 If we look at $ i, j, k $ as three axes, they are the same as their own multiplications and complex numbers, and the multiplication and outer product are the same. Sometimes people also use a scalar and a vector to express quaternions:
 \[
 \mathbf{q} = \left[ s, \mathbf{v} \right]^\mathrm{T}, \quad s=q_0 \in \mathbb{R},\quad \mathbf{v} = [q_1, q_2, q_3]^\mathrm{T} \in \mathbb{R}^3,
 \]
-Here, $ s $ is the real part of the quaternion, and $ \mathbf {v} $ is its imaginary part. If the imaginary part of a quaternion is $ \mathbf {0} $ , it is called \textbf{real quaternion}. Conversely, if its real part is $ 0 $ , it is called \textbf{imaginary quaternion}.
+Here, $ s $ is the real part of the quaternion, and $ \mathbf {v} $ is its imaginary part. If the imaginary part of a quaternion is $ \mathbf {0} $, it is called \textbf{real quaternion}. Conversely, if its real part is $ 0 $, it is called \textbf{imaginary quaternion}.
 
-We can use a \textbf{unit quaternion} to represent any rotation in 3D space, but this expression is subtly different from the complex numbers. In the complex, multiplying by $ i $ means rotating $ 90 ^ \circ $ . Does this mean that in the quaternion, multiplied by $ i $ is rotated around the $ i $ axis by $ 90 ^ \circ $ ? So, does $ ij = k $ mean, first rotating around the $ i $ by $ 90 ^ \circ $ , then around $j$ by $ 90 ^ \circ $ , is equivalent to rotating around $ k$ by $ 90 ^ \circ $ ? Readers can use a cell phone to simulate that, then you will find that this is not the case. The correct situation should be that multiplying $ i $ corresponds to rotating $ 180 ^ \circ $ , in order to guarantee the nature of $ ij=k $ . And $ i^ 2 =- 1 $ means that after rotating $ 360 ^ \circ $ around the $ i $ axis, we get an opposite thing. This thing has to be rotated for 720 $^\circ$ to be equal to its original appearance.
+We can use a \textbf{unit quaternion} to represent any rotation in 3D space, but this expression is subtly different from the complex numbers. In the complex, multiplying by $ i $ means rotating $ 90 ^ \circ $. Does this mean that in the quaternion, multiplied by $ i $ is rotated around the $ i $ axis by $ 90 ^ \circ $ ? So, does $ ij = k $ mean, first rotating around the $ i $ by $ 90 ^ \circ $, then around $j$ by $ 90 ^ \circ $, is equivalent to rotating around $ k$ by $ 90 ^ \circ $ ? Readers can use a cell phone to simulate that, then you will find that this is not the case. The correct situation should be that multiplying $ i $ corresponds to rotating $ 180 ^ \circ $, in order to guarantee the nature of $ ij=k $. And $ i^ 2 =- 1 $ means that after rotating $ 360 ^ \circ $ around the $ i $ axis, we get an opposite thing. This thing has to be rotated by 720 $^\circ$ to be equal to its original appearance.
 
 This seems a bit mysterious, the complete explanation needs too much extra things, let's calm down and come back to the quaternions. At least, we know that a unit quaternion can express the rotation of a three-dimensional space. So what are the properties of the quaternions? And how can they operate with each other?
 
 \subsection{Quaternion Operations}
 
-Quaternions are very similar to complex numbers, and a series of operations can be performed. We can easily plus, minus, multiplies to quaternions just like doing with two complex numbers. Assume there are two quaternions $ \mathbf{q}_a, \mathbf{q}_b $ , whose vectors are represented as $ [s_a, \mathbf {v}_a]^ \mathrm {T}, [s_b, \mathbf{v}_b]^ \mathrm {T} $ , or the original quaternion is expressed as:
+Quaternions are very similar to complex numbers, and a series of operations can be performed. We can easily plus, minus, multiplies to quaternions just like doing with two complex numbers. Assume there are two quaternions $ \mathbf{q}_a, \mathbf{q}_b $, whose vectors are represented as $ [s_a, \mathbf {v}_a]^ \mathrm {T}, [s_b, \mathbf{v}_b]^ \mathrm {T} $, or the original quaternion is expressed as:
 \[
-\mathbf{q} _a = s_a + x_ai + y_a + z_ak, \quad  \mathbf {q} _b = s_b + x_bi + y_bj + z_bk.
+\mathbf{q} _a = s_a + x_ai + y_aj + z_ak, \quad  \mathbf {q} _b = s_b + x_bi + y_bj + z_bk.
 \]
 Then, their operations can be expressed as follows.
 
@@ -520,7 +520,7 @@ Then, their operations can be expressed as follows.
     \begin{equation} 	
     \mathbf{q}_a \pm \mathbf{q}_b = \left[ s_a \pm s_b, \mathbf{v}_a \pm \mathbf{v}_b \right]^\mathrm{T}.
     \end{equation}
-    \item { \emph {Multiplication}}. Multiplication is the multiplication of each item of $ \mathbf {q}_a $ with each item of $ \mathbf {q}_b $ , and finally, the imaginary part is done according to the formula \eqref {eq:quaternionVirtual}:
+    \item { \emph {Multiplication}}. Multiplication is the multiplication of each item of $ \mathbf {q}_a $ with each item of $ \mathbf {q}_b $, and finally, the imaginary part is done according to the formula~\eqref {eq:quaternionVirtual}:
     \begin{equation}
     \begin{aligned}
     \mathbf{q}_a \mathbf{q}_b &= {s_a}{s_b} - {x_a}{x_b} - {y_a}{y_b} - {z_a}{z_b}\\
@@ -539,7 +539,7 @@ Then, their operations can be expressed as follows.
     \begin{equation}
     \| \mathbf{q}_a \| = \sqrt{ s_a^2 + x_a^2 + y_a^2 + z_a^2 }.
     \end{equation}
-    It can be verified that the length of the product is the product of the length. This makes the unit quaternion keep unit length when multiplied by another unit quaternion:
+    It can be verified that the length of the product is the product of the lengths. This makes the unit quaternion keep unit-length when multiplied by another unit quaternion:
     \begin{equation}
     \| \mathbf{q}_a \mathbf{q}_b \| = \|\mathbf{q}_a \| \| \mathbf{q}_b \|.
     \end{equation}
@@ -550,13 +550,13 @@ Then, their operations can be expressed as follows.
     \end{equation}
     We get a real quaternion if the quaternion is multiplied by its conjugate. The real part is the square of its length:
     \begin{equation}
-    \mathbf{q}^* \mathbf{q} = \mathbf{q} \mathbf{q}^* = [s_a^2+\mathbf{v}^\mathrm{T} \mathbf{v}, \mathbf{0} ]^\mathrm{T}.
+    \mathbf{q}^* \mathbf{q} = \mathbf{q} \mathbf{q}^* = [s^2+\mathbf{v}^\mathrm{T} \mathbf{v}, \mathbf{0} ]^\mathrm{T}.
     \end{equation}
     
     \item { \emph{Inverse}}. The inverse of a quaternion is:
     \begin{equation}
     \label{eq:quaternionInverse}
-    \mathbf{q} ^ { - 1 } = \mathbf{q} ^ * / \| \mathbf{q} \| ^ 2 .       
+    \mathbf{q} ^ { - 1 } = \mathbf{q} ^ * / \| \mathbf{q} \| ^ 2.
     \end{equation}
     According to this definition, the product of the quaternion and its inverse is the real quaternion $ \mathbf {1} $ :
     \begin{equation}
@@ -576,9 +576,9 @@ Then, their operations can be expressed as follows.
 
 \subsection{Use Quaternion to Represent Rotation}
 
-We can use a quaternion to express the rotation of a point. Suppose a spatial 3D point $ \mathbf{p} = [x,y,z]^\mathrm{T} \in  \mathbb {R}^3$, and a rotation is specified by a unit quaternion $ \mathbf{q}$. The 3D point $\mathbf{p}$ is rotated to become $\mathbf{p}'$ . If we use matrix, then there is $ \mathbf{p}'= \mathbf{R} \mathbf{p} $ . And if we use quaternion to describe rotation, how do we operate a 3D vector with a quaternion? 
+We can use a quaternion to express the rotation of a point. Suppose a spatial 3D point $ \mathbf{p} = [x,y,z]^\mathrm{T} \in  \mathbb {R}^3$, and a rotation is specified by a unit quaternion $ \mathbf{q}$. The 3D point $\mathbf{p}$ is rotated to become $\mathbf{p}'$. If we use matrix, then there is $ \mathbf{p}'= \mathbf{R} \mathbf{p} $. And if we use quaternion to describe rotation, how do we operate a 3D vector with a quaternion?
 
-First, we use extends the 3D point to a imaginary quaternion:
+First, we extend the 3D point to an imaginary quaternion:
 \[s
 \mathbf{p} = [0, x, y, z]^\mathrm{T} = [0, \mathbf{v}]^\mathrm{T}. 
 \]
@@ -592,7 +592,7 @@ The multiplication here is quaternion multiplication, and the result is also a q
 
 \subsection{Conversion of Quaternions to Other Rotation Representations}
 
-An arbitrary unit quaternion describes a rotation, which can also be described by a rotation matrix or a rotation vector. Now let's examine the conversion relationship between quaternions and rotation vectors/matrices. Before that, we have to say that quaternion multiplication can also be written as a matrix multiplication. Let $\mathbf{q}=[s,\mathbf{v}]^\mathrm{T}$, then define the following symbols $^{+}$ and $^{\oplus}$ as \cite{Barfoot2011}:
+An arbitrary unit quaternion describes a rotation, which can also be described by a rotation matrix or a rotation vector. Now let's examine the conversion relationship between quaternions and rotation vectors/matrices. Before that, we have to say that quaternion multiplication can also be written as a matrix multiplication. Let $\mathbf{q}=[s,\mathbf{v}]^\mathrm{T}$, then define the following symbols $^{+}$ and $^{\oplus}$ as~\cite{Barfoot2011}:
 \begin{equation}
 	\mathbf{q}^{+}=\left[\begin{array}{cc}
 		s&-\mathbf{v}^\mathrm{T} \\
@@ -604,10 +604,10 @@ An arbitrary unit quaternion describes a rotation, which can also be described b
 		\mathbf{v} & s\mathbf{I}-\mathbf{v}^{\wedge}
 	\end{array}\right],
 \end{equation}
-These two symbols map the quaternion to a matrix of 4$\times$4. Then quaternion multiplication can be written in the form of a matrix:
+These two symbols map the quaternion to a matrix of 4$\times$4. Then the quaternion multiplication can be written in the form of a matrix:
 \begin{equation}
 	\mathbf{q}_1^ + {\mathbf{q}_2} = \left[ {\begin{array}{*{20}{c}}
-			S_1&-\mathbf{v}_1^T\\
+			s_1&-\mathbf{v}_1^T\\
 			\mathbf{v}_1 & s_1 \mathbf{I} + \mathbf{v}_1^\wedge
 	\end{array}} \right]\left[ {\begin{array}{*{20}{c}}
 			{{s _2}} \\
@@ -646,16 +646,16 @@ Since $\mathbf{p}'$ and $\mathbf{p}$ are both imaginary quaternions, so in fact 
 \begin{equation}
 	\mathbf{R} = \mathbf{v} \mathbf{v}^\mathrm{T} + {s^2} \mathbf{I} + 2s\mathbf{v} ^ \wedge + {(\mathbf{v } ^ \wedge)}^2.
 \end{equation}
-In order to obtain the conversion formula of the quaternion to the rotation vector, we take the trace on both of two sides of the above formula:
+In order to obtain the conversion formula of the quaternion to the rotation vector, we take the trace on both sides of the above formula:
 \begin{equation}
 	\begin{aligned}
-		\mathrm{tr}(\mathbf{R}) &= \mathrm{tr}(\mathbf{v}\mathbf{v}^\mathrm{T} + 3s^2 + 2s \cdot 0 + \mathrm{tr }((\mathbf{v}^\wedge)^2) \\
+		\mathrm{tr}(\mathbf{R}) &= \mathrm{tr}(\mathbf{v}\mathbf{v}^\mathrm{T}) + 3s^2 + 2s \cdot 0 + \mathrm{tr }((\mathbf{v}^\wedge)^2) \\
 		&= v_1^2+v_2^2+v_3^2 + 3s^2 - 2(v_1^2+v_2^2+v_3^2) \\
 		&= (1-s^2) + 3s^2 -2(1-s^2)\\
 		&= 4s^2 -1.
 	\end{aligned}
 \end{equation}
-Also obtained by the formula \eqref{eq:R2theta}:
+Also obtained by the formula~\eqref{eq:R2theta}:
 \begin{equation}
 	\begin{aligned}
 		\theta &= \arccos(\frac{\mathrm{tr}(\mathbf{R})-1}{2}) \\
@@ -670,7 +670,7 @@ and so we have:
 \begin{equation}
 	\theta = 2 \arccos s.
 \end{equation}
-For the rotation axis, if we replace $\mathbf{p}$ with the imaginary part of $\mathbf{q}$ in the formula \eqref{eq:quaternion-to-rotation-matrix-derive}, it is easy to know the imaginary part of  $\mathbf{q}$ is not moving when it is rotated, that is, it constitutes exactly the rotation axis. So we get the rotation axis just by normalizing $\mathbf{q}$'s imaginary part. In summary, the conversion formula for quaternion to rotation vector can be written as follows:
+For the rotation axis, if we replace $\mathbf{p}$ with the imaginary part of $\mathbf{q}$ in the formula~\eqref{eq:quaternion-to-rotation-matrix-derive}, it is easy to know the imaginary part of  $\mathbf{q}$ is not moving when it is rotated, that is, it constitutes exactly the rotation axis. So we get the rotation axis just by normalizing $\mathbf{q}$'s imaginary part. In summary, the conversion formula for quaternion to rotation vector can be written as follows:
 \begin{equation}
 	\label{eq:rotationVector2Quaternion}
 	\begin{cases}
@@ -695,7 +695,7 @@ In addition to the Euclidean transformation, there are several other transformat
 		\end{array}} \right].
 	\end{equation}
 	
-	Notice that the rotation part has an extra scaling factor $s$, which means that we can evenly scale the three coordinates of $x, y, and z$ of a vector after it is rotated. Due to the scaling, the similar transformation no longer keeps the volumn of ​​the transformed boy unchanged. You can imagine a cube with a side length of 1 transforming into a side with a length of 10 (but still being a cube). The set of three-dimensional similar transforms is also called \textbf{similarity transform group}, which is denoted as $\mathrm{Sim}(3)$.
+	Notice that the rotation part has an extra scaling factor $s$, which means that we can evenly scale the three coordinates of $x,\ y,\ and\ z$ of a vector after it is rotated. Due to the scaling, the similar transformation no longer keeps the volume of ​​the transformed boy unchanged. You can imagine a cube with a side length of 1 transforming into a side with a length of 10 (but still being a cube). The set of three-dimensional similar transforms is also called \textbf{similarity transform group}, which is denoted as $\mathrm{Sim}(3)$.
 	
 	\item {\emph{Affine transformation}}.
 	
@@ -842,7 +842,7 @@ Note that the \textbf {program code has some subtle differences from the mathema
 
 Let's take a small example to demonstrate the coordinate transformation.
 
-\noindent  \textbf{Example 1}. \quad  The robot No. 1 and the robot No. 2 are located in the world coordinate system. We use the world coordinate system as $W$ , robot coordinate system as $R_1 $ and $R_2$ . The pose of the robot No. 1 is $ \mathbf {q}_ 1 = [ 0.35 , 0.2 , 0.3 , 0.1 ]^ \mathrm{T}, \mathbf{t}_ 1 = [ 0.3 , 0.1 , 0.1 ]^ \mathrm{T} $ . The pose of the robot No. 2 is $ \mathbf{q}_2 = [ - 0.5 , 0.4 , - 0.1 , 0.2 ]^ \mathrm{T}, \mathbf{t}_ 2 = [- 0.1 , 0.5 , 0.3 ]^ \mathrm{T} $ . Here $ \mathbf {q} $ and $ \mathbf{t} $ express $ \mathbf{T}_{R_k, W}, k= 1 , 2 $ , which is the world coordinate system to the robot coordinate system. Now, assume that robot No. 1 sees a point in its own coordinate system with coordinates of $ \mathbf{p}_{R_1} = [ 0.5 .0 , 0.2 ]^ \mathrm{T} $ , find the coordinates of the vector in the radish No. 2 coordinate system. 
+\noindent  \textbf{Example 1}. \quad  The robot No. 1 and the robot No. 2 are located in the world coordinate system. We use the world coordinate system as $W$, robot coordinate system as $R_1 $ and $R_2$. The pose of the robot No. 1 is $ \mathbf {q}_ 1 = [ 0.35, 0.2, 0.3, 0.1 ]^ \mathrm{T}, \mathbf{t}_ 1 = [ 0.3, 0.1, 0.1 ]^ \mathrm{T} $. The pose of the robot No. 2 is $ \mathbf{q}_2 = [ - 0.5, 0.4, - 0.1, 0.2 ]^ \mathrm{T}, \mathbf{t}_ 2 = [- 0.1, 0.5, 0.3 ]^ \mathrm{T} $. Here $ \mathbf {q} $ and $ \mathbf{t} $ express $ \mathbf{T}_{R_k, W}, k= 1, 2 $, which is the world coordinate system to the robot coordinate system. Now, assume that robot No. 1 sees a point in its own coordinate system with coordinates of $ \mathbf{p}_{R_1} = [ 0.5, 0, 0.2 ]^ \mathrm{T} $, find the coordinates of the vector in the radish No. 2 coordinate system.
 
 This is a very simple but representative example. In actual scenarios you often need to convert coordinates between different parts of the same robot or between different robots. Below we write a program to demonstrate this calculation.
 
@@ -873,7 +873,7 @@ int main(int argc, char** argv) {
 }
 \end{lstlisting}
 
-The answer to the program is $ [- 0.0309731 , 0.73499 , 0.296108 ]^ \mathrm{T}$, and the calculation process is very simple, just by calculating $$ \mathbf{p}_{R_2} = \mathbf{T}_{ R_2, W} \mathbf{T}_{W, R_1} \mathbf{p}_{R_1}. $$ Note that the quaternion needs to be normalized before use.
+The answer to the program is $ [- 0.0309731, 0.73499, 0.296108 ]^ \mathrm{T}$, and the calculation process is very simple, just by calculating $$ \mathbf{p}_{R_2} = \mathbf{T}_{ R_2, W} \mathbf{T}_{W, R_1} \mathbf{p}_{R_1}. $$ Note that the quaternion needs to be normalized before use.
 
 \section{Visualization Demo}
 \subsection{Plotting Trajectory}
@@ -882,11 +882,11 @@ If you are new to the concepts of rotation and translation, you may find that th
 
 In this section we demonstrate two visual examples. First, let's say that we recorded the trajectory of a robot in some way, and now I want to draw it in a figure. Suppose the trajectory file is stored in a text file called ``trajectory.txt'', and each line is stored in the following format: $$ \mathrm {time}, t_x, t_y, t_z, q_x, q_y, q_z, q_w, $$ where $ \mathrm {time} $ refers the recording time of this pose, $ \mathbf {t} $ is translation, $ \mathbf {q} $ is the quaternion, all recorded in the world coordinate system to the robot coordinate system. Below we read these tracks from the file and display them in a window. In principle, if we just talk about ``robot pose'', then we can use any one of $ \mathbf {T}_{WR} $ or $ \mathbf {T}_{RW} $ because they are just the inverse of each other. It means that knowing one of them makes it easy to get the other. If we want to store \textbf {robot's trajectory}, then saving $ \mathbf {T}_{WR} $ or $ \mathbf {T}_{RW} $ doesn't make much difference.
 
-When drawing the trajectory, we should draw the ``trajectory'' as a sequence of points, which is similar to the ``trajectory'' we imagined. Strictly speaking, this is actually the \textbf {the coordinates of the origin of the robot in the world coordinate system}. Consider the origin of the robot coordinate system, i.e., $ \mathbf {O}_{R}$ , then the $ \mathbf{O}_{W}$ at this time is the coordinates of the origin in the world coordinate system:
+When drawing the trajectory, we should draw the ``trajectory'' as a sequence of points, which is similar to the ``trajectory'' we imagined. Strictly speaking, this is actually the \textbf {the coordinates of the origin of the robot in the world coordinate system}. Consider the origin of the robot coordinate system, i.e., $ \mathbf {O}_{R}$, then the $ \mathbf{O}_{W}$ at this time is the coordinates of the origin in the world coordinate system:
 \begin{equation}
 \mathbf{O} _ {W} = \mathbf{T} _ {WR} \mathbf {O} _R = \mathbf {t} _ {WR}.
 \end{equation}
-This is exactly the translation part of $ \mathbf {T}_{WR} $ . So, you can see \textbf {where the camera is} directly from $ \mathbf {T}_{WR} $. Therefore, in most of the public datasets, the trajectory file stores $ \mathbf {T}_{WR} $ instead of $ \mathbf {T}_{RW} $ .
+This is exactly the translation part of $ \mathbf {T}_{WR} $. So, you can see \textbf {where the camera is} directly from $ \mathbf {T}_{WR} $. Therefore, in most of the public datasets, the trajectory file stores $ \mathbf {T}_{WR} $ instead of $ \mathbf {T}_{RW} $ .
 
 Finally, we need a library that supports 3D drawing. There are many libraries that support 3D drawing, such as the famous matlab, python matplotlib, OpenGL and so on. In linux, a common library is OpenGL-based Pangolin library \footnote{See \url {https://github.com/stevenlovegrove/Pangolin}.}, which provides some drawing operations based on OpenGL. In the second edition of the book, we used git's submodule feature to manage the third-party libraries that this book relies on. Readers can go directly to the 3rdparty folder to install the required libraries, and git guarantees that I am consistent with the version you are using.
 
@@ -1002,8 +1002,8 @@ In addition to displaying the trajectory, we can also display the pose of the ca
 \begin{enumerate}
 	\item Verify that the rotation matrix is an orthogonal matrix.
 	\item Prove the Rodrigues formula.
-	\item Verify that after the quaternion rotates a point, the result is a imaginary quaternion (the real part is zero), so it still corresponds to a three-dimensional space point, see \eqref{eq:rotate-with-quaternion}.
+	\item Verify that after the quaternion rotates a point, the result is a imaginary quaternion (the real part is zero), so it still corresponds to a three-dimensional space point, see~\eqref{eq:rotate-with-quaternion}.
 	\item Draw a table that summarizes the conversion relationship of the rotation matrix, rotation angle, Euler angle and quaternion.
-	\item Suppose there is a large Eigen matrix, we want to know the value in the top left $3 \times 3$ blocks, and then assign it to $\mathbf{I}_{3 \times 3}$ . Please implement it in C++.
-	\item When does a general linear equation $\mathbf{A} \mathbf{x}=\mathbf{b}$ has an unique solution of $\mathbf{x}$? How to solve it numerically? Can you implement it in Eigen?
+	\item Suppose there is a large Eigen matrix, we want to know the value in the top left $3 \times 3$ blocks, and then assign it to $\mathbf{I}_{3 \times 3}$. Please implement it in C++.
+	\item When does a general linear equation $\mathbf{A} \mathbf{x}=\mathbf{b}$ has a unique solution of $\mathbf{x}$? How to solve it numerically? Can you implement it in Eigen?
 \end{enumerate}

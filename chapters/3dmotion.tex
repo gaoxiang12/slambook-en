@@ -427,7 +427,7 @@ det: 0.208598
 
 因此，我们希望有一种方式能够紧凑地描述旋转和平移。例如，用一个三维向量表达旋转，用六维向量表达变换，可行吗？事实上，任意旋转都可以用\textbf{一个旋转轴和一个旋转角}来刻画。于是，我们可以使用一个向量，其方向与旋转轴一致，而长度等于旋转角。这种向量称为\textbf{旋转向量}（或轴角/角轴，Axis-Angle），只需一个三维向量即可描述旋转。同样，对于变换矩阵，我们使用一个旋转向量和一个平移向量即可表达一次变换。这时的变量维数正好是六维。
 
-考虑某个用$\bm{R}$表示的旋转。如果用旋转向量来描述，假设旋转轴为一个单位长度的向量$\bm{n}$，角度为$\theta$，那么向量$\theta \bm{n}$也可以描述这个旋转。于是，我们要问，两种表达方式之间有什么联系吗？事实上推导它们的转换关系并不难。从旋转向量到旋转矩阵的转换过程由\textbf{罗德里格斯公式}（Rodrigues's Formula ）表明，由于推导过程比较复杂，这里不作描述，只给出转换的结果\footnote{感兴趣的读者请参见\url{https://en.wikipedia.org/wiki/Rodrigues\%27_rotation_formula}，事实上下一章会从李代数层面给出一个证明。}：
+考虑某个用$\bm{R}$表示的旋转。如果用旋转向量来描述，假设旋转轴为一个单位长度的向量$\bm{n}$，角度为$\theta$，那么向量$\theta \bm{n}$也可以描述这个旋转。于是，我们要问，两种表达方式之间有什么联系吗？事实上推导它们的转换关系并不难。从旋转向量到旋转矩阵的转换过程由\textbf{罗德里格斯公式}（Rodrigues' Formula ）表明，由于推导过程比较复杂，这里不作描述，只给出转换的结果\footnote{感兴趣的读者请参见\url{https://en.wikipedia.org/wiki/Rodrigues\%27_rotation_formula}，事实上下一章会从李代数层面给出一个证明。}：
 \begin{equation}
 \label{eq:rogridues}
 \bm{R} = \cos \theta \bm{I} + \left( {1 - \cos \theta } \right) \bm{n}{\bm{n}^\mathrm{T}} + \sin \theta { \bm{n}^ \wedge }.

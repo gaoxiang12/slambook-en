@@ -56,7 +56,7 @@ Y' = f\frac{Y}{Z}
 
 Readers may ask why can we seem to arbitrarily move the imaging plane to the front? In fact this is just a mathematical approach to handle the camera projection, and most of the images captured by the camera are not upside-down - the camera's software will flip the image for you, so what we actually get is the image on the symmetric plane. So, although from the physical principle, the pin-hold image should be inverted, but since we have pre-processed the image, it is not bad to take the symmetric one. Therefore, without causing ambiguity, we often emit the minus symbol in the pinhole model.
 
-The formula \eqref{eq:P2Pprime} describes the spatial relationship between the point $P$ and its image, where the units of all points are meters,  for example, a focal length may be 0.2 meters and $X'$ be 0.14 meters. However, in the camera, we end up with pixels, where we need to sample and quantize the pixels on the imaging plane. In order to describe the process by which the sensor converts the perceived light into image pixels, we set a pixel plane $o-u-v$ fixed on the physical imaging plane. Finally we get \textbf{pixel coordinates} of $P'$ in the pixel plane: $[u,v]^\mathrm{T}$.
+The formula~\eqref{eq:P2Pprime} describes the spatial relationship between the point $P$ and its image, where the units of all points are meters,  for example, a focal length may be 0.2 meters and $X'$ be 0.14 meters. However, in the camera, we end up with pixels, where we need to sample and quantize the pixels on the imaging plane. In order to describe the process by which the sensor converts the perceived light into image pixels, we set a pixel plane $o-u-v$ fixed on the physical imaging plane. Finally we get \textbf{pixel coordinates} of $P'$ in the pixel plane: $[u,v]^\mathrm{T}$.
 
 The usual definition ot the \textbf{pixel coordinate system}\footnote{ Or image coordinate system, see section 2 of this lecture. } is : the origin $o'$ is in the upper left corner of the image, the $u$ axis is parallel to the $x$ axis, and the $v$ axis is parallel to the $y$ axis. Between the pixel coordinate system and the imaging plane, there is an obvious \textbf{zoom} and a \textbf{translation of the origin}. We set the pixel coordinates to scale $\alpha$ times on the $u$ axis and $\beta$ times on $v$. At the same time, the origin is translated by $[c_x, c_y]^\mathrm{T}$. Then, the relationship between the coordinates of $P'$ and the pixel coordinate $[u,v]^\mathrm{T}$ is:
 \begin{equation}
@@ -69,7 +69,7 @@ v=\beta Y' + c_y
 \right. .
 \end{equation}
 
-Put it into \eqref{eq:P2Pprime} and set $\alpha f$ as $f_x$, $\beta f$ as $f_y$:
+Put it into~\eqref{eq:P2Pprime} and set $\alpha f$ as $f_x$, $\beta f$ as $f_y$:
 \begin{equation}
 \left\{
 \begin{matrix} 
@@ -105,9 +105,9 @@ v\\
 \end{array} \right] = \mathbf{K} \left( {\mathbf{R}{ \mathbf{P}_w} + \mathbf{t}} \right) =  \mathbf{K} \mathbf{T} \mathbf{P}_w .
 \end{equation}
 
-Note that the latter formula implies a conversion from homogeneous to non-homogeneous coordinates (can you see it?)\footnote{We use homogeneous coordinates in $\mathbf{T}\mathbf{P}$ , then convert to non-homogeneous coordinates, and then multiply it by $\mathbf{K}$. }. It describes the projection relationship of world coordinates to pixel coordinates of $P$. Among them, the camera's pose $\mathbf{R}, \mathbf{t}$ is also called the camera's \textbf{extrinsics} \footnote{In robots or autonomous vehicles, the extrinsics is sometimes explained the transform between the camera coordinate system and the robot body coordinate system, describing ``where the camera is installed''. }. Compared with the intrinsics, the extrinsics may change with the camera installation, and is also the target to be estimated in the SLAM if we only have a camera.
+Note that the latter formula implies a conversion from homogeneous to non-homogeneous coordinates (can you see it?)\footnote{We use homogeneous coordinates in $\mathbf{T}\mathbf{P}$, then convert to non-homogeneous coordinates, and then multiply it by $\mathbf{K}$. }. It describes the projection relationship of world coordinates to pixel coordinates of $P$. Among them, the camera's pose $\mathbf{R}, \mathbf{t}$ is also called the camera's \textbf{extrinsics} \footnote{In robots or autonomous vehicles, the extrinsics is sometimes explained the transform between the camera coordinate system and the robot body coordinate system, describing ``where the camera is installed''. }. Compared with the intrinsics, the extrinsics may change with the camera installation, and is also the target to be estimated in the SLAM if we only have a camera.
 
-The projection process can also be viewed from another perspective. The formula \eqref{eq:cameraprojection} shows that we can convert a world coordinate point to the camera coordinate system first, and then remove the value of its last dimension (that is, the depth of the point from the imaging plane of the camera), which is equivalent to the \textbf{normalization} on the last dimension. By this way we get the projection of the point $P$ on the camera \textbf{normalized plane}:
+The projection process can also be viewed from another perspective. The formula ~\eqref{eq:cameraprojection} shows that we can convert a world coordinate point to the camera coordinate system first, and then remove the value of its last dimension (that is, the depth of the point from the imaging plane of the camera), which is equivalent to the \textbf{normalization} on the last dimension. By this way we get the projection of the point $P$ on the camera \textbf{normalized plane}:
 \begin{equation}
 \left( {\mathbf{R}{\mathbf{P}_w} + \mathbf{t}} \right) = \underbrace{\left[ X,Y,Z\right]^\mathrm{T}}_{\text{Camera Coordinates}} \to \underbrace {\left[ {X/Z,Y/Z,1} \right]^\mathrm{T}}_{\text{Normalized Coordinates}}.
 \end{equation}
@@ -152,7 +152,7 @@ x_\mathrm{distorted} = x+2p_1xy+p_2(r^2+2x^2)\\
 y_\mathrm{distorted} = y+p_1(r^2+2y^2)+2p_2xy
 \end{matrix}. 
 \end{equation}
-Put \eqref{eq:distortion} and \eqref{eq:tangen} together we get a joint model with 5 distortion coefficients. The complete form is:
+Put~\eqref{eq:distortion} and~\eqref{eq:tangen} together we get a joint model with 5 distortion coefficients. The complete form is:
 \begin{equation}
 \left\{\begin{matrix} x_\mathrm{distorted} =x(1+k_1r^2+k_2r^4+k_3r^6)+2p_1xy+p_2(r^2+2x^2)\\ 
 y_\mathrm{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)+p_1(r^2+2y^2)+2p_2xy
@@ -291,7 +291,7 @@ sudo apt-get install build-essential libgtk2.0-dev libvtk5-dev libjpeg-dev libti
 
 In fact, OpenCV has many dependencies, and the lack of certain compilation items will affect some of its functions (but we will not use all the functions). OpenCV will check whether the dependencies will be installed during cmake and adjust its own functions. If you have a GPU on your computer and the relevant dependencies are installed, OpenCV will also enable GPU acceleration. But for this book, the above dependencies are sufficient.
 
-Subsequent compilation and installation are the same as ordinary cmake projects. After make, please call ``sudo make install'' to install OpenCV on your machine (instead of just compiling it). Depending on the machine configuration, this compilation process may take from 20 minutes to an hour. If your CPU is strong, you can use commands like "make -j4" to call multiple threads to compile (the parameter after -j is the number of threads used). After installation, OpenCV is stored in the /usr/local directory by default. You can look for the installation location of OpenCV header files and library files to see where they are. In addition, if you have installed the OpenCV 2 series before, it is recommended that you install OpenCV 3 elsewhere (think about how this should be done).
+Subsequent compilation and installation are the same as ordinary cmake projects. After make, please call ``sudo make install'' to install OpenCV on your machine (instead of just compiling it). Depending on the machine configuration, this compilation process may take from 20 minutes to an hour. If your CPU is powerful, you can use commands like ``make -j4'' to call multiple threads to compile (the parameter after -j is the number of threads used). After installation, OpenCV is stored in the /usr/local directory by default. You can look for the installation location of OpenCV header files and library files to see where they are. In addition, if you have installed the OpenCV 2 series before, it is recommended that you install OpenCV 3 elsewhere (think about how this should be done).
 
 \subsection{Basic OpenCV Images Operations}
 Now let's go through the basic image operations in OpenCV from a simple example.
@@ -511,7 +511,7 @@ int main(int argc, char **argv) {
     \label{fig:stereoExample}
 \end{figure}
 
-In this example, we call the SGBM (Semi-global Batch Matching) \textsuperscript{\cite{Hirschmuller2008}} algorithm implemented by OpenCV to calculate the disparity of the left and right images, and then transform it into the 3D space of the camera through the geometric model of the binocular camera . We use a classic parameter configuration from internet, and we mainly adjust the maximum and minimum disparity. The disparity data combined with the camera's internal parameters and baseline can determine the position of each point in three-dimensional space. We omit the code related to displaying the point cloud to save some space.
+In this example, we call the SGBM (Semi-global Batch Matching) \textsuperscript{\cite{Hirschmuller2008}} algorithm implemented by OpenCV to calculate the disparity of the left and right images, and then transform it into the 3D space of the camera through the geometric model of the binocular camera. We use a classic parameter configuration from internet, and we mainly adjust the maximum and minimum disparity. The disparity data combined with the camera's internal parameters and baseline can determine the position of each point in three-dimensional space. We omit the code related to displaying the point cloud to save some space.
 
 This book is not going to introduce the disparity calculation algorithm of the binocular camera. Interested readers can read the relevant references \textsuperscript{\cite{Scharstein2002, Seitz2006}}. In addition to the binocular algorithm implemented by OpenCV, there are many other libraries focused on achieving efficient parallax calculations. It is still an active and complex subject today.
 
