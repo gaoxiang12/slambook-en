@@ -13,9 +13,9 @@
 \newpage
 \section{Introduction}
 
-This lecture summarizes the structure of a visual SLAM system as an outline of subsequent chapters. Practice part introduces the fundamentals of environment setup and program development. We will make a small "Hello SLAM" program at the end.
+This lecture summarizes the structure of a visual SLAM system as an outline of subsequent chapters. Practice part introduces the fundamentals of environment setup and program development. We will make a small ``Hello SLAM'' program at the end.
 
-\section{Meet "Little Carrot"}
+\section{Meet ``Little Carrot''}
 
 Suppose we assembled a robot called \emph{Little Carrot}, as shown in the following figure:
 
@@ -36,7 +36,7 @@ First of all, such a robot needs wheels and motors to move, so we installed whee
 	\item What is the surrounding environment like? -It's about \emph{map building}.
 \end{enumerate}
 
-\emph{Localization} and \emph{map building}, can be seen as the perception in both inward and outward directions. As a completely autonomous robot, Little Carrot need not only to understand its own \emph{state} (i.e. the location), but also the external \emph{environment} (i.e. the map). Of course, there are many different approaches to solve these two problems. For example, we can lay guiding rails on the floor of the room, or paster a lot of artificial markers such as QR code pictures on the wall, or mount radio positioning devices on the table. If you are outdoor, you can also install a GNSS receiver (like the one in a cell phone or a car) on the head of Little Carrot. With these devices, can we claim that the positioning problem has been resolved? Let's categorize these sensors (see Fig.~\ref{fig:sensors}) into two classes.
+\emph{Localization} and \emph{map building}, can be seen as the perception in both inward and outward directions. As a completely autonomous robot, Little Carrot need not only to understand its own \emph{state} (i.e.\ the location), but also the external \emph{environment} (i.e.\ the map). Of course, there are many different approaches to solve these two problems. For example, we can lay guiding rails on the floor of the room, or paste a lot of artificial markers such as QR code pictures on the wall, or mount radio positioning devices on the table. If you are outdoor, you can also install a GNSS receiver (like the one in a cell phone or a car) on the head of Little Carrot. With these devices, can we claim that the positioning problem has been resolved? Let's categorize these sensors (see Fig.~\ref{fig:sensors}) into two classes.
 
 \begin{figure}
 	\centering
@@ -51,7 +51,7 @@ We can see that the intrusive sensors place certain \emph{constraints} to the ex
 
 Looking back at the SLAM definitions discussed earlier, we emphasized an \emph{unknown environment} in SLAM problems. In theory, we should not presume which environment the Little Carrot will be used (but in reality we will have a rough range, such as indoor or outdoor), which means that we can not assume that the external sensors like GPS can work smoothly. Therefore, the use of portable non-intrusive sensors to achieve SLAM is our main focus. In particular, when talking about visual SLAM, we generally refer to the using of \emph{cameras} to solve the localization and map building problems.
 
-Visual SLAM is the main subject of this book, so we are particularly interested in what the Little Carrot's eyes can do. The cameras used in SLAM are different from the commonly seen SLR cameras. It is often much simpler and does not carry expensive lens. It shoots at the surrounding environment at a certain rate, forming a continuous video stream. An ordinary camera can capture images at 30 frames per second, while high-speed cameras can do faster. The camera can be roughly divided into three categories: Monocular, Stereo and RGB-D, as shown by the following figure \ref{fig:cameras}. Intuitively, a monocular camera has only one camera, a stereo camera has two. The principle of a RGB-D camera is more complex, in addition to being able to collect color images, it can also measure the distance of the scene from the camera for each pixel. RGB-D cameras usually carry multiple cameras, and may adopt a variety of different working principles. In the fifth lecture, we will detail their working principles, and readers just need an intuitive impression for now. In addition, there are also specialty and emerging camera types can be applied to SLAM, such as panorama camera \cite{Pretto2011}, event camera \cite{Rueckauer2016}. Although they are occasionally seen in SLAM applications, so far they have not become the mainstream. From the appearance we can infer that Little Carrot seems to carry a stereo camera.
+Visual SLAM is the main subject of this book, so we are particularly interested in what the Little Carrot's eyes can do. The cameras used in SLAM are different from the commonly seen Single Lens Reflex (SLR) cameras. It is often much simpler and does not carry expensive lens. It shoots at the surrounding environment at a certain rate, forming a continuous video stream. An ordinary camera can capture images at 30 frames per second, while high-speed cameras can do faster. The camera can be roughly divided into three categories: Monocular, Stereo and RGB-D, as shown by the following figure~\ref{fig:cameras}. Intuitively, a monocular camera has only one camera, a stereo camera has two. The principle of a RGB-D camera is more complex, in addition to being able to collect color images, it can also measure the distance of the scene from the camera for each pixel. RGB-D cameras usually carry multiple cameras, and may adopt a variety of different working principles. In the fifth lecture, we will detail their working principles, and readers just need an intuitive impression for now. In addition, there are also specialty and emerging camera types can be applied to SLAM, such as panorama camera~\cite{Pretto2011}, event camera~\cite{Rueckauer2016}. Although they are occasionally seen in SLAM applications, so far they have not become the mainstream. From the appearance we can infer that Little Carrot seems to carry a stereo camera.
 
 \begin{figure}
 	\centering
@@ -66,7 +66,7 @@ Now, let's take a look at the pros and cons of using different type of camera fo
 
 The SLAM system that uses only one camera is called Monocular SLAM. This sensor structure is particularly simple, and the cost is particularly low, therefore the monocular SLAM has been very attractive to researchers. You must have seen the output data of a monocular camera: photo. Yes, as a photo, what are its characteristics?
 
-A photo is essentially a \emph{projection} of a scene onto a camera's imaging plane. It reflects a three-dimensional world in a two-dimensional form. Obviously, there is one dimension lost during this projection process, which is the so-called depth (or distance). In a monocular case, we can not obtain the \emph{distance} between objects in the scene and the camera by using a single image. Later we will see that this distance is actually critical for SLAM. Because we human have seen a large number of images, we formed a natural sense of distances for most scenes, and this can help us determine the distance relationship among the objects in the image. For example, we can recognize objects in the image and correlate them with their approximate size obtained from daily experience. The close objects will occlude the distant objects; the sun, the moon and other celestial objects are infinitely far away; an object will have shadow if it is under sunlight. This common sense can help us determine the distance of objects, but there are also certain cases that confuse us, and we can no longer determine the distance and true size of an object. The following figure \ref{fig:why-depth} is shown as an example. In this image, we can not determine whether the figures are real person or small toys purely based on the image itself. Unless we change our view angle, explore the three-dimensional structure of the scene. In other words, from a single image, we can not determine the true size of an object. It may be a big but far away object, but it may also be a close but small object. They may appear to be the same size in an image due to the perspective projection effect.
+A photo is essentially a \emph{projection} of a scene onto a camera's imaging plane. It reflects a three-dimensional world in a two-dimensional form. Obviously, there is one dimension lost during this projection process, which is the so-called depth (or distance). In a monocular case, we can not obtain the \emph{distance} between objects in the scene and the camera by using a single image. Later we will see that this distance is actually critical for SLAM. Because we human have seen a large number of images, we formed a natural sense of distances for most scenes, and this can help us determine the distance relationship among the objects in the image. For example, we can recognize objects in the image and correlate them with their approximate size obtained from daily experience. The close objects will occlude the distant objects; the sun, the moon and other celestial objects are infinitely far away; an object will have shadow if it is under sunlight. This common sense can help us determine the distance of objects, but there are also certain cases that confuse us, and we can no longer determine the distance and true size of an object. The following figure~\ref{fig:why-depth} is shown as an example. In this image, we can not determine whether the figures are real person or small toys purely based on the image itself. Unless we change our view angle, explore the three-dimensional structure of the scene. In other words, from a single image, we can not determine the true size of an object. It may be a big but far away object, but it may also be a close but small object. They may appear to be the same size in an image due to the perspective projection effect.
 
 \begin{figure}
 	\centering
@@ -124,7 +124,7 @@ A typical visual SLAM work-flow includes the following steps:
 \item {Reconstruction}. It constructs a task specific map based on the estimated camera trajectory.
 \end{enumerate}
 
-The classic visual SLAM framework is the result of more than a decade's research endeavor. The framework itself and the algorithms have been basically finalized and have been provided as basic functions in several public vision and robotics libraries. Relying on these algorithms, we are able to build visual SLAM systems performing real-time localization and mapping in static environments. Therefore, a rough conclusion can be reached that if the working environment is limited to static and rigid with stable lighting conditions and no human interference, visual SLAM problem is basically solved \cite{Cadena2016}.
+The classic visual SLAM framework is the result of more than a decade's research endeavor. The framework itself and the algorithms have been basically finalized and have been provided as basic functions in several public vision and robotics libraries. Relying on these algorithms, we are able to build visual SLAM systems performing real-time localization and mapping in static environments. Therefore, a rough conclusion can be reached that if the working environment is limited to static and rigid with stable lighting conditions and no human interference, visual SLAM problem is basically solved~\cite{Cadena2016}.
 
 The readers may have not fully understood the concepts of the above mentioned modules yet, so we will detail the functionality of each module in the following sections. However, an deeper understanding of their working principles requires certain mathematical knowledge which will be expanded in the second part of this book. For now, an intuitive and qualitative understanding of each module is good enough.
 
@@ -162,14 +162,14 @@ The accumulated drift will make us unable to build a consistent map. A straight 
 \subsubsection{ Back-end Optimization}
 Generally speaking, the back-end optimization mainly refers to the process of dealing with the \emph{noise} in SLAM systems. We wish that all the sensor data is accurate, but in reality, even the most expensive sensors still have certain amount of noise. Cheap sensors usually have larger measurement errors, while that of expensive ones may be small. Moreover, performance of many sensors are affected by changes in magnetic field, temperature, etc. Therefore, in addition to solving the problem of estimating camera movements from images, we also care about how much noise this estimation contains, how these noise is carried forward from the last time step to the next, and how confident we have on the current estimation. So the problem that back-end optimization solves can be summarized as: to estimate the state of the entire system from noisy input data and calculate how uncertain these estimations are. The state here includes both the robot's own trajectory and the environment map.
 
-In contrast, the visual odometry part is usually referred to as the \emph{front end}. In a SLAM framework, the front end provides data to be optimized by the back end, as well as the initial values. Because the back end is responsible for the overall optimization, we only care about the data itself instead of where it comes from. In other words, we only have numbers and matricies in backend without those beatiful images. In visual SLAM, the front end is more relevant to \emph{computer vision} topics, such as image feature extraction and matching, while the backend is relevant to \emph{state estimation} research area.
+In contrast, the visual odometry part is usually referred to as the \emph{front end}. In a SLAM framework, the front end provides data to be optimized by the back end, as well as the initial values. Because the back end is responsible for the overall optimization, we only care about the data itself instead of where it comes from. In other words, we only have numbers and matricies in backend without those beautiful images. In visual SLAM, the front end is more relevant to \emph{computer vision} topics, such as image feature extraction and matching, while the backend is relevant to \emph{state estimation} research area.
 
-Historically, the back-end optimization part has been equivalent to ``SLAM research'' for a long time. In the early days, SLAM problem was described as a state estimation problem, which is exactly what the back-end optimization tries to solve. In the earliest papers on SLAM, researchers at that time called it ``estimation of spatial uncertainty'' \cite{Smith1986, Smith1990}. Although sounds a little obscure, it does reflect the nature of the SLAM problem: \emph{the estimation of the uncertainty of the self-movement and the surrounding environment}. In order to solve the SLAM problem, we need state estimation theory to express the uncertainty of localization and map construction, and then use filters or nonlinear optimization to estimate the mean and uncertainty (covariance) of the states. The details of state estimation and non-linear optimization will be explained in chapter 6, 10 and 11.
+Historically, the back-end optimization part has been equivalent to ``SLAM research'' for a long time. In the early days, SLAM problem was described as a state estimation problem, which is exactly what the back-end optimization tries to solve. In the earliest papers on SLAM, researchers at that time called it ``estimation of spatial uncertainty''~\cite{Smith1986, Smith1990}. Although sounds a little obscure, it does reflect the nature of the SLAM problem: \emph{the estimation of the uncertainty of the self-movement and the surrounding environment}. In order to solve the SLAM problem, we need state estimation theory to express the uncertainty of localization and map construction, and then use filters or nonlinear optimization to estimate the mean and uncertainty (covariance) of the states. The details of state estimation and non-linear optimization will be explained in chapter 6, 10 and 11.
 
 \subsubsection{Loop Closing}
 Loop Closing, also known as \emph{Loop Closure Detection}, is mainly to address the drifting problem of position estimation in SLAM. So how to solve it? Assuming that a robot has returned to its origin after a period of movement, but the estimated position does not return to the origin due to drift. How to correct it? Imagine that if there is some way to let the robot know that it has returned to the origin, then we can then ``pull'' the estimated locations to the origin to eliminate drifts, which is, exactly, called loop closing.
 
-Loop closing has close relationship with both localization and map building. In fact, the main purpose of building a map is to enable a robot to know the places it has been to. In order to achieve loop closing, we need to let the robot has the ability to identify the scenes it has visited before. There are different alternatives to achieve this goal. For example, as we mentioned earlier, we can set a marker at where the robot starts, such as a QR code. If the sign was seen again, we know that the robot has returned to the origin. However, the marker is essentially an intrusive sensor which sets additional constraints to the application environment. We prefer the robot can use its non-intrusive sensors, e.g. the image itself, to complete this task. A possible approach would be to detect similarities between images. This is inspired by us humans. When we see two similar images, it is easy to identify that they are taken from the same place. If the loop closing is successful, accumulative error can be significantly reduced. Therefore, visual loop detection is essentially an algorithm for calculating similarities of images. Note that the loop closing problem also exists in laser based SLAM, but here the rich information contained in images can remarkably reduce the difficulty of making a correct loop detection.
+Loop closing has close relationship with both localization and map building. In fact, the main purpose of building a map is to enable a robot to know the places it has been to. In order to achieve loop closing, we need to let the robot has the ability to identify the scenes it has visited before. There are different alternatives to achieve this goal. For example, as we mentioned earlier, we can set a marker at where the robot starts, such as a QR code. If the sign was seen again, we know that the robot has returned to the origin. However, the marker is essentially an intrusive sensor which sets additional constraints to the application environment. We prefer the robot can use its non-intrusive sensors, e.g.\ the image itself, to complete this task. A possible approach would be to detect similarities between images. This is inspired by us humans. When we see two similar images, it is easy to identify that they are taken from the same place. If the loop closing is successful, accumulative error can be significantly reduced. Therefore, visual loop detection is essentially an algorithm for calculating similarities of images. Note that the loop closing problem also exists in laser based SLAM, but here the rich information contained in images can remarkably reduce the difficulty of making a correct loop detection.
 
 After a loop is detected, we will tell the back-end optimization algorithm that, OK,  ``A and B are the same point''. Then, based on this new information, the trajectory and the map will be adjusted to match the loop detection result. In this way, if we have sufficient and reliable loop detection, we can eliminate cumulative errors, and get globally consistent trajectories and maps.
 
@@ -183,7 +183,7 @@ Mapping means the process of building a map, whatever kind it is. A map (see Fig
 	\label{fig:mapping}
 \end{figure}
 
-Let's take the domestic cleaning robots as an example. Since they basically move on the ground, a two-dimensional map with marks for open areas and obstacles, built by a single line laser scanner, would be sufficient for navigation for them. And for a camera, we need at least a three-dimensional map for its 6 degrees of freedom movement. Sometimes, we want a smooth and beautiful reconstruction result, not just a set of points, but also with texture of triangular faces. And at other times, we do not care about the map, just need to know things like "point A and point B are connected, while point B and point C are not", which is a topological way to understand the environement. Sometimes maps may not even be needed, for instance, a level-3 autonomous driving car can make a lane-following driving only knowing its relative motion with the lanes.
+Let's take the domestic cleaning robots as an example. Since they basically move on the ground, a two-dimensional map with marks for open areas and obstacles, built by a single line laser scanner, would be sufficient for navigation for them. And for a camera, we need at least a three-dimensional map for its 6 degrees of freedom movement. Sometimes, we want a smooth and beautiful reconstruction result, not just a set of points, but also with texture of triangular faces. And at other times, we do not care about the map, just need to know things like ``point A and point B are connected, while point B and point C are not'', which is a topological way to understand the environement. Sometimes maps may not even be needed, for instance, a level-3 autonomous driving car can make a lane-following driving only knowing its relative motion with the lanes.
 
 For maps, we have various ideas and demands. So compared to the previously mentioned VO, loop closure detection and back-end optimization, map building does not have a certain algorithm. A collection of spatial points can be called a map, a beautiful 3D model is also a map, so is a picture of a city, a village, railways, and rivers. The form of the map depends on the application of SLAM. In general, they can be divided into to categories: \emph{metrical map} and \emph{topological map}.
 
@@ -201,8 +201,8 @@ Assuming that our Little Carrot is moving in an unknown environment, carrying so
 With such a setting, the process that ``Little Carrot move in the environment with sensors'' basically has two parts: 
 
 \begin{enumerate}
-\item What is its \emph{motion}? We want to describe how $\mathbf{x}$ is changed from time step $k-1$ to $k$.
-\item What are the sensor \emph{observations}? Assuming that the Little Carrot detects a certain landmark, say $\mathbf{y}_j$ at position $\mathbf{x}_k$, we need to describe this event in mathematical language.
+\item What is its \emph{motion}? We want to describe how $\mathbf{x}$ has changed from time step $k-1$ to $k$.
+\item What are the sensor \emph{observations}? Assuming that the Little Carrot detects a certain landmark, let's say $\mathbf{y}_j$ at position $\mathbf{x}_k$, we need to describe this event in mathematical language.
 \end{enumerate}
 
 Let's first take a look at motion. Typically, we may send some motion message to the robots like ``turn 15 degree to left''. These messages or orders will be finally carried out by the controller, but probably in may different ways. Sometimes we control the position of robots, but acceleration or angular velocity would always be reasonable alternates. However, no matter what the controller is, we can use a universal and abstract mathematical model to describe it:
@@ -211,15 +211,15 @@ Let's first take a look at motion. Typically, we may send some motion message to
 \end{equation}
 where $\mathbf{u}_k$ is the input orders, and $\mathbf{w}_k$ is noise. Note that we use a general $f(\cdot)$ to describe the process, instead of specifying the exact form of $f$. This allows the function to represent any motion input, rather than being limited to a particular one, and thus becoming a general equation. We call it the \emph{motion equation}.
 
-The presence of noise turns this model into a stochastic model. In other words, even if we give the order like ``move forward one metes'', it does not mean that our robot really advances one meter. If all the instructions are accurate, there is no need to \emph{estimate} anything. In fact, the robot may only advance by, say, 0.9 meters, and at another moment, it moves by 1.1 meters. Thus, the noise during each movement is random. If we ignore this noise, the position determined only by the command may be a hundred miles away from the actual position after several minutes.
+The presence of noise turns this model into a stochastic model. In other words, even if we give the order like ``move forward one meter'', it does not mean that our robot really advances one meter. If all the instructions are accurate, there is no need to \emph{estimate} anything. In fact, the robot may only advance by, say, 0.9 meters, and at another moment, it moves by 1.1 meters. Thus, the noise during each movement is random. If we ignore this noise, the position determined only by the command may be a hundred miles away from the actual position after several minutes.
 
-Corresponding to the motion equation, there is also a \emph{observation equation}. The observation equation describes the process that the Little Carrot sees a landmark point $\mathbf{y}_j$ at $\mathbf{x}_k$ and generates an observation data $\mathbf{z}_{k,j}$. Likewise, we will describe this relationship with an abstract function $h(\cdot)$:
+Corresponding to the motion equation, there is also an \emph{observation equation}. The observation equation describes the process that the Little Carrot sees a landmark point $\mathbf{y}_j$ at $\mathbf{x}_k$ and generates an observation data $\mathbf{z}_{k,j}$. Likewise, we will describe this relationship with an abstract function $h(\cdot)$:
 \begin{equation}
 {\mathbf{z}_{k,j}} = h\left( {{\mathbf{y}_j},{\mathbf{x}_k}, \mathbf{v}_{k,j} } \right),
 \end{equation}
 where $\mathbf{v}_{k,j}$ is the noise in this observation. Since there are various forms of observation sensors, the observed data $\mathbf{z}$ and the observation equation $h$ may also have many different forms.
 
-Readers may say that the function $f,h$ here does not seem to specify what is going on in the motion and observation. Also, what does $\mathbf{x}$, $\mathbf{y}$, $\mathbf{z}$ mean here? In fact, depending on the actual motion and the type of sensor, there are several kinds of \textbf{parameterization} methods. What is parameterization? For example, suppose our robot moves in a plane, then its pose \footnote{ In this book, we use the word "pose" to mean "position" plus "rotation". } is described by two $x-y$ coordinates and an angle, ie $\mathbf{x}_k = [x_1,x_2,\theta]_k^\mathrm{T}$, where $x_1, x_2$ are positions on two axes and $\theta$ is the angle. At the same time, the input command is the position and angle change between the time interval: $\mathbf{u}_k = [ \Delta x_1, \Delta x_2, \Delta \theta ]_k^\mathrm{T} $, so the motion equation can be parameterized as:
+Readers may say that the function $f,h$ here does not seem to specify what is going on in the motion and observation. Also, what does $\mathbf{x}$, $\mathbf{y}$, $\mathbf{z}$ mean here? In fact, depending on the actual motion and the type of sensor, there are several kinds of \textbf{parameterization} methods. What is parameterization? For example, suppose our robot moves in a plane, then its pose \footnote{ In this book, we use the word ``pose'' to mean ``position'' plus ``rotation''. } is described by two $x-y$ coordinates and an angle, ie $\mathbf{x}_k = [x_1,x_2,\theta]_k^\mathrm{T}$, where $x_1, x_2$ are positions on two axes and $\theta$ is the angle. At the same time, the input command is the position and angle change between the time interval: $\mathbf{u}_k = [ \Delta x_1, \Delta x_2, \Delta \theta ]_k^\mathrm{T} $, so the motion equation can be parameterized as:
 \begin{equation}
 {\left[ \begin{array}{l}
     x_1\\
@@ -235,9 +235,9 @@ Readers may say that the function $f,h$ here does not seem to specify what is go
     \Delta \theta
     \end{array} \right]_k} + {\mathbf{w}_k},
 \end{equation}
-where $\mathbf{w}_k$ is the noise again. This is a simple linear relationship. However, not all input commands are position and angular changes. For example, the input of “throttle” or “joystick” is the speed or acceleration, so there are other forms of more complex equations of motion. At that time, we would say the kinetic analysis is required.
+where $\mathbf{w}_k$ is the noise again. This is a simple linear relationship. However, not all input commands are position and angular changes. For example, the input of ``throttle'' or ``joystick'' is the speed or acceleration, so there are other forms of more complex equations of motion. At that time, we would say the kinetic analysis is required.
 
-Regarding the observation equation, for example, the robot carries a two-dimensional laser sensor. We know that when a laser sensor observes a 2D landmark by measuring two quantities: the distance between the landmark point and the robot $r$, and the angle $\phi$. Let's say the landmark is at $\mathbf{y}_j = [y_1, y_2]_j^\mathrm{T}$, the pose is $\mathbf{x}_k=[x_1,x_2]_k^\mathrm{T}$，and the observed data is $\mathbf{z}_{k,j} = [r_{k,j}, \phi_{k,j}]^\mathrm{T}$, then the observation equation is written as:
+Regarding the observation equation, for example, the robot carries a two-dimensional laser sensor. We know that when a laser sensor observes a 2D landmark by measuring two quantities: the distance $r$ between the landmark point and the robot, and the angle $\phi$. Let's say the landmark is at $\mathbf{y}_j = [y_1, y_2]_j^\mathrm{T}$, the pose is $\mathbf{x}_k=[x_1,x_2]_k^\mathrm{T}$，and the observed data is $\mathbf{z}_{k,j} = [r_{k,j}, \phi_{k,j}]^\mathrm{T}$, then the observation equation is written as:
 \begin{equation}
 \left[ \begin{array}{l}
 r_{k,j}\\
@@ -245,10 +245,10 @@ r_{k,j}\\
 \end{array} \right] = \left[ \begin{array}{l}
 \sqrt {{{\left(y_{1,j} - x_{1,k} \right)}^2} + {{\left( {{y_{2,j}} - x_{2,k} } \right)}^2}} \\
 \arctan \left( \frac{{y_{2,j}} - x_{2,k}}{{y_{1,j} - x_{1,k}}} \right)
-\end{array} \right] + \mathbf{v}.
+\end{array} \right] + \mathbf{v}_{k, j}.
 \end{equation}
 
-When considering about visual SLAM, the sensor is a camera, then the observation equation is a process like "getting the pixels in the image of the landmarks." This process involves a description of the camera model, which will be covered in detail in Chapter 5, which is skipped here.
+When considering about visual SLAM, the sensor is a camera, then the observation equation is a process like ``getting the pixels in the image of the landmarks.'' This process involves a description of the camera model, which will be covered in detail in Chapter 5, which is skipped here.
 
 Obviously, it can be seen that the two equations have different parameterized forms for different sensors. If we maintain versatility and take them into a common abstract form, then the SLAM process can be summarized into two basic equations:
 \begin{equation}
@@ -288,10 +288,10 @@ Now, I assume there's an Ubuntu 18.04 installed on your PC. Regarding the instal
 
 Now, let's say you have successfully installed Ubuntu, either it's a virtual machine or a dual system. If you are not familiar with Ubuntu, try its various software and experience its interface and interaction mode\footnote{Most people think Ubuntu is cool for the first time. }. But I have to \textbf{remind} you, especially to the novice friends: don't spend too much time on Ubuntu's user interface! Linux has a lot of chances to waste your time, you may find some niche software, some games, and even spend a lot of time looking for a wallpaper. But remember, you are working with Linux. Especially in this book, you are using Linux to learn SLAM, so try to spend your time on learning SLAM.
 
-Ok, let's choose a directory and put the code for the SLAM program in this book. For example, you can put the code under "slambook2" in the home directory (/home). We will refer to this directory as "\textbf{code root}" in the future. At the same time, you can choose another directory to copy the Git code of this book, which is convenient for comparison when doing experiments. The code for this book is divided into chapters. For example, the code for this chapter will be under slambook2/ch2, and the next one will be under slambook2/ch3. So, now please go into the slambook2/ch2 directory (you should create a new folder and enter the folder name).
+Ok, let's choose a directory and put the code for the SLAM program in this book. For example, you can put the code under ``slambook2'' in the home directory (/home). We will refer to this directory as ``\textbf{code root}'' in the future. At the same time, you can choose another directory to copy the Git code of this book, which is convenient for comparison when doing experiments. The code for this book is divided into chapters. For example, the code for this chapter will be under slambook2/ch2, and the next one will be under slambook2/ch3. So, now please go into the slambook2/ch2 directory (you should create a new folder and enter the folder name).
 
 \subsection{Hello SLAM}
-Like many computer books, let's write a HelloSLAM program. But before we do this, let's talk about what a program is.
+Like many computer books, let's write a \textit{HelloSLAM} program. But before we do this, let's talk about what a program is.
 
 In Linux, a program is a file with execute permissions. It can be a script or a binary file, but we don't limit its suffix name (unlike Windows, you need to specify it as an .exe file). The commonly used binaries such as \textbf{cd} and \textbf{ls} are executable files located in the /bin directory. For an executable program elsewhere, as long as it has executable permissions, it will run when we enter the program name in the terminal. When programming in C++, we first write a text file:
 
@@ -311,7 +311,7 @@ Then use a program called \textbf{compiler} to compile this text file into an ex
 g++ helloSLAM.cpp
 \end{lstlisting}
 
-If it goes well, this command should have no output. If the "command not found" error message appears on the screen, you may not have g++ installed yet. Please use the following command to install it:
+If it goes well, this command should have no output. If the ``command not found'' error message appears on the screen, you may not have g++ installed yet. Please use the following command to install it:
 \begin{lstlisting}[language=sh,caption=terminal input:]
 sudo apt-get install g++
 \end{lstlisting}
@@ -324,7 +324,7 @@ Just now this compile command compiles the text file helloSLAM.cpp into an execu
 Hello SLAM!
 \end{lstlisting}
 
-As we thought, this program outputs "Hello SLAM!", telling us that it is running correctly.
+As we thought, this program outputs ``Hello SLAM!'', telling us that it is running correctly.
 
 Please review what we did before. In this example, we used the editor to enter the source code for helloSLAM.cpp, then called the g++ compiler to compile it and get the executable. By default, g++ compiles the source file into a program of the name a.out (it is a bit weird, but acceptable). If we like, we can also specify the file name of this output. This is an extremely simple example, we actually \textbf{use a lot of hidden default parameters, almost omitting all intermediate steps}, in order to give the reader a simple impression (although you may not have realized it). Below we will use cmake to compile this program.
 
@@ -357,7 +357,7 @@ The compiler will show a process percent during compilation. We then get the dec
 % ./helloSLAM
 Hello SLAM!
 \end{lstlisting}
-to run it. Because we didn't modify the source code, we got the same result as before. Please think about the difference between this practice and the previous use of g++ compiler. This time we used the cmake-make process. The cmake process handles the relationship between the project files, and the make process actually calls g++ to compile the program. By calling this cmake-make process, we have a good management for the project: \textbf{from inputting a string of g++ commands to maintaining several relatively intuitive CMakeLists.txt files}, which will obviously reduce the difficulty of maintaining the entire project. For example, if you want to add another executable file, just add a line "add\_executable" in CMakeLists.txt, and the subsequent steps are unchanged. Cmake will help us resolve code dependencies without having to type in a bunch of g++ commands.
+to run it. Because we didn't modify the source code, we got the same result as before. Please think about the difference between this practice and the previous use of g++ compiler. This time we used the cmake-make process. The cmake process handles the relationship between the project files, and the make process actually calls g++ to compile the program. By calling this cmake-make process, we have a good management for the project: \textbf{from inputting a string of g++ commands to maintaining several relatively intuitive CMakeLists.txt files}, which will obviously reduce the difficulty of maintaining the entire project. For example, if you want to add another executable file, just add a line ``add\_executable'' in CMakeLists.txt, and the subsequent steps are unchanged. Cmake will help us resolve code dependencies without having to type in a bunch of g++ commands.
 
 The only thing that is dissatisfied with this process is that the intermediate files generated by cmake are still in our code files. When we want to release the code, we don't want to publish these intermediate files together. At this time, we still need to delete them one by one, which is very inconvenient. A better approach is to have these intermediate files in an intermediate directory. After the compilation is successful, we will delete the intermediate directory. Therefore, the more common practice of compiling cmake projects is as follows:
 \begin{lstlisting}[language=sh,caption=Terminal input]
@@ -377,7 +377,7 @@ A library is often just a collection of many algorithms and programs, and we wil
 #include <iostream>
 using namespace std;
 
-// Just a funtion printing hello message
+// Just a function printing hello message
 void printHello() {
     cout << "Hello SLAM" << endl;
 }
@@ -407,7 +407,7 @@ The library file is a compressed package with compiled binary functions. However
 #ifndef LIBHELLOSLAM_H_
 #define LIBHELLOSLAM_H_
 
-// Declares a funtion in header file
+// Declares a function in header file
 void printHello();
 
 #endif
@@ -495,9 +495,9 @@ In the second step, open ``Run $\rightarrow$Configure Launcher'' and click on ``
     \label{fig:launchConfigure}
 \end{figure}
 
-In the second column, you can set the program's parameters and working directory. Sometimes programs have runtime parameters that are passed in as arguments to the main function. If not, leave it blank, as is the working directory. After configuring these two items, click the "OK" button to save the configuration results.
+In the second column, you can set the program's parameters and working directory. Sometimes programs have runtime parameters that are passed in as arguments to the main function. If not, leave it blank, as is the working directory. After configuring these two items, click the ``OK'' button to save the configuration results.
 
-In just these steps we have configured an application startup item. For each startup item, we can click the "Execute" button to start the program directly, or click the "Debug" button to debug it. Readers can try to click the ``Execute'' button to see the results of the output. Now, to debug this program, click on the left side of the printHello line and add a breakpoint. Then, click on the ``Debug'' button and the program will wait at the breakpoint, as shown by \autoref{fig:debug}.
+In just these steps we have configured an application startup item. For each startup item, we can click the ``Execute'' button to start the program directly, or click the ``Debug'' button to debug it. Readers can try to click the ``Execute'' button to see the results of the output. Now, to debug this program, click on the left side of the printHello line and add a breakpoint. Then, click on the ``Debug'' button and the program will wait at the breakpoint, as shown by \autoref{fig:debug}.
 
 \begin{figure}[!htp]
     \centering
@@ -506,7 +506,7 @@ In just these steps we have configured an application startup item. For each sta
     \label{fig:debug}
 \end{figure}
 
-When debugging, KDevelop will switch to debug mode and the interface will change a bit. At the breakpoint, you can control the operation of the program with single step operation (F10 key), single step follow up (F11 key), and single step jump (F12 key) function. At the same time, you can click the interface on the left to view the value of the local variable. Or select the "Stop" button to end debugging. After debugging, KDevelop will return to the normal development interface.
+When debugging, KDevelop will switch to debug mode and the interface will change a bit. At the breakpoint, you can control the operation of the program with single step operation (F10 key), single step follow up (F11 key), and single step jump (F12 key) function. At the same time, you can click the interface on the left to view the value of the local variable. Or select the ``Stop'' button to end debugging. After debugging, KDevelop will return to the normal development interface.
 
 Now you should be familiar with the entire process of breakpoint debugging. In the future, if an error occurs during the running phase of the program, causing the program to crash, you can use breakpoint debugging to determine the location of the error, and then modify \footnote{ instead of directly sending us an email asking how to deal with the problem. }.
 
@@ -518,7 +518,7 @@ Now you should be familiar with the entire process of breakpoint debugging. In t
     \label{fig:clion}
 \end{figure}
 
-Clion is more complete than KDevelop, but it requires an user account, and the memory/CPU requirements for the host will be higher. \footnote{CLion is abnormally slow in the version after 2018. It is recommended that you use the release version around 2017. }. In Clion, you can also open a CMakeLists.txt or specify a directory. Clion will complete the cmake-make process for you. Its running interface is shown in \autoref{fig:clion}.
+Clion is more complete than KDevelop, but it requires a user account, and the memory/CPU requirements for the host will be higher. \footnote{CLion is abnormally slow in the version after 2018. It is recommended that you use the release version around 2017. }. In Clion, you can also open a CMakeLists.txt or specify a directory. Clion will complete the cmake-make process for you. Its running interface is shown in \autoref{fig:clion}.
 
 Similarly, after opening Clion, you can select the programs you want to run or debug in the upper right corner of the interface, and adjust their startup parameters and working directory. Click the small beetle button in this column to start the breakpoint debugging mode. Clion also has a number of convenient features, such as automatically creating classes, changing functions, and automatically adjusting the coding style. Please try it.
 
@@ -526,9 +526,9 @@ Ok, if you are already familiar with the use of the IDE, then the second chapter
 
 \section*{Exercises}
 \begin{enumerate}
-    \item Read the survey SLAM literature \cite{Liu2016} and \cite{Liang2013}, can you read the contents? (They are Chinese papers for beginners. For English reader, see the next  exercise.)
-    \item[\optional] Read SLAM's review literature, such as \cite{Cadena2016, Fuentes-Pacheco2015, Boal2014, Chen2012, Chen2007} and so on. What are the similarities and differences between these papers on SLAM and this book?
-    \item What are the parameters of the \item g++ command? If I want to change the generated program file name, how should I call g++?
+    \item Read the survey SLAM literature~\cite{Liu2016} and~\cite{Liang2013}, can you read the contents? (They are Chinese papers for beginners. For English reader, see the next  exercise.)
+    \item[\optional] Read SLAM's review literature, such as~\cite{Cadena2016, Fuentes-Pacheco2015, Boal2014, Chen2012, Chen2007} and so on. What are the similarities and differences between these papers on SLAM and this book?
+    \item What are the parameters of the g++ command? If I want to change the generated program file name, how should I call g++?
     \item Use the build folder to compile your cmake project, then try it in KDevelop.
     \item Deliberately add some syntax errors to the code to see what information the build will generate. Can you read the error message of g++?
     \item If you forgot to link the library to the executable, will the compiler report an error? What kind of mistakes are reported?

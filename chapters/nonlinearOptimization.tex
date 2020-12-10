@@ -22,7 +22,7 @@ Solving the state estimation problem requires a certain degree of optimization b
 \newpage
 \section{State Estimation}
 \subsection{From Batch State Estimation to Least Square}
-According to the previous sections, the SLAM process can be described by a discrete time motion and observation equations like \eqref{eq:slamproblem}:
+According to the previous sections, the SLAM process can be described by a discrete time motion and observation equations like~\eqref{eq:slamproblem}:
 \begin{equation}
 \left\{ \begin{array}{l}
 {\bm{x}_k} = \mathbf{f}\left( {{\bm{x}_{k - 1}},{\bm{u}_k}} \right) + \bm{w}_k\\
@@ -50,7 +50,7 @@ In theory, the batch method is easier to introduce. At the same time, understand
 \[
 \bm{x}=\{ \bm{x}_1, \ldots, \bm{x}_N \}, \quad \bm{y} = \{\bm{y}_1, \ldots, \bm{y}_M \}.
 \]
-Similarly, $ \bm {u} $ without subscript is used for input at all times, and $ \bm {z} $ is used for observation data at all times. Then we say that the state estimation of the robot, from a probabilistic point of view, is to find the state $ \bm {x} , \bm{y}$ under the condition that the input data $ \bm {u} $ and the observation data $\bm{z} $. Or, the conditional probability distribution of:
+Similarly, $ \bm {u} $ without subscript is used for input at all times, and $ \bm {z} $ is used for observation data at all times. Then we say that the state estimation of the robot, from a probabilistic point of view, is to find the state $ \bm {x}, \bm{y}$ under the condition that the input data $ \bm {u} $ and the observation data $\bm{z} $. Or, the conditional probability distribution of:
 \begin{equation}
 P( \bm{x},\bm{y} | \bm{z}, \bm{u}).
 \end{equation}
@@ -121,7 +121,7 @@ Then, minimizing the Mahalanobis distance between the estimated value at all tim
 \end{equation}
 In this way, a \textbf{least square problem} is obtained with the same solution as the MLE problem. Intuitively speaking, due to the presence of noise, when we substitute the estimated trajectory and map into the SLAM motion and observation models, they will not be perfectly fit. What shall we do at this time? We perform \textbf{fine-tuning} on the estimated value of the state, so that the overall error is reduced. Of course, finally we will reach a (local) \textbf{minimum value}. This is a typical nonlinear optimization process.
 
-Observing the formula \eqref{eq:least-square} carefully, we find that the least squares problem in SLAM has some specific structures:
+Observing the formula~\eqref{eq:least-square} carefully, we find that the least squares problem in SLAM has some specific structures:
 
 \begin{itemize}
 	\item First of all, the objective function of the whole problem consists of many (weighted) error quadratic forms. Although the dimensionality of the overall state variable is very high, each error term is simple and is only related to one or two state variables. For example, the motion error is only related to $\bm{x}_{k-1}, \bm{x}_k$, and the observation error is only related to $\bm{x}_k, \bm{y}_j$. This relationship will give a \textbf{sparse} least square problem, which we will investigate further in the backend chapter.
@@ -284,7 +284,7 @@ This equation is a \textbf{linear equation} of the variable $\Delta \bm{x}$. We 
     \label{eq:minimize-deltax}
     \bm{H} \Delta \bm{x} = \bm{g}.
 \end{equation}
-It makes sense to mark the left side as $\bm{H}$ here. Compared with Newton's method \ref{eq:newton-method}, Gauss-Newton's method uses $\bm{J}\bm{J}^\mathrm{T}$ \textbf{as the approximation} of the second-order Hessian matrix in Newton's method, thus omitting the calculation of $\bm{H}$. Please note that solving the normal equation is the core of the entire optimization problem. If we can get the $\Delta \bm{x}$ in each iteration, then the algorithm of Gauss-Newton method can be written as:
+It makes sense to mark the left side as $\bm{H}$ here. Compared with Newton's method~\ref{eq:newton-method}, Gauss-Newton's method uses $\bm{J}\bm{J}^\mathrm{T}$ \textbf{as the approximation} of the second-order Hessian matrix in Newton's method, thus omitting the calculation of $\bm{H}$. Please note that solving the normal equation is the core of the entire optimization problem. If we can get the $\Delta \bm{x}$ in each iteration, then the algorithm of Gauss-Newton method can be written as:
 
 \begin{mdframed}
     \begin{enumerate}
