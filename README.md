@@ -16,3 +16,7 @@ author = {Xiang Gao and Tao Zhang and Yi Liu and Qinrui Yan},
 } ```
 
 ```
+
+## For reviewers and coolaborators
+- Please refer to chapter-cn directory for Chinese version. 
+- If you want to compile the cn version, install the fonts in font/ directory first, and use xelatex to compile. There might be some warnings or errors but you will see a compiled pdf to compare the results between the translated version and the original.

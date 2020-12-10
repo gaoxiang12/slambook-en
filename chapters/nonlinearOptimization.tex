@@ -301,5 +301,36 @@ In order to solve the incremental equation, we need to solve $\bm{H}^{-1}$, whic
 
 Although the Gauss-Newton method has these shortcomings, it is still a simple and effective method for nonlinear optimization, and it is worth learning. In nonlinear optimization, quite a few algorithms can be taken as the variants of the Gauss-Newton method. These algorithms all use the idea of the Gauss-Newton method and correct their shortcomings through their own improvements. For example, some \textbf{line search method} adds an extra step size $\alpha$. After determining $\Delta \bm{x}$, we may further find the $\alpha$ to make $\left\| f (\bm{x} + \alpha \Delta \bm{ x}) \right\|^2$ is minimized, instead of simply making $\alpha = 1$.
 
-The Levenberg-Marquardt method corrects these problems to a certain extent. It is generally considered to be more robust than the Gauss-Newton method, but its convergence rate may be slower than the Gauss-Newton method, and is called \textbf{damped Newton Method}.
+The Levenberg-Marquardt method corrects these problems to a certain extent. It is generally considered to be more robust than the Gauss-Newton method, but its convergence rate may be slower than the Gauss-Newton method. Such a kind of method is also called as \textbf{damped Newton Method}.
+
+\subsection{The Levernberg-Marquatdt Method}
+The approximate second-order Taylor expansion used in the Gauss-Newton method can only have a good approximation effect near the expansion point, so we naturally thought that a range should be added to $\Delta \bm{x}$, called \textbf{trust region}. This range defines under what circumstances the second-order approximation is valid. This type of method is also called \textbf{trust region method}. We think the approximation is valid only in the trusted region; otherwise, it may go wrong if the approximation goes outside.
+
+So how to determine the scope of this trust region? A good method is to determine it based on the difference between our approximate model and the real object function: if the difference is small, it means that the approximation is good, and we may expand the trust region; conversely, if the difference is large, we will reduce the range of approximation. We define an indicator $\rho$ to describe the degree of approximation:
+\begin{equation}\label{eq:6.24}
+	\rho = \frac{{f\left( {\bm{x} + \Delta \bm{x}} \right)}-{{ {f\left( \bm{x} \right)} }}} {\bm{J}\left( \bm{x} \right)^\mathrm{T} \Delta \bm{x}}.
+\end{equation}
+The numerator of $\rho$ is the decreasing value of the real object function, and the denominator is the decreasing value of the approximate model. If $\rho$ is close to 1, the approximation is good. If $\rho$ is too small, indicating that the actual reduced value is far less than the approximate reduced value, the approximation is considered poor, and the trust region needs to be reduced. Conversely, if $\rho$ is relatively large, it means that the actual decline is greater than expected, and we can enlarge the approximate range.
+
+Therefore, we build an improved version of the nonlinear optimization framework, which will have a better effect than the Gauss-Newton method:
+
+\begin{mdframed}
+	\begin{enumerate}
+		\item Give the initial valude $\bm{x}_0$ and initial trust region radius $\mu$.
+		\item For $k$-th iteration, we solve a linear problem based on Gauss-Newton's method added with a trust region: 
+		\begin{equation}\label{eq:LM}
+			\mathop {\min }\limits_{\Delta \bm{x}_k} \frac{1}{2}{\left\| {f\left( \bm{x}_k \right) + \bm{J} \left( \bm{x}_k \right)^\mathrm{T} \Delta \bm{x}_k} \right\|^2}, \quad \mathrm{s.t.}\quad {\left\| {\bm{D} \Delta \bm{x}_k} \right\|^2} \leqslant \mu ,
+		\end{equation}
+		where $\mu$ is the radius and $\bm{D}$ is a coefficient matrix, which will be discussed in below. 
+		\item Compute $\rho$ using equation \eqref{eq:6.24}. 
+		\item If $\rho > \frac{3}{4}$, set $\mu = 2 \mu$. 
+		\item Otherwise, if $\rho < \frac{1}{4}$, set $\mu = 0.5 \mu$. 
+		\item If $\rho$ is larger than a given threshold, set $\bm{x}_{k+1} = \bm{x}_k+\Delta \bm{x}_k$. 
+		\item Go back to step 2 if not converged, otherwise return the result. 
+	\end{enumerate}
+\end{mdframed}
+
+Here, the multiples and thresholds of the approximate range expansion are empirical values and can be replaced with other values. In the formula \eqref{eq:LM}, we limit the increment to a sphere with a radius of $\mu$, and think that it is valid only in this sphere. After bringing $\bm{D}$, this sphere can be seen as an ellipsoid. In the optimization method proposed by Levenberg, taking $\bm{D}$ into the unit matrix $\bm{I}$ is equivalent to directly constraining $\Delta \bm{x}_k$ in a sphere. Subsequently, Marquardt proposed to take $\bm{D}$ as a non-negative diagonal matrix-in practice, the square root of the diagonal elements of $\bm{J}^T \bm{J}$ is usually used so that The constraint range is larger on the dimension with small gradient.
+
+In any case, in Levenberg-Marquardt optimization, we need to solve a sub-problem like \eqref{eq:LM} to obtain the gradient. This sub-problem is an optimization problem with inequality constraints. We use Lagrangian multipliers to put the constraints in the objective function to form the Lagrangian function:
 
