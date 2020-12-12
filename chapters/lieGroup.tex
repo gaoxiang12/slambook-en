@@ -5,13 +5,13 @@
     \textbf{Main Goal}
     \begin{enumerate}
         \item Understand the concept of Lie group, Lie algebra, and their applications of $ \mathrm{SO}( 3 ), \mathrm{SE}( 3 ) $ and the corresponding Lie algebras.
-        \item Understands the meaning of BCH formula.
+        \item Understand the meaning of BCH (Baker-Campbell-Hausdorff) formula.
         \item Learn the perturbation model on Lie algebra.
         \item Use Sophus to perform operations on Lie algebras.
     \end{enumerate}
 \end{mdframed}
 
-In the last lecture, we introduced the description of rigid body motion in the three-dimensional world, including the rotation matrix, rotation vector, Euler angle, quaternion and so on. We focus on the representation of rotation, but in SLAM we have to estimate and optimize them in addition to the representation. Because the pose is unknown in SLAM, we need to solve the problem of ``\textbf {which camera pose best matches the current observation}''. A typical way is to build it into an optimization problem, solving the optimal $ \mathbf{R}, \mathbf{t}$, and minimizing the error.
+In the last lecture, we introduced the description of rigid body motion in the three-dimensional world, including the rotation matrix, rotation vector, Euler angle, quaternion and so on. We focused on the representation of rotation, but in SLAM we have to estimate and optimize them in addition to the representation. Because the pose is unknown in SLAM, we need to solve the problem of ``\textbf {which camera pose best matches the current observation}''. A typical way is to build it into an optimization problem, solving the optimal $ \mathbf{R}, \mathbf{t}$, and minimizing the error.
 
 As mentioned before, the rotation matrix itself is constrained (orthogonal and the determinant is 1). When used as optimization variables, it introduces additional constraints on matrices that makes optimization difficult. Through the transformation relationship between Lie group and Lie algebra, we are able to turn the pose estimation into an unconstrained optimization problem and simplify the solution. Considering that the reader may not have the basic knowledge of Lie Group and Lie algebra, we will start with the most basic knowledge.
 
@@ -40,7 +40,7 @@ You can also say that the two matrices do not have a well-defined addition opera
 We know that the matrix multiplication corresponds to the composition of two rotations or transformations. For a set that only has one ``well-defined'' operation, we call it a \textbf{group}.
 
 \subsection{Group}
-For the next contents we need to talk about a little bit abstract algebra. I think this is a necessary condition for discussing Lie Group and Lie Algebra, but in fact, except for the students of mathematics and physics, most of the students will not have this knowledge in undergraduate classes. So let's look at some basic concepts first.
+For the next contents we need to talk a little bit about abstract algebra. I think this is a necessary condition for discussing Lie Group and Lie Algebra, but in fact, except for the students of mathematics and physics, most of the students will not have this knowledge in undergraduate classes. So let's look at some basic concepts first.
 
 A group is an algebraic structure of \textbf{a set} plus \textbf{an operation}. We denote the set as $A$ and the operation as $\cdot$, then the group can be denoted as $G=(A,\cdot)$. We say $G$ is a \textbf{group} if the operation satisfies the following conditions:
 
@@ -59,9 +59,9 @@ It is easy to verify that the rotation matrix set with the normal matrix multipl
     \item {Special Euclidean group $\mathrm{SE}(n)$}. Or the $n$ dimensional transformation described earlier, such as $\mathrm{SE}(2)$ and $\mathrm{SE}(3)$.
 \end{itemize}
 
-The group structure guarantees that the operations on the group have very good properties, and the \textbf{group theory} is the theory that studies the various structures and properties of the groups. Readers interested in group theory can refer to any of the modern algebra books. \textbf{Lie Group} refers to a group with continuous (smooth) properties. Discrete groups like the integer group $\mathbb{Z}$ have no continuous properties, so they are not Lie groups. And obviously, $\mathrm{SO}(n)$ and $\mathrm{SE}(n)$ are continuous in real space because we can intuitively imagine that a rigid body moving continuously in space, so they are all Lie Groups. Since $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$ are especially important for camera pose estimation, we mainly discuss these two Lie groups. However, strictly discussing the concepts of ``continuous'' and ``smooth'' requires knowledge of analysis and topology, but we are not mathematics books, so only some important conclusions directly related to SLAM are introduced. If the reader is interested in the theoretical nature of Lie Groups, please refer to the special books like~\cite{Varadarajan2013}.
+The group structure guarantees that the operations on the group have very good properties, and the \textbf{group theory} is the theory that studies the various structures and properties of the groups. Readers interested in group theory can refer to any of the modern algebra books. \textbf{Lie Group} refers to a group with continuous (smooth) properties. Discrete groups like the integer group $\mathbb{Z}$ have no continuous properties, so they are not Lie groups. And obviously, $\mathrm{SO}(n)$ and $\mathrm{SE}(n)$ are continuous in real space because we can intuitively imagine that a rigid body moving continuously in space, so they are all Lie Groups. Since $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$ are especially important for camera pose estimation, we mainly discuss these two Lie groups. However, strictly discussing the concepts of ``continuous'' and ``smooth'' requires knowledge of analysis and topology, but this text is not a mathematics book, so only some important conclusions directly related to SLAM are introduced. If the reader is interested in the theoretical nature of Lie Groups, please refer to the special books like~\cite{Varadarajan2013}.
 
-Normally we have two ways to introduce the Lie Groups or Lie Algebras. The first is to directly introduce Lie group and Lie algebra, and then tell the reader that each Lie group corresponds to a Lie algebra, but in this case, the reader will think that Lie algebra seems to be a symbol that jumps out with no reason, and does not know its physical meaning. So, I am going to take a little time to draw the Lie algebra from the rotation matrix, similar to the practice of~\cite{Ma2012}. Let's start with the simpler $\mathrm{SO}(3)$, leading to the Lie algebra $\mathfrak{so}(3)$ above $\mathrm{SO}(3)$.
+Normally we have two ways to introduce the Lie Groups or Lie Algebras. The first is to directly introduce Lie group and Lie algebra, and then present to the reader that each Lie group corresponds to a Lie algebra, but in this case, the reader may think that Lie algebra seems to be a symbol that jumps out with no reason, and does not know its physical meaning. So, I am going to take a little time to draw the Lie algebra from the rotation matrix, similar to the practice of~\cite{Ma2012}. Let's start with the simpler $\mathrm{SO}(3)$, leading to the Lie algebra $\mathfrak{so}(3)$ above $\mathrm{SO}(3)$.
 
 \subsection{Introduction of the Lie Algebra}
 Consider an arbitrary rotation matrix $\mathbf{R}$, we know that it satisfies:
@@ -72,16 +72,16 @@ Now, we say that $\mathbf{R}$ is the rotation of a camera that changes continuou
 \[
 \mathbf{R}(t) \mathbf{R}(t) ^T = \mathbf{I}.
 \]
-Deriving time on both sides of the equation yields (we use $\dot{\mathbf{R}}$ to represent the derivative of $\mathbf{R}$ on time $t$, just like many control books):
+Deriving time on both sides of the equation yields (we use $\dot{\mathbf{R}}$ to represent the derivative of $\mathbf{R}$ on time $t$, just like many other control books):
 \[
 \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} + \mathbf{R} (t) \dot{\mathbf{R}} {(t) ^\mathrm{T}} = 0.
 \]
-Put the second item to right:
+Move the second term to right and commute the matrices by using the transpose relation:
 \begin{equation}
 \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} = - \left( \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} \right)^\mathrm{T} .
 \end{equation}
 
-It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \textbf{skew-symmetric} matrix. Recall that we introduced the $^\wedge$ symbol when we mention about the cross product in~\eqref{eq:cross}, which turns a vector into an skew-symmetric matrix. Similarly, for any skew-symmetric matrix, we can also find a unique vector corresponding to it. Let this operation be represented by the symbol $^{\vee}$:
+It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \textbf{skew-symmetric} matrix. Recall that we introduced the $^\wedge$ symbol when we mention about the cross product in the formula~\eqref{eq:cross}, which turns a vector into a skew-symmetric matrix. Similarly, for any skew-symmetric matrix, we can also find a unique vector corresponding to it. Let this operation be represented by the symbol $^{\vee}$:
 \begin{equation}
 {\mathbf{a}^ \wedge } = \mathbf{A} = \left[ {\begin{array}{*{20}{c}}
     0&{ - {a_3}}&{{a_2}}\\
@@ -91,7 +91,7 @@ It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \tex
 { \mathbf{A}^ \vee } = \mathbf{a}.
 \end{equation}
 
-So, since $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is an skew-symmetric matrix, we can find a three-dimensional vector $\boldsymbol{\phi} (t) \in \mathbb{R}^3$ corresponds to it:
+So, since $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a skew-symmetric matrix, we can find a three-dimensional vector $\boldsymbol{\phi} (t) \in \mathbb{R}^3$ corresponds to it:
 \[
 \dot{\mathbf{R}} (t) \mathbf{R}(t)^\mathrm{T} = \boldsymbol{\phi} (t) ^ {\wedge}.
 \]
@@ -107,7 +107,7 @@ Right multiply with $\mathbf{R}(t)$ on both sides, since $\mathbf{R}$ is an orth
     \end{array}} \right] \mathbf{R} (t).
 \end{equation}
 
-It can be seen that we can take the time derivative of a ration matrix just by multiplying a $\boldsymbol{\phi}^\wedge (t)$ matrix on the left. Consider at time $t_0=0$, and the rotation matrix is $\mathbf{R}(0) = \mathbf{I}$. According to the derivative definition, $\mathbf{R}(t)$ can be used to perform a first-order Taylor expansion around $t=0$:
+It can be seen that we can take the time derivative of a ration matrix just by multiplying a $\boldsymbol{\phi}^\wedge (t)$ matrix on the left. Consider at time $t_0=0$ that the rotation matrix is $\mathbf{R}(0) = \mathbf{I}$. According to the derivative definition, $\mathbf{R}(t)$ can be used to perform a first-order Taylor expansion around $t=0$:
 \begin{equation}
 \begin{aligned}
 \mathbf{R} \left( t \right) & \approx \mathbf{R} \left( t_0 \right) + \dot {\mathbf{R}} \left( {{t_0}} \right)\left ( {t - {t_0}} \right)\\
@@ -141,18 +141,18 @@ Now let's give the strict definition of Lie Algebra. Each Lie group has a Lie al
 A Lie algebra consists of a set $\mathbb{V}$, a scalar field $\mathbb{F}$, and a binary operation $[,]$. If they satisfy the following properties, then $(\mathbb{V}, \mathbb{F}, [,])$ is a Lie algebra, denoted as $\mathfrak{g}$.
 
 \begin{enumerate}
-    \item Closure.  $\forall \mathbf{X}, \mathbf{Y} \in \mathbb{V}, [\mathbf{X}, \mathbf{Y}] \in \mathbb{V}$.
-    \item Bilinear. $\forall \mathbf{X},\mathbf{Y},\mathbf{Z} \in \mathbb{V}, a,b \in \mathbb{F }, $ we have:
+    \item \textbf{Closure}: $\forall \mathbf{X}, \mathbf{Y} \in \mathbb{V}; [\mathbf{X}, \mathbf{Y}] \in \mathbb{V}$.
+    \item \textbf{Bilinear Composition}: $\forall \mathbf{X},\mathbf{Y},\mathbf{Z} \in \mathbb{V}; a,b \in \mathbb{F }$, we have:
     \[
     [a\mathbf{X}+b\mathbf{Y}, \mathbf{Z}] = a[\mathbf{X}, \mathbf{Z}] + b [ \mathbf{Y}, \mathbf{Z} ], \quad [\mathbf{Z}, a \mathbf{X}+b\mathbf{Y}] = a [\mathbf{Z}, \mathbf{X} ]+ b [\mathbf{Z},\mathbf{Y}] .
     \]
-    \item Reflexive \footnote{ Reflexive means that an element operates with itself results in zero. } $\forall \mathbf{X} \in \mathbb{V}, [\mathbf{X},\mathbf{X}] = \mathbf{0}$.
-    \item Jacobi equation. $\forall \mathbf{X},\mathbf{Y},\mathbf{Z} \in \mathbb{V}, [\mathbf{X}, [ \mathbf{Y},\mathbf{Z}] ] + [\mathbf{Z}, [\mathbf{X},\mathbf{Y}] ] + [\mathbf{Y}, [\mathbf{Z}, \mathbf{X}]] =\mathbf{0}$.
+    \item \textbf{Reflexive} \footnote{ Reflexive means that an element operates with itself results in zero. }: $\forall \mathbf{X} \in \mathbb{V}; [\mathbf{X},\mathbf{X}] = \mathbf{0}$.
+    \item \textbf{Jacobi Identity}: $\forall \mathbf{X},\mathbf{Y},\mathbf{Z} \in \mathbb{V}; [\mathbf{X}, [ \mathbf{Y},\mathbf{Z}] ] + [\mathbf{Z}, [\mathbf{X},\mathbf{Y}] ] + [\mathbf{Y}, [\mathbf{Z}, \mathbf{X}]] =\mathbf{0}$.
 \end{enumerate}
-The binary operation $[,]$ is called \textbf{Lie brackets}. On the first glance, we require a lot of properties about the operator of Lie bracket.  Compared to the simpler binary operations in the group, the Lie bracket expresses the difference between the two elements. It does not require a combination law, but requires the element and itself to be zero after the brackets. As an example, the cross product $\times$ defined on the 3D vector $\mathbb{R}^3$ is a kind of Lie bracket, so $\mathfrak{g} = (\mathbb{R}^3, \mathbb{R}, \times)$ constitutes a Lie algebra. The reader can try to substitute the cross product into the above four properties to verify the above conclusion.
+The binary operations $[,]$ are called \textbf{Lie brackets}. On the first glance, we require a lot of properties about the operator of Lie bracket.  Compared to the simpler binary operations in the group, the Lie bracket expresses the difference between the two elements. It does not require a combination law, but requires the element and itself to be zero after the brackets. As an example, the cross product $\times$ defined on the 3D vector $\mathbb{R}^3$ is a kind of Lie bracket, so $\mathfrak{g} = (\mathbb{R}^3, \mathbb{R}, \times)$ constitutes a Lie algebra. The reader can try to substitute the cross product into the above four properties to verify the above conclusion.
 
 \subsection{Lie Algebra $\mathfrak{so}(3)$}
-The previously mentioned $\boldsymbol{\phi}$ is actually a kind of Lie algebra. The Lie algebra corresponding to $\mathrm{SO}(3)$ is a vector defined on $\mathbb{R}^3$, which we will denote as $\boldsymbol{\phi}$. According to the previous derivation, each $\boldsymbol{\phi}$ can generate an skew-symmetric matrix:
+The previously mentioned $\boldsymbol{\phi}$ is actually a kind of Lie algebra. The Lie algebra corresponding to $\mathrm{SO}(3)$ is a vector defined on $\mathbb{R}^3$, which we will denote as $\boldsymbol{\phi}$. According to the previous derivation, each $\boldsymbol{\phi}$ can generate a skew-symmetric matrix:
 \begin{equation}
 \label{eq:phi}
 \boldsymbol{\varPhi} = \boldsymbol{\phi}^{\wedge} = \left[ {\begin{array}{*{20}{c}}
@@ -162,12 +162,12 @@ The previously mentioned $\boldsymbol{\phi}$ is actually a kind of Lie algebra. 
     \end{array}} \right] \in \mathbb{R}^{3 \times 3}.
 \end{equation}
 
-Under this definition, the two vectors $\boldsymbol{\phi}_1, \boldsymbol{\phi}_2$'s Lie brackets are:
+Under this definition, the two vectors $\boldsymbol{\phi}_1, \boldsymbol{\phi}_2$'s Lie bracket is:
 \begin{equation}
 [\boldsymbol{\phi}_1, \boldsymbol{\phi}_2] = \left( \mathbf{ \varPhi }_1 \mathbf{ \varPhi }_2 - \mathbf{ \varPhi }_2 \mathbf{ \varPhi }_1 \right)^\vee.
 \end{equation}
 
-The reader can verify that the Lie brackets under this definition satisfy the above properties. Since the vector $\boldsymbol{\phi}$ is one-to-one with the skew-symmetric matrix, we say the elements of $\mathfrak{so}(3)$ are three-dimensional vectors or three-dimensional skew-symmetric matrices, without any ambiguity:
+The reader can verify that the Lie bracket under this definition satisfy the above properties. Since the vector $\boldsymbol{\phi}$ is one-to-one with the skew-symmetric matrix, we say the elements of $\mathfrak{so}(3)$ are three-dimensional vectors or three-dimensional skew-symmetric matrices, without any ambiguity:
 \begin{equation}
 \mathfrak{so}(3) = \left\{ \boldsymbol{\phi} \in \mathbb{R}^3 \ \text{or}\  \boldsymbol{\varPhi} = \boldsymbol{\phi^\wedge} \in \mathbb{ R}^{3 \times 3} \right\}.
 \end{equation}
@@ -178,7 +178,7 @@ Some books also use the symbol $\widehat{\boldsymbol{\phi}}$ to represent $\bold
 The exponential map will be introduced later. Since we have introduced $\mathfrak{so}(3)$, we will first look at the corresponding Lie algebra on $\mathrm{SE}(3)$.
 
 \subsection{Lie Algebra $\mathfrak{se}(3)$}
-For $\mathrm{SE}(3)$, it also has a corresponding Lie algebra $\mathfrak{se}(3)$. To save space, I won't start by taking time derivatives. Similar to $\mathfrak{so}(3)$, $\mathfrak{se}(3)$ is located in the $\mathbb{R}^6$ space:
+For $\mathrm{SE}(3)$, it also has a corresponding Lie algebra $\mathfrak{se}(3)$. To save space, we won't start by taking time derivatives. Similar to $\mathfrak{so}(3)$, $\mathfrak{se}(3)$ is located in the $\mathbb{R}^6$ space:
 \begin{equation}
 \mathfrak{se}(3) = \left\{ { \boldsymbol{\xi} = \left[ \begin{array}{l}
     \boldsymbol{\rho} \\
@@ -190,7 +190,7 @@ For $\mathrm{SE}(3)$, it also has a corresponding Lie algebra $\mathfrak{se}(3)$
         {{\mathbf{0}^\mathrm{T}}}&0
         \end{array}} \right] \in { \mathbb{R}^{4 \times 4}}} \right\}.
 \end{equation}
-We write each $\mathfrak{se}(3)$ element as $\boldsymbol{\xi}$, which is a six-dimensional vector. The first three dimensions are ``translation part'' (but keep in mind that the meaning is \textbf{different} from the translation in the transformation matrix, we will see later), which is denoted as $\boldsymbol{\rho}$; after the three-dimensional rotation, there is a $\boldsymbol{\phi}$, which is essentially a $\mathfrak{so}(3)$ element\footnote{Please note that in some books the authors may put the rotation in front and the translation in the back, which has no significant difference.}. At the same time, we extended the meaning of the $^\wedge$ symbol. In $\mathfrak{se}(3)$, a six-dimensional vector is also converted to a four-dimensional matrix using the $^\wedge$ symbol, but no longer a skew-symmetric one:
+We write each $\mathfrak{se}(3)$ element as $\boldsymbol{\xi}$, which is a six-dimensional vector. The first three dimensions are ``translation part'' (but keep in mind that the meaning is \textbf{different} from the translation in the transformation matrix, we will see later), which is denoted as $\boldsymbol{\rho}$; after the three-dimensional rotation, there is a $\boldsymbol{\phi}$, which is essentially a $\mathfrak{so}(3)$ element\footnote{Please note that in some books the authors may put the rotation in front and the translation in the back, which has no significant difference.}. At the same time, we extended the meaning of the $^\wedge$ symbol. In $\mathfrak{se}(3)$, a six-dimensional vector is converted to a four-dimensional matrix also using the $^\wedge$ symbol, but no longer a skew-symmetric one:
 \begin{equation}
 { \boldsymbol{\xi} ^ \wedge } = \left[ {\begin{array}{*{20}{c}}
     {{ \boldsymbol{\phi} ^ \wedge }}& \boldsymbol{\rho} \\
@@ -208,50 +208,50 @@ The reader can verify that it satisfies the definition of Lie algebra (I'll leav
 \section{Exponential and Logarithmic Mapping}
 \subsection{Exponential Map of $\mathrm{SO}(3)$}
 
-Now consider the second question: How to calculate $\exp ( \boldsymbol{\phi}^{\wedge} )$? Obviously it is an exponential map of a matrix. Again, we will first discuss the exponential mapping of $\mathfrak{so}(3)$ and then the case of $\mathfrak{se}(3)$.
+Now consider the second question: How to calculate $\exp ( \boldsymbol{\phi}^{\wedge} )$? In other words, it is an exponential map of a matrix. Again, we will first discuss the exponential mapping of $\mathfrak{so}(3)$ and then the case of $\mathfrak{se}(3)$.
 
-The exponential of an arbitrary matrix can be written as a Taylor expansion if it is converged, whose result is still a matrix:
+The exponential of an arbitrary matrix can be written as a Taylor expansion, if it has converged, whose result is still a matrix:
 \begin{equation}
 \exp(\mathbf{A}) = \sum\limits_{n = 0}^\infty {\frac{1}{{n!}}{ \mathbf{A}^n}}.
 \end{equation}
 
-Similarly, for any element in $\boldsymbol{\phi} \in \mathfrak{so}(3)$,, we can also define its exponential map in this way:
+Similarly, for any element in $\boldsymbol{\phi} \in \mathfrak{so}(3)$, we can also define its exponential map in this way:
 \begin{equation}
 \exp(\boldsymbol{\phi}^\wedge) = \sum\limits_{n = 0}^\infty {\frac{1}{{n!}}{ (\boldsymbol{\phi}^{\wedge })^n}}.
 \end{equation}
-But this definition cannot be calculated directly because we don't want to calculate the infinite power of a matrix. Below we derive a convenient way to calculate the exponential mapping. Since $\boldsymbol{\phi}$ is a three-dimensional vector, we can define its length and direction,  denoted as $\theta$ and $\mathbf{a}$, respectively. So we have $\boldsymbol{\phi} = \theta \mathbf{a}$, where $\mathbf{a}$ is a unit-length direction vector, i.e., $\| \mathbf{a} \| =1$. First, for such a unit-length vector $\mathbf{a}$, there are two properties:
+But this definition cannot be calculated directly because we don't want to calculate the infinite power of a matrix. Below we derive a convenient way to calculate the exponential mapping. Since $\boldsymbol{\phi}$ is a three-dimensional vector, we can define its length and direction,  denoted as $\theta$ and $\mathbf{n}$, respectively. So we have $\boldsymbol{\phi} = \theta \mathbf{n}$, where $\mathbf{n}$ is a unit-length direction vector, i.e., $\| \mathbf{n} \| =1$. First, for such a unit-length vector $\mathbf{n}$, there are two properties:
 \begin{equation}
- \mathbf{a}^{\wedge} \mathbf{a}^{\wedge} = \left[ {\begin{array}{*{20}{c}}
-{ - a_2^2 - a_3^2}&{{a_1}{a_2}}&{{a_1}{a_3}}\\
-{{a_1}{a_2}}&{ - a_1^2 - a_3^2}&{{a_2}{a_3}}\\
-{{a_1}{a_3}}&{{a_2}{a_3}}&{ - a_1^2 - a_2^2}
-\end{array}} \right] = \mathbf{a} \mathbf{a}^\mathrm{T} - \mathbf{I},
+ \mathbf{n}^{\wedge} \mathbf{n}^{\wedge} = \left[ {\begin{array}{*{20}{c}}
+{ - n_2^2 - n_3^2}&{{n_1}{n_2}}&{{n_1}{n_3}}\\
+{{n_1}{n_2}}&{ - n_1^2 - n_3^2}&{{n_2}{n_3}}\\
+{{n_1}{n_3}}&{{n_2}{n_3}}&{ - n_1^2 - n_2^2}
+\end{array}} \right] = \mathbf{n} \mathbf{n}^\mathrm{T} - \mathbf{I},
 \end{equation}
 as well as
 \begin{equation}
-\mathbf{a}^{\wedge} \mathbf{a}^{\wedge} \mathbf{a}^{\wedge} = \mathbf{a}^\wedge (\mathbf{a}\mathbf{a} ^\mathrm{T}-\mathbf{I}) = - \mathbf{a}^{\wedge}.
+\mathbf{n}^{\wedge} \mathbf{n}^{\wedge} \mathbf{n}^{\wedge} = \mathbf{n}^\wedge (\mathbf{n}\mathbf{n} ^\mathrm{T}-\mathbf{I}) = - \mathbf{n}^{\wedge}.
 \end{equation}
-These two formulas provide a way to handle the high-order $\mathbf{a}^\wedge$ items. Now we can write the exponential map as:
+These two formulas provide a way to handle the high-order $\mathbf{n}^\wedge$ items. Now we can write the exponential map as:
 \begin{align*}
-\exp \left( {{\boldsymbol{\phi} ^ \wedge }} \right) &= \exp \left( {\theta {\mathbf{a}^ \wedge }} \right) = \sum\limits_ {n = 0}^\infty {\frac{1}{{n!}}{{\left( {\theta {\mathbf{a}^ \wedge }} \right)}^n}} \\
-&= \mathbf{I} + \theta {\mathbf{a}^ \wedge } + \frac{1}{{2!}}{\theta ^2}{\mathbf{a}^ \wedge }{\ Bm{a}^ \wedge } + \frac{1}{{3!}}{\theta ^3}{\mathbf{a}^ \wedge }{\mathbf{a}^ \wedge }{\mathbf{ a}^ \wedge } + \frac{1}{{4!}}{\theta ^4}{\left( {{\mathbf{a}^ \wedge }} \right)^4} + ... \\
-&= \mathbf{a} {\mathbf{a}^\mathrm{T}} - {\mathbf{a}^ \wedge }{\mathbf{a}^ \wedge } + \theta {\mathbf{a} ^ \wedge } + \frac{1}{{2!}}\theta^2 {\mathbf{a}^ \wedge }{\mathbf{a}^ \wedge } - \frac{1}{{3! }}{\theta ^3}{\mathbf{a}^ \wedge } - \frac{1}{{4!}}{\theta ^4}{\left( {{\mathbf{a}^ \wedge }} \right)^2} + ...\\
-&= \mathbf{a}{\mathbf{a}^\mathrm{T}} + \underbrace{\left( {\theta - \frac{1}{{3!}}{\theta ^3} + \ Frac{1}{{5!}}{\theta ^5} - ...} \right)}_{\sin \theta} {\mathbf{a}^ \wedge } - \underbrace{\left( { 1 - \frac{1}{{2!}}{\theta ^2} + \frac{1}{{4!}}{\theta ^4} - ...} \right)}_{\cos \theta}{\mathbf{a}^ \wedge }{\mathbf{a}^ \wedge }\\
-&= {\mathbf{a}^ \wedge }{\mathbf{a}^ \wedge } + \mathbf{I} + \sin \theta {\mathbf{a}^ \wedge } - \cos \theta {\ Bm{a}^ \wedge }{\mathbf{a}^ \wedge }\\
-&= (1 - \cos \theta ){\mathbf{a}^ \wedge }{\mathbf{a}^ \wedge } + \mathbf{I} + \sin \theta {\mathbf{a}^ \wedge }\\
-&= \cos \theta \mathbf{I} + (1 - \cos \theta )\mathbf{a}{\mathbf{a}^\mathrm{T}} + \sin \theta {\mathbf{a}^ \wedge }.
+\exp \left( {{\boldsymbol{\phi} ^ \wedge }} \right) &= \exp \left( {\theta {\mathbf{n}^ \wedge }} \right) = \sum\limits_ {n = 0}^\infty {\frac{1}{{n!}}{{\left( {\theta {\mathbf{n}^ \wedge }} \right)}^n}} \\
+&= \mathbf{I} + \theta {\mathbf{n}^ \wedge } + \frac{1}{{2!}}{\theta ^2}{\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge } + \frac{1}{{3!}}{\theta ^3}{\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge } + \frac{1}{{4!}}{\theta ^4}{\left( {{\mathbf{n}^ \wedge }} \right)^4} + ... \\
+&= \mathbf{n} {\mathbf{n}^\mathrm{T}} - {\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge } + \theta {\mathbf{n} ^ \wedge } + \frac{1}{{2!}}\theta^2 {\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge } - \frac{1}{{3! }}{\theta ^3}{\mathbf{n}^ \wedge } - \frac{1}{{4!}}{\theta ^4}{\left( {{\mathbf{n}^ \wedge }} \right)^2} + ...\\
+&= \mathbf{n}{\mathbf{n}^\mathrm{T}} + \underbrace{\left( {\theta - \frac{1}{{3!}}{\theta ^3} + \frac{1}{{5!}}{\theta ^5} - ...} \right)}_{\sin \theta} {\mathbf{n}^ \wedge } - \underbrace{\left( { 1 - \frac{1}{{2!}}{\theta ^2} + \frac{1}{{4!}}{\theta ^4} - ...} \right)}_{\cos \theta}{\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge }\\
+&= {\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge } + \mathbf{I} + \sin \theta {\mathbf{n}^ \wedge } - \cos \theta {\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge }\\
+&= (1 - \cos \theta ){\mathbf{n}^ \wedge }{\mathbf{n}^ \wedge } + \mathbf{I} + \sin \theta {\mathbf{n}^ \wedge }\\
+&= \cos \theta \mathbf{I} + (1 - \cos \theta )\mathbf{n}{\mathbf{n}^\mathrm{T}} + \sin \theta {\mathbf{n}^ \wedge }.
 \end{align*}
 
 Finally, we got a very familiar equation:
 \begin{equation}
-\exp( \theta \mathbf{a}^\wedge ) = \cos \theta \mathbf{I} + (1 - \cos \theta )\mathbf{a}{\mathbf{a}^\mathrm{T} } + \sin \theta {\mathbf{a}^ \wedge }.
+\exp( \theta \mathbf{n}^\wedge ) = \cos \theta \mathbf{I} + (1 - \cos \theta )\mathbf{n}{\mathbf{n}^\mathrm{T} } + \sin \theta {\mathbf{n}^ \wedge }.
 \end{equation}
 
-Recall the previous lesson, this equation is exactly the same as the Rodriguez formula, i.e. equation \eqref{eq:rogridues}. This shows that $\mathfrak{so}(3)$ is actually the \textbf{rotation vector}, and the exponential map is the just the Rodriguez formula. Through them, we map any vector in $\mathfrak{so}(3)$ to a rotation matrix in $\mathrm{SO}(3)$. Conversely, if we define a logarithmic map, we can also map the elements in $\mathrm{SO}(3)$ to $\mathfrak{so}(3)$:
+Recall the previous lesson, this equation is exactly the same as the Rodrigues' formula, i.e. equation \eqref{eq:rogridues}. This shows that $\mathfrak{so}(3)$ is actually the \textbf{rotation vector}, and the exponential map is just the Rodrigues' formula. Through them, we map any vector in $\mathfrak{so}(3)$ to a rotation matrix in $\mathrm{SO}(3)$. Conversely, if we define a logarithmic map, we can also map the elements in $\mathrm{SO}(3)$ to $\mathfrak{so}(3)$:
 \begin{equation}
 \boldsymbol{\phi} = \ln {\left( \mathbf{R} \right)^ \vee } = {\left( {\sum\limits_{n = 0}^\infty {\frac{{{{ \left( { - 1} \right)}^n}}}{{n + 1}}{{\left( { \mathbf{R} - \mathbf{I}} \right)}^{n + 1 }}} } \right)^ \vee }.
 \end{equation}
-Just like the exponential mapping, we don't have to use Taylor to expand the logarithmic mapping. In Lecture 3, we have already introduced how to calculate the corresponding Lie algebra according to the rotation matrix, that is, using the formula \eqref{eq:R2theta}, and use the properties of the trace to solve the rotation angle and the rotation axis separately, which is more convenient.
+Just like the exponential mapping, we have to use Taylor series to expand the logarithmic mapping. In Lecture 3, we have already introduced how to calculate the corresponding Lie algebra according to the rotation matrix, that is using the formula \eqref{eq:R2theta}, and use the properties of the trace to solve the rotation angle and the rotation axis separately, which is more convenient.
 
 Now, we've introduced the calculation method of exponential mapping. Readers may ask, what is the property of the exponential mapping? Can I find a unique $\boldsymbol{\phi}$ for any $\mathbf{R}$? Unfortunately, the exponential map is just a surjective map, not injective. This means that for each element in $\mathrm{SO}(3)$ we can find a $\mathfrak{so}(3)$ element corresponding to it; however, there may be multiple $\mathfrak{so}(3)$ elements corresponding to the same $\mathrm{SO}(3)$ element. At least for the rotation angle $\theta$, we know that rotating multiple $360^\circ$ will give the same rotation - it has periodicity. However, if we fix the rotation angle between $\pm \pi$, then the Lie group and the Lie algebra elements are one-to-one correspondence.
 
@@ -478,7 +478,7 @@ Substituting this into the last line, you can get the final result. So far, we h
 
 \section{Practice: Sophus}
 \subsection{Basic Usage of Sophus}
-We have introduced the basic knowledge of Lie algebra, and now it is time to consolidate what we have learned through practical exercises. Let's discuss how to manipulate Lie algebra in a program. In Lecture 3, we saw that Eigen provided geometry modules, but did not provide support for Lie algebra. A better Lie algebra library is the Sophus library maintained by Strasdat (\url{https://github.com/strasdat/Sophus})\footnote{Sophus Lie first proposed the Lie algebra. The library is named after him.}. The Sophus library supports $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, which are mainly discussed in this chapter. In addition, it also contains two-dimensional motion $\mathrm{SO}(2), \mathrm{SE} (2) $ and the similar transformation of $\mathrm{Sim}(3)$. It is developed directly on top of Eigen and we don't need to install additional dependencies. Readers can get Sophus directly from GitHub, or the Sophus source code is also available in our book's code directory slambook2/3rdparty. For historical reasons, earlier versions of Sophus only provided double-precision Lie group/Lie algebra classes. Subsequent versions have been rewritten as template classes, so that different precision of Lie group/Lie algebra can be used in the Sophus from the template class, but at the same time it increases the difficulty of use. In the second edition of this book, we use the Sophus library of \textbf{with templates}. The Sophus provided in the 3rdparty of this book is the \textbf{template} version, which should have been copied to your computer when you downloaded the code for this book. Sophus itself is also a cmake project. Presumably you already know how to compile the cmake project, so I won't go into details here. The Sophus library only needs to be compiled, no need to install it.
+We have introduced the basic knowledge of Lie algebra, and now it is time to consolidate what we have learned through practical exercises. Let's discuss how to manipulate Lie algebra in a program. In Lecture 3, we saw that Eigen provided geometry modules, but did not provide support for Lie algebra. A better Lie algebra library is the Sophus library maintained by Strasdat (\url{https://github.com/strasdat/Sophus})\footnote{Sophus Lie first proposed the Lie algebra. The library is named after him.}. The Sophus library supports $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, which are mainly discussed in this chapter. In addition, it also contains two-dimensional motion $\mathrm{SO}(2), \mathrm{SE} (2) $ and the similar transformation of $\mathrm{Sim}(3)$. It is developed directly on top of Eigen and we don't need to install additional dependencies. Readers can get Sophus directly from GitHub, or the Sophus source code is also available in our book's code directory ``slambook2/3rdparty''. For historical reasons, earlier versions of Sophus only provided double-precision Lie group/Lie algebra classes. Subsequent versions have been rewritten as template classes, so that different precision of Lie group/Lie algebra can be used in the Sophus from the template class, but at the same time it increases the difficulty of use. In the second edition of this book, we use the Sophus library of \textbf{with templates}. The Sophus provided in the 3rdparty of this book is the \textbf{template} version, which should have been copied to your computer when you downloaded the code for this book. Sophus itself is also a cmake project. Presumably you already know how to compile the cmake project, so I won't go into details here. The Sophus library only needs to be compiled, no need to install it.
 
 Let's demonstrate the SO(3) and SE(3) operations in the Sophus library:
 
