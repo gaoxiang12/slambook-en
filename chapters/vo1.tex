@@ -356,7 +356,7 @@ matches: 51
 \begin{figure}[!htp]
     \centering
     \includegraphics[width=0.8\linewidth]{vo1/matches}
-    \caption{匹配结果}
+    \caption{Matching Result}
     \label{fig:matches}
 \end{figure}
 
@@ -378,16 +378,16 @@ The following sections will introduce camera motion estimation in these three si
 
 \subsection{epipolar constraints}
 
-现在，假设我们从两张图像中得到了一对配对好的特征点，如\autoref{fig:doubleview}~所示。如果有若干对这样的匹配点，就可以通过这些二维图像点的对应关系，恢复出在两帧之间摄像机的运动。这里“若干对”具体是多少对呢？我们会在下文介绍。下面先来看看两个图像当中的匹配点有什么几何关系。
+Suppose we have a pair of matched feature points from two images, as shown in \autoref{fig:doubleview}~. If there are several pairs of such matching points, the camera motion between the two frames can be recovered through the correspondence between these two-dimensional image points. How many pairs do we need? We will introduce it later. Let's first take a look at the geometric relationship between the matching points in the two images.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.6\linewidth]{vo1/fundamental}
-	\caption{对极几何约束。}
+	\caption{epipolar constraints.}
 	\label{fig:doubleview}
 \end{figure}
 
-以\autoref{fig:doubleview}~为例，我们希望求取两帧图像$I_{1}, I_{2}$之间的运动，设第一帧到第二帧的运动为$\bm{R}, \bm{t}$。两个相机中心分别为$O_{1}, O_{2}$。现在，考虑$I_{1}$中有一个特征点$p_{1}$，它在$I_{2}$中对应着特征点$p_{2}$。我们知道两者是通过特征匹配得到的。如果匹配正确，说明它们确实是\textbf{同一个空间点在两个成像平面上的投影}。这里需要一些术语来描述它们之间的几何关系。首先，连线$\overrightarrow{O_{1}p_{1}}$和连线$\overrightarrow{O_{2}p_{2}}$在三维空间中会相交于点$P$。这时候点$O_{1},O_{2},P$三个点可以确定一个平面，称为\textbf{极平面（Epipolar plane）}。$O_{1}O_{2}$连线与像平面$I_{1},I_{2}$的交点分别为$e_{1},e_{2}$。$e_{1},e_{2}$称为\textbf{极点（Epipoles）}，$O_{1}O_{2}$被称为\textbf{基线（Baseline）}。我们称极平面与两个像平面$I_{1}, I_{2}$之间的相交线$l_{1},l_{2}$为\textbf{极线（Epipolar line）}。
+Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames of image $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\bm{R}, \bm{t}$, and the centers of the two cameras as $O_{1}, O_{2}$ (Origin). Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, which are obtained through feature matching. If the matching is correct, it means that they are indeed \textbf{projection of the same point in space on two image planes}. Now we need some terms to describe the geometric relationship between them. First, the connection $\overrightarrow{O_{1}p_{1}}$ and the connection $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the three-dimensional space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called \textbf{Epipolar plane}. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$ respectively. $e_{1}, e_{2}$ is called \textbf{Epipoles}, and $O_{1}O_{2}$ is called \textbf{Baseline}. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as \textbf{Epipolar line}.
 
 直观讲，从第一帧的角度看，射线$\overrightarrow{O_1 p_1}$是\textbf{某个像素可能出现的空间位置}——因为该射线上的所有点都会投影到同一个像素点。同时，如果不知道$P$的位置，那么当我们在第二幅图像上看时，连线$\overrightarrow{e_2 p_2}$（也就是第二幅图像中的极线）就是$P$可能出现的投影的位置，也就是射线$\overrightarrow{O_1 p_1}$在第二个相机中的投影。现在，由于我们通过特征点匹配确定了$p_2$的像素位置，所以能够推断$P$的空间位置，以及相机的运动。要提醒读者的是，\textbf{这多亏了正确的特征匹配}。如果没有特征匹配，我们就没法确定$p_2$到底在极线的哪个位置了。那时，就必须在极线上搜索以获得正确的匹配，这将在第12讲中提到。
 
