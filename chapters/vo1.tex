@@ -1,163 +1,165 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{视觉里程计1}
+\chapter{Visual Odometry 1}
 \label{cpt:7}
 \thispagestyle{empty}
 
 \begin{mdframed}  
-	\textbf{主要目标}
+	\textbf{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item 理解图像特征点的意义, 并掌握在单幅图像中提取出特征点及多幅图像中匹配特征点的方法。
-		\item 理解对极几何的原理，利用对极几何的约束，恢复出图像之间的摄像机的三维运动。
-		\item 理解PNP问题，以及利用已知三维结构与图像的对应关系求解摄像机的三维运动。
-		\item 理解ICP问题，以及利用点云的匹配关系求解摄像机的三维运动。
-		\item 理解如何通过三角化获得二维图像上对应点的三维结构。
+		\item Understand the meaning of image feature points, and master the method of extracting feature points from a single image and matching feature points in multiple images.
+		\item Understand the principle of epipolar geometry and use the constraints of epipolar geometry to recover the three-dimensional motion of the camera between images.
+		\item Understand the PNP problem, and use the known correspondence between the three-dimensional structure and the image to solve the three-dimensional motion of the camera.
+		\item Understand the ICP problem and use the point clouds matching to solve the three-dimensional motion of the camera.
+		\item Understand how to obtain the three-dimensional structure of corresponding points on the two-dimensional image through triangulation.
 	\end{enumerate}
 \end{mdframed}
 
-本书前面介绍了运动方程和观测方程的具体形式，并讲解了以非线性优化为主的求解方法。从本讲开始，我们结束基础知识的铺垫而步入正题：按照第2讲的顺序，分别介绍视觉里程计、优化后端、回环检测和地图构建4个模块。本讲和下一讲主要介绍两类视觉里程计里常用的方法：特征点法和光流法。本讲中，我们将介绍什么是特征点、如何提取和匹配特征点，以及如何根据配对的特征点估计相机运动。
+In the previous chapters, we introduced the details of motion and observation equations, and explained nonlinear optimization methods to solve those equations. From this chapter, we finish the introduction to the fundamental knowledge and move on to the main topic: in the order of Chapter 2, we will introduce visual odometry, optimization of backend, loop detection, and map reconstruction. This chapter and the next chapter mainly focus on two commonly used methods in visual odometry: feature point method and optical flow method. In this chapter, we will introduce what feature points are, how to extract and match them, and how to estimate camera motion based on matched feature points.
 
 \newpage
 \includepdf{resources/other/ch7.pdf}
 
 \newpage
 
-\section{特征点法}
-在第二讲中，我们说，一个SLAM系统分为前端和后端，其中前端也称为视觉里程计（VO）。VO根据相邻图像的信息估计出粗略的相机运动，给后端提供较好的初始值。VO的算法主要分为两个大类：\textbf{特征点法}和\textbf{直接法}。基于特征点法的前端，长久以来（直到现在）被认为是视觉里程计的主流方法。它具有稳定，对光照、动态物体不敏感的优势，是目前比较成熟的解决方案。在本讲中，我们将从特征点法入手，学习如何提取、匹配图像特征点，然后估计两帧之间的相机运动和场景结构，从而实现一个两帧间视觉里程计。这类算法有时也称为两视图几何（Two-view geometry）。
+\section{Feature Point Method}
+In the chapter 2, we said that a SLAM system can be divided into front-end and back-end, where the front-end is also called visual odometry (VO). VO estimates the rough camera movement based on the information of the consecutive images, and provides a good initial value for the back end. VO algorithms are mainly divided into two categories: \textbf{feature point method} and \textbf{direct method}. The front end based on the feature point method has been considered the mainstream method of visual odometry for a long time (even until now). It performs well thanks to its stability and insensitivity to lighting and dynamic objects. It is relatively mature at present. In this chapter, we will start with the feature point method, learn how to extract and match image feature points, and then estimate the camera motion and scene structure between two frames to realize a visual odometer between two frames. This type of algorithm is sometimes called Two-View geometry.
 
-\subsection{特征点}
-VO的核心问题是\textbf{如何根据图像来估计相机运动}。然而，图像本身是一个由亮度和色彩组成的矩阵，如果直接从矩阵层面考虑运动估计，将会非常困难。所以，比较方便的做法是：首先，从图像中选取比较\textbf{有代表性}的\textbf{点}。这些点在相机视角发生少量变化后会保持不变，于是我们能在各个图像中找到相同的点。然后，在这些点的基础上，讨论相机位姿估计问题，以及这些点的定位问题。在经典SLAM模型中，我们称这些点为\textbf{路标}（Landmark）。而在视觉SLAM中，路标则是指图像特征（Feature）。
+\subsection{Feature Point}
 
-根据维基百科的定义，图像特征是一组与计算任务相关的信息，计算任务取决于具体的应用\textsuperscript{\cite{wiki:featurecv}}。简而言之，\textbf{特征是图像信息的另一种数字表达形式}。一组好的特征对于在指定任务上的最终表现至关重要，所以多年来研究者们花费了大量的精力对特征进行研究。数字图像在计算机中以灰度值矩阵的方式存储，所以最简单的，单个图像像素也是一种“特征”。但是，在视觉里程计中，我们希望\textbf{特征点在相机运动之后保持稳定}，而灰度值受光照、形变、物体材质的影响严重，在不同图像间变化非常大，不够稳定。理想的情况是，当场景和相机视角发生少量改变时，算法还能从图像中判断哪些地方是同一个点。所以，仅凭灰度值是不够的，我们需要对图像提取特征点。
+The core problem of VO is \textbf{how to estimate camera motion based on images}. However, the image itself is a numerical matrix encoding brightness and color. It is abstract and very difficult to consider motion estimation directly from the matrix level. Therefore, it is more convenient to do this: First, select some \textbf{representative (feature)} \textbf{points} from the image. These points will remain the same after a small change in the camera's angle of view, so that we can find the same points in each image. Then, on the basis of these points, the problem of camera pose estimation and the positioning of these points are discussed. In the classic SLAM model, we call these points \textbf{landmark}. In visual SLAM, they are always referred as image features.
 
-特征点是图像里一些\textbf{特别的地方}。以\autoref{fig:corner-feature}~为例。我们可以把图像中的角点、边缘和区块都当成图像中有代表性的地方。不过，我们更容易精确地指出，某两幅图像中出现了同一个角点；同一个边缘则稍微困难一些，因为沿着该边缘前进，图像局部是相似的；同一个区块则是最困难的。我们发现，图像中的角点、边缘相比于像素区块而言更加“特别”，在不同图像之间的辨识度更强。所以，一种直观的提取特征的方式就是在不同图像间辨认角点，确定它们的对应关系。在这种做法中，角点就是所谓的特征。角点的提取算法有很多，例如Harris角点\textsuperscript{\cite{Harris1988}}、FAST角点\textsuperscript{\cite{Rosten2006}}、GFTT角点\textsuperscript{\cite{Shi1994}}，等等。它们大部分是2000年以前提出的算法。
+On the Wikipedia, image features are defined as a set of information related to computing tasks. The computing tasks depend on the specific application \textsuperscript{\cite{wiki:featurecv}}. Briefly speaking, \textbf{feature is another digital expression of image information}. A good set of features is crucial to the final performance on the specified task, so researchers have comprehensive work on the features for many years. Digital images are stored in a computer as a gray value matrix, so at the simplest, a single image pixel can be also considered a "feature". However, in visual odometry, we hope that \textbf{feature points remain stable after the camera moves}, and the gray value is badly affected by illumination, deformation, and object material. It varies greatly between different images and is not stable enough. Ideally, when the scene and camera angle of view change slightly, the algorithm can also determine from the images which places refer to the same point. Therefore, the gray value alone is not feasible, we need to extract feature points from the image.
 
-然而，在大多数应用中，单纯的角点依然不能满足我们的很多需求。例如，从远处看上去是角点的地方，当相机走近之后，可能就不显示为角点了。或者，当旋转相机时，角点的外观会发生变化，我们也就不容易辨认出那是同一个角点。为此，计算机视觉领域的研究者们在长年的研究中设计了许多更加稳定的局部图像特征，如著名的SIFT\textsuperscript{\cite{Lowe2004}}、SURF\textsuperscript{\cite{Bay2006}}、ORB\textsuperscript{\cite{Rublee2011}}，等等。相比于朴素的角点，这些人工设计的特征点能够拥有如下的性质：
+We can say that the feature points are some \textbf{special places} in the image. Taking \autoref{fig:corner-feature}~ as an example, we can see the corners, edges and blocks as representative places in the image. It is easy for us to correctly point out that the same corner point appears in two images; whereas pointing out the same edge is slightly more difficult, because the image patches are similar when moving along the edge; it is even harder as for the same block. We found that the corners and edges in the image are more "special" than pixels, and they are more distinguished between different images. Therefore, an intuitive way to extract features is to identify corners between different images and then determine their correspondence. In this approach, the corners are the so-called features. There are many corner extraction algorithms, such as Harris corner \textsuperscript{\cite{Harris1988}}, FAST corner \textsuperscript{\cite{Rosten2006}}, GFTT corner point \textsuperscript{\cite{Shi1994}}, etc. Most of them were proposed before 2000.
+
+However, in the majority of applications, a single corner still cannot meet our needs. For example, a place that appears to be a corner point from a long distance may not be viewed as a corner when the camera steps in. Or, when the camera rotates, the appearance of the corner points will change, and it is not easy for us to recognize that they are the same corner point. For this reason, researchers in the field of computer vision have designed many more stable local image features during years of research, such as the SIFT\textsuperscript{\cite{Lowe2004}}, SURF\textsuperscript{\cite{Bay2006}} , ORB\textsuperscript{\cite{Rublee2011}}, etc. Compared with simple corner points, these handcrafted features should have the following properties:
 
 \begin{enumerate}
-\item \emph{可重复性}（Repeatability）：相同的特征可以在不同的图像中找到。
-\item \emph{可区别性}（Distinctiveness）：不同的特征有不同的表达。
-\item \emph{高效率}（Efficiency）：同一图像中，特征点的数量应远小于像素的数量。
-\item \emph{本地性}（Locality）：特征仅与一小片图像区域相关。
+\item \emph{Repeatability}: The same feature can be found in different images.
+\item \emph{Distinctiveness}: Different features have different expressions.
+\item \emph{Efficiency}: In the same image, the number of feature points should be far smaller than the number of pixels.
+\item \emph{Locality}: The feature is only related to a small image area.
 \end{enumerate}
 
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.8\linewidth]{vo1/corner-flat-line}\\
-    \caption{可以作为图像特征的部分：角点、边缘、区块。}
+    \caption{corners, edges, blocks can be used as image features.}
     \label{fig:corner-feature}
 \end{figure}
 
-特征点由\textbf{关键点}（Key-point）和\textbf{描述子}（Descriptor）两部分组成。比如，当我们说“在一张图像中计算SIFT特征点”，是指“提取SIFT关键点，并计算SIFT描述子”两件事情。关键点是指该特征点在图像里的位置，有些特征点还具有朝向、大小等信息。描述子通常是一个向量，按照某种人为设计的方式，描述了该关键点周围像素的信息。描述子是按照“\textbf{外观相似的特征应该有相似的描述子}”的原则设计的。因此，只要两个特征点的描述子在向量空间上的距离相近，就可以认为它们是同样的特征点。
+A feature point is composed of two parts: \textbf{Key-point} and \textbf{Descriptor}. For example, when we say "calculate SIFT feature points in an image", we mean "extract SIFT key points and calculate SIFT descriptors". The key point refers to the position of the feature point in the image, and some types of feature points also hold information such as orientation and size. The descriptor is usually a vector, describing the information of the pixels around the key point according to some handcrafted rules. The descriptor should be designed according to the principle of "\textbf{features with similar appearance should have similar descriptors}". Therefore, as long as the descriptors of two feature points are close in vector space, they can be considered as the same feature point.
 
-历史上，研究者们提出过许多图像特征。它们有些很精确，在相机的运动和光照变化下仍具有相似的表达，但相应地需要较大的计算量。其中，SIFT（尺度不变特征变换，Scale-Invariant Feature Transform）当属最为经典的一种。它充分考虑了在图像变换过程中出现的光照、尺度、旋转等变化，但随之而来的是极大的计算量。由于整个SLAM过程中图像特征的提取与匹配仅仅是诸多环节中的一个，到目前（2016年）为止，普通PC的CPU还无法实时地计算SIFT特征，进行定位与建图\footnote{这里是指30Hz的实时速度。}。所以在SLAM中我们甚少使用这种“奢侈”的图像特征。
+Historically, researchers put forward many image features. Some of them are very accurate and robust. They still have similar expressions under camera movement and lighting changes, and consequentially they might require a large amount of calculation. Among them, SIFT (Scale-Invariant Feature Transform) is one of the most classic. To fully consider the changes in illumination, scale, and rotation during the image transformation, it comes with a huge amount of calculation. The extraction and matching of image features is only a part compared to the entire SLAM process. Until now (2016), CPUs equipped on PCs cannot achieve real time to calculate SIFT features for localization and mapping \footnote{here refers Real-time speed as of 30Hz. }. So we rarely use this "luxury" image feature in SLAM.
 
-另一些特征，则考虑适当降低精度和鲁棒性，以提升计算的速度。例如，FAST关键点属于计算特别快的一种特征点（注意这里“关键点”的表述，说明它没有描述子），而ORB（Oriented FAST and Rotated BRIEF）特征则是目前看来非常具有代表性的实时图像特征。它改进了FAST检测子\textsuperscript{\cite{Rosten2006}}不具有方向性的问题，并采用速度极快的二进制描述子BRIEF\textsuperscript{\cite{calonder2010brief}}，使整个图像特征提取的环节大大加速。根据作者在论文中所述测试，在同一幅图像中同时提取约1000个特征点的情况下，ORB约要花费15.3ms，SURF约花费217.3ms，SIFT约花费5228.7ms。由此可以看出，ORB在保持了特征子具有旋转、尺度不变性的同时，速度方面提升明显，对于实时性要求很高的SLAM来说是一个很好的选择。
+Some other features exchange some accuracy and robustness for the calculation speed increase. For example, the FAST key point is a feature point that is extremely fast to calculate (note the expression of "key point" here, which means that it has no descriptor), while the ORB (Oriented FAST and Rotated BRIEF) feature is currently widely used for real-time image feature extraction. It solves the problem that the FAST detector \textsuperscript{\cite{Rosten2006}} does not have directionality, and uses the extremely fast binary descriptor BRIEF\textsuperscript{\cite{calonder2010brief}} to make the whole image feature extraction process accelerate greatly. According to the author's experiment in the paper, extracting about 1000 feature points in the same image, it takes about 15.3ms for ORB, 217.3ms for SURF, and 5228.7ms for SIFT. It can be seen that ORB made a significant boost in speed while maintaining the features of rotation and scale invariance. It is a good choice for SLAM with high real-time requirements.
 
-大部分特征提取都具有较好的并行性，可以通过GPU等设备来加速计算。经过GPU加速后的SIFT，就可以满足实时计算要求。但是，引入GPU将带来整个SLAM成本的提升。由此带来的性能提升是否足以抵去付出的计算成本，需要系统的设计人员仔细考量。
+Most feature extractions have good parallelism and can be accelerated by GPU and other devices. SIFT accelerated by GPU can meet real-time requirements. However, the inclusion of GPU will increase the cost of the entire SLAM system. Whether the resulting performance improvement is sufficient to offset the computational cost requires careful consideration by the system designer.
 
-显然，计算机视觉领域存在大量的特征点种类，我们不可能在书中一一介绍。在目前的SLAM方案中，ORB是质量与性能之间较好的折中，因此，我们以ORB为代表介绍提取特征的整个过程。如果读者对特征提取和匹配算法感兴趣，我们建议阅读这方面的相关书籍\cite{Nixon2012}。
+Obviously, there are a large number of feature points in the field of computer vision, and we cannot introduce them one by one in the book. In the current SLAM scheme, ORB is a good tradeoff between quality and performance. Therefore, we take ORB as an example to introduce the entire process of extracting features. If readers are interested in feature extraction and matching algorithms, we recommend reading related books in this area\cite{Nixon2012}.
 
-\subsection{ORB特征}
+\subsection{ORB Feature}
 
-ORB特征亦由\textbf{关键点}和\textbf{描述子}两部分组成。它的关键点称为“Oriented FAST”，是一种改进的FAST角点，关于什么是FAST角点我们将在下文介绍。它的描述子称为BRIEF（Binary Robust Independent Elementary Feature）。因此，提取ORB特征分为如下两个步骤：
+ORB features are also composed of two parts: \textbf{key points} and \textbf{descriptor}. Its key point is called "Oriented FAST", which is an improved FAST corner point. We will introduce what is FAST corner point below. Its descriptor is called BRIEF (Binary Robust Independent Elementary Feature). Therefore, the extraction of ORB features is divided into the following two steps:
 \begin{enumerate}
-\item FAST角点提取：找出图像中的“角点”。相较于原版的FAST，ORB中计算了特征点的主方向，为后续的BRIEF描述子增加了旋转不变特性。
-\item BRIEF描述子：对前一步提取出特征点的周围图像区域进行描述。ORB对BRIEF进行了一些改进，主要是指在BRIEF中使用了先前计算的方向信息。
+\item FAST corner point extraction: find the "corner point" in the image. Compared with the original FAST, the main direction of the feature points is calculated in ORB, which makes the subsequent BRIEF descriptor rotation-invariant.
+\item BRIEF descriptor: describe the surrounding image area where the feature points were extracted in the previous step. ORB has made some improvements to BRIEF, mainly referring to utilizing the previously calculated direction.
 \end{enumerate}
 
-下面分别介绍FAST和BRIEF。
-\subsubsection{FAST关键点}
+Then we will introduce FAST and BRIEF respectively.
+\subsubsection{FAST key points}
 
-FAST是一种角点，主要检测局部像素灰度变化明显的地方，以速度快著称。它的思想是：如果一个像素与邻域的像素差别较大（过亮或过暗），那么它更可能是角点。相比于其他角点检测算法，FAST只需比较像素亮度的大小，十分快捷。它的检测过程如下（见\autoref{fig:fastcorner}~）：
+FAST is a kind of corner point, which mainly detects the obvious grayscale changes locally, and is known for its fast speed. Its main idea is: if a pixel is very different from the neighboring pixels (too bright or too dark), then it is more likely to be a corner point. Compared with other corner detection algorithms, FAST only needs to compare the brightness of the pixels, which is very fast. Its entire procedure is as follows (see \autoref{fig:fastcorner}~):
 
 \begin{enumerate}
-\item 在图像中选取像素$p$，假设它的亮度为$I_{p}$。
-\item 设置一个阈值$T$（比如，$I_{p}$的20\%）。
-\item 以像素$p$为中心，选取半径为3的圆上的16个像素点。
-\item 假如选取的圆上有连续的$N$个点的亮度大于$I_{p}+T$或小于$I_{p}-T$，那么像素$p$可以被认为是特征点（$N$通常取12，即为FAST-12。其他常用的$N$取值为9和11，它们分别被称为FAST-9和FAST-11）。
-\item 循环以上四步，对每一个像素执行相同的操作。
+\item Select pixel $p$ in the image，assuming its brightness as $I_{p}$
+\item Set a threshold $T$ (for example, 20\% of $I_{p}$).
+\item Take the pixel $p$ as the center, and select the 16 pixels on a circle with a radius of 3.
+\item If there are consecutive $N$ points on the selected circle whose brightness is greater than $I_{p}+T$ or less than $I_{p}-T$, then the central pixel $p$ can be considered a feature point ($N$ usually takes 12, which is FAST-12. Other commonly used $N$ values ​​are 9 and 11, which are called FAST-9 and FAST-11 respectively).
+\item Iterate through the above four steps on each pixel.
 \end{enumerate}
 
-在FAST-12算法中，为了更高效，可以添加一项预测试操作，以快速地排除绝大多数不是角点的像素。具体操作为，对于每个像素，直接检测邻域圆上的第1, 5, 9, 13个像素的亮度。只有当这4个像素中有3个同时大于$I_{p}+T$或小于$I_{p}-T$时，当前像素才有可能是一个角点，否则应该直接排除。这样的预测试操作大大加速了角点检测。此外，原始的FAST角点经常出现“扎堆”的现象。所以在第一遍检测之后，还需要用非极大值抑制（Non-maximal suppression），在一定区域内仅保留响应极大值的角点，避免角点集中的问题。
+In the FAST-12 algorithm, to speed up, checking the brightness of the 1, 5, 9 and 13-th pixels on the circle for each pixel can quickly exclude a lot of pixels that are not corner points. Only when 3 of these 4 pixels are greater than $I_{p}+T$ or less than $I_{p}-T$, the current pixel may potentially be a corner point, otherwise it should be directly excluded. Such 'pre-processing' operation greatly accelerates FAST corner detection. In addition, the original FAST corners are often "clustered", meaning a lot of FAST corners present in the same area. Therefore, after the initial detection, non-maximal suppression is required. Only corner points with maximum response in a certain area will be retained to avoid the corners concentrating.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.9\linewidth]{vo1/fast-corner}
-	\caption{FAST特征点\textsuperscript{\cite{Rosten2006}}。}
+	\caption{FAST key points\textsuperscript{\cite{Rosten2006}}。}
 	\label{fig:fastcorner}
 \end{figure}
 
-FAST特征点的计算仅仅是比较像素间亮度的差异所所以速度非常快，但它也有重复性不强，分布不均匀的缺点。此外，FAST角点不具有方向信息。同时，由于它固定取半径为3的圆，存在尺度问题：远处看着像是角点的地方，接近后看可能就不是角点了。针对FAST角点不具有方向性和尺度的弱点，ORB添加了尺度和旋转的描述。尺度不变性由构建图像金字塔\footnote{金字塔是指对图像进行不同层次的降采样，以获得不同分辨率的图像。}，并在金字塔的每一层上检测角点来实现。而特征的旋转是由灰度质心法（Intensity Centroid）实现的。
+The calculation of FAST feature points only compares the brightness difference between pixels, thus the speed is very fast, but it suffers from bad repeatability and uneven distribution. Moreover, FAST corner points do not include direction information. At the same time, because it fixed the radius of circle as 3, there is also a scaling problem: a place that looks like a corner from a distance may not be a corner when it comes close. To solve those, ORB adds the description of scale and rotation. The scale invariance is achieved by the image pyramid \footnote{ pyramid refers to the downsampling of images at different levels to obtain images with different resolutions. }, and detect corner points on each layer of the pyramid. The rotation of features is realized by the Intensity Centroid method.
 
-金字塔时计算图视觉中常用的一种处理方法，示意图见\autoref{fig:pyramid}。金字塔底层是原始图像。每往上一层，就对图像进行一个固定倍率的缩放，这样我们就有了不同分辨率的图像。较小的图像可以看成是远处看过来的场景。在特征匹配算法中，我们可以匹配不同层上的图像，从而实现尺度不变性。例如，如果相机在后退，那么我们应该能够在上一个图像金字塔的上层和下一个图像的下层中找到匹配。
+Pyramid is a common approach in computer vision. For a schema, see \autoref{fig:pyramid}. The bottom of the pyramid is the original image. For each layer up, the image is scaled with a fixed ratio, so that we have images of different resolutions. The smaller image can be seen as a scene viewed from a distance. In the feature matching algorithm, we can match images on different layers to achieve scale invariance. For example, if the camera is moving backwards, then we should be able to find a match in the upper layer of the previous image pyramid and the lower layer of the next image.
 
 \begin{figure}[!t]
     \centering
     \includegraphics[width=0.9\linewidth]{vo1/pyramid}\\
-    \caption{使用金字塔可以匹配不同缩放倍率下的图像。}
+    \caption{Use pyramids to match images at different resolutions.}
     \label{fig:pyramid}
 \end{figure}
 
-在旋转方面，我们计算特征点附近的图像灰度质心。所谓质心是指以图像块灰度值作为权重的中心。其具体操作步骤如下\textsuperscript{\cite{Rosin1999}}：
+In terms of rotation, we calculate the gray centroid of the image near the feature point. The so-called centroid refers to the gray value of the image block as the center of weight. The specific steps are as follows
+\textsuperscript{\cite{Rosin1999}}：
 \begin{enumerate}
-\item 在一个小的图像块$B$中，定义图像块的矩为
+\item In a small image block $B$, define the moment of the image block as
 \[
 m_{pq}=\sum_{x,y \in B}x^{p}y^{q}I(x,y), \quad p, q = \{0,1\}.
 \]
-\item 通过矩可以找到图像块的质心：
+\item calculate the centroid of the image block by the moment:
 \[
 C=\left(\frac{m_{10}}{m_{00}},\frac{m_{01}}{m_{00}}\right).
 \]
-\item 连接图像块的几何中心$O$与质心$C$，得到一个方向向量$\overrightarrow{OC}$，于是特征点的方向可以定义为
+\item Connect the geometric center $O$ and the centroid $C$ of the image block to get a direction vector $\overrightarrow{OC}$, so the direction of the feature point can be defined as
 \[
 \theta = \arctan(m_{01}/m_{10}).
 \]
 \end{enumerate}
-通过以上方法，FAST角点便具有了尺度与旋转的描述，从而大大提升了其在不同图像之间表述的鲁棒性。所以在ORB中，把这种改进后的FAST称为Oriented FAST。
+Now, FAST corner points have a description of scale and rotation, which greatly improves the robustness of their representation between different images. This improved FAST is called Oriented FAST in ORB.
 
-\subsubsection{BRIEF描述子}
-在提取Oriented FAST关键点后，我们对每个点计算其描述子。ORB使用改进的BRIEF特征描述。我们先来介绍一下BRIEF是什么。
+\subsubsection{BRIEF descriptor}
+After extracting the Oriented FAST key points, we calculate the descriptor for each point. ORB uses an improved BRIEF feature description. Let's first introduce what BRIEF is.
 
-BRIEF是一种\textbf{二进制}描述子，其描述向量由许多个0和1组成，这里的0和1编码了关键点附近两个随机像素（比如$p$和$q$）的大小关系：如果$p$比$q$大，则取1，反之就取0。如果我们取了128个这样的$p,q$，最后就得到128维由0、1组成的向量\textsuperscript{\cite{calonder2010brief}}。BRIEF使用了随机选点的比较，速度非常快，而且由于使用了二进制表达，存储起来也十分方便，适用于实时的图像匹配。原始的BRIEF描述子不具有旋转不变性，因此在图像发生旋转时容易丢失。而ORB在FAST特征点提取阶段计算了关键点的方向，所以可以利用方向信息，计算了旋转之后的“Steer BRIEF”特征使ORB的描述子具有较好的旋转不变性。
+BRIEF is a \textbf{binary} descriptor. Its description vector consists of many 0s and 1s, where 0s and 1s encode the size relationship between two random pixels near the key point (such as $p$ and $q$) : If $p$ is greater than $q$, then take 1, otherwise take 0. If we take 128 such $p,q$ pairs, we will finally get a 128-dimensional vector \textsuperscript{\cite{calonder2010brief}} consisting of 0s and 1s. BRIEF implements the comparison of randomly selected points, which is very fast, and since it expresses in binary, it is also very convenient to store and suitable for real-time image matching. The original BRIEF descriptor does not have rotation invariance, so it is easy to get lost when the image is rotated. The ORB calculates the direction of the key points in the FAST feature point extraction stage, so the direction information can be used to calculate the "Steer BRIEF" feature after the rotation, so that the ORB descriptor has better rotation invariance.
 
-由于考虑到了旋转和缩放，使得ORB在平移、旋转和缩放的变换下仍有良好的表现。同时，FAST和BREIF的组合也非常高效，使得ORB特征在实时SLAM中非常受欢迎。我们在\autoref{fig:ORB}~中展示了一张图像提取ORB之后的结果，下面来介绍如何在不同的图像之间进行特征匹配。
+Due to the consideration of rotation and scaling, the ORB still performs well under the translation, rotation and scaling. Meanwhile, the combination of FAST and BREIF is very efficient, which makes ORB features very popular in real-time SLAM. In \autoref{fig:ORB}~, we show the result of extracting ORB from an image. In the following, we will move on to feature matching between different images.
 
 \begin{figure}[!htp]
     \centering
     \includegraphics[width=0.9\linewidth]{vo1/feature}\\
-    \caption{OpenCV提供的ORB特征点检测结果。}
+    \caption{ORB feature point detection by OpenCV.}
     \label{fig:ORB}
 \end{figure}
 
-\subsection{特征匹配}
+\subsection{Feature Matching}
 
-特征匹配（如\autoref{fig:feature-matching}~所示）是视觉SLAM中极为关键的一步，宽泛地说，特征匹配解决了SLAM中的数据关联问题（data association），即确定当前看到的路标与之前看到的路标之间的对应关系。通过对图像与图像或者图像与地图之间的描述子进行准确匹配，我们可以为后续的姿态估计、优化等操作减轻大量负担。然而，由于图像特征的局部特性，误匹配的情况广泛存在，而且长期以来一直没有得到有效解决，目前已经成为视觉SLAM中制约性能提升的一大瓶颈。部分原因是场景中经常存在大量的重复纹理，使得特征描述非常相似。在这种情况下，仅利用局部特征解决误匹配是非常困难的。
+Feature matching (as shown in \autoref{fig:feature-matching}~) is a key step in visual SLAM. Broadly speaking, feature matching solves the data association problem in SLAM, that is, to determine the current view correspondence between the landmarks (feature points) and the landmarks (feature points) seen before. By accurately matching the descriptors between images or between image and map, we can reduce a lot of work for subsequent pose estimation and optimization operations. However, due to the locality of image features, mismatches are common and have not been effectively resolved for a long time. It has become a major bottleneck to improve the performance of  visual SLAM. It is somehow due to repeated textures in the scene, making the feature descriptions very similar. Under this circumstance, it is hard to resolve the mismatch by using local features only.
 
 \begin{figure}[!htp]
     \centering
     \includegraphics[width=0.9\linewidth]{vo1/feature-matching}
-    \caption{两帧图像间的特征匹配。}
+    \caption{Feature matching between two images.}
     \label{fig:feature-matching}
 \end{figure}
 
-不过，让我们先来看正确匹配的情况，等做完实验再回头去讨论误匹配问题。考虑两个时刻的图像。如果在图像$I_{t}$中提取到特征点$ x_{t}^{m}, m=1,2,...,M$，在图像$I_{t+1}$中提取到特征点$x_{t+1}^{n}, n=1,2,...,N$，如何寻找这两个集合元素的对应关系呢？最简单的特征匹配方法就是\textbf{暴力匹配（Brute-Force Matcher）}。即对每一个特征点$x_{t}^{m}$与所有的$x_{t+1}^{n}$测量描述子的距离，然后排序，取最近的一个作为匹配点。描述子距离表示了两个特征之间的\textbf{相似程度}，不过在实际运用中还可以取不同的距离度量范数。对于浮点类型的描述子，使用欧氏距离进行度量即可。而对于二进制的描述子（比如BRIEF这样的），我们往往使用汉明距离（Hamming distance）作为度量——两个二进制串之间的汉明距离，指的是其\textbf{不同位数的个数}。
+However, let’s look at the correct matching first, and then go back to discuss the mismatch problem. Consider images at two timestamps, if the feature points $x_{t}^{m}, m=1,2,...,M$ are extracted in the image $I_{t}$, then the feature points are also extracted in the image $I_{t+1}$ as $x_{t+1}^{n}, n=1,2,...,N$. How to find the correspondence between these two set elements? The simplest feature matching method is \textbf{Brute-Force Matcher}. That is, measure the distance between each feature point $x_{t}^{m}$ and all $x_{t+1}^{n}$ descriptors, and then sort, and take the closest one as the matching point. The descriptor distance indicates the \textbf{degree of similarity} between two features. In practice, different distance metric norms can be used. For descriptors of floating-point type, use Euclidean distance to measure. For binary descriptors (such as BRIEF), we often use Hamming distance as a metric - the Hamming distance between two binary strings refers to the number of \textbf{different digits}.
 
-然而，当特征点数量很大时，暴力匹配法的运算量将变得很大，特别是当想要匹配某个帧和一张地图的时候。这不符合我们在SLAM中的实时性需求。此时\textbf{快速近似最近邻（FLANN）}算法更加适合于匹配点数量极多的情况。由于这些匹配算法理论已经成熟，而且实现上也已集成到OpenCV，所以这里就不再描述它的技术细节了。感兴趣的读者可以参考阅读文献\cite{Muja2009}。
+However, when the number of feature points is very large, the computational complexity of the brute force matching method will become large, especially when you want to match a certain frame and a map. This does not meet our real-time requirements in SLAM. To solve this, the \textbf{Fast Approximate Nearest Neighbor (FLANN)} algorithm is more suitable. Since the theory of these matching algorithms is mature and the implementation has been already integrated into OpenCV, the technical details will not be described here. Interested readers can refer to the literature \cite{Muja2009}.
 
-\section{实践：特征提取和匹配}
+\section{Practice: Feature extraction and matching}
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.9\linewidth]{vo1/exp1-images.pdf}
-	\caption{实验使用的两帧图像。}
+	\caption{Two frames of images used in the practice.}
 	\label{fig:exp1-images}
 \end{figure}
 
-OpenCV已经集成了多数主流的图像特征，我们可以很方便地进行调用。下面我们来完成两个实验：第一个实验中，我们演示使用OpenCV进行ORB的特征匹配；第二个实验中，我们演示如何根据前面介绍的原理，手写一个简单的ORB特征。通过手写的过程，读者可以更加清楚地理解ORB的计算过程，并类推到其他特征上去。
+OpenCV has integrated most mainstream image features, and we can easily use them by function calls. Let's complete two exercise: In the first one, we demonstrate the use of OpenCV for feature matching of ORB; in the second, we demonstrate how to write a simple ORB feature from scratch based on the principles introduced. Through the practice, readers will have a deeper and more clear understanding of the ORB calculation process. Then other features can be done analogously.
 
-\subsection{OpenCV的ORB特征}
-首先我们调用OpenCV来提取和匹配ORB。我为此实验准备了两张图像，位于slambook2/ch7/下的1.png和2.png，如\autoref{fig:exp1-images}~所示。它们是来自公开数据集\cite{Sturm2012}中的两张图像，我们看到相机发生了微小的运动。本节程序演示如何提取ORB特征并进行匹配。下一小节中，我们将演示如何用匹配结果来估计相机运动。
+\subsection{ORB features in OpenCV}
+First we call OpenCV to extract and match ORB. I prepared two images for this practice, 1.png and 2.png under slambook2/ch7/, as shown in \autoref{fig:exp1-images}~. They are two images from the public data set \cite{Sturm2012}. We can see a slight movement of the camera. The procedure in this section demonstrates how to extract ORB features and perform matching. In the next section, we will demonstrate how to use matching results to estimate camera motion.
 
-下面程序演示了ORB的使用方法：
+The following program demonstrates how to use ORB:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/orb_cv.cpp]
 #include <iostream>
 #include <opencv2/core/core.hpp>
@@ -173,24 +175,24 @@ int main(int argc, char **argv) {
         cout << "usage: feature_extraction img1 img2" << endl;
         return 1;
     }
-    //-- 读取图像
+    //-- load the image
     Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
     Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
     assert(img_1.data != nullptr && img_2.data != nullptr);
     
-    //-- 初始化
+    //-- initialization
     std::vector<KeyPoint> keypoints_1, keypoints_2;
     Mat descriptors_1, descriptors_2;
     Ptr<FeatureDetector> detector = ORB::create();
     Ptr<DescriptorExtractor> descriptor = ORB::create();
     Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
     
-    //-- 第一步:检测 Oriented FAST 角点位置
+    //-- Step 1: calculate Oriented FAST keypoints
     chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
     detector->detect(img_1, keypoints_1);
     detector->detect(img_2, keypoints_2);
     
-    //-- 第二步:根据角点位置计算 BRIEF 描述子
+    //-- Step 2: calculate BRIEF descriptors based on the position of Oriented FAST keypoints
     descriptor->compute(img_1, keypoints_1, descriptors_1);
     descriptor->compute(img_2, keypoints_2, descriptors_2);
     chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
@@ -201,7 +203,7 @@ int main(int argc, char **argv) {
     drawKeypoints(img_1, keypoints_1, outimg1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
     imshow("ORB features", outimg1);
     
-    //-- 第三步:对两幅图像中的BRIEF描述子进行匹配，使用 Hamming 距离
+    //-- Step 3: match BRIEF descriptors of the two images using Hamming distance
     vector<DMatch> matches;
     t1 = chrono::steady_clock::now();
     matcher->match(descriptors_1, descriptors_2, matches);
@@ -209,8 +211,8 @@ int main(int argc, char **argv) {
     time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
     cout << "match ORB cost = " << time_used.count() << " seconds. " << endl;
     
-    //-- 第四步:匹配点对筛选
-    // 计算最小距离和最大距离
+    //-- Step 4: select correct matching (filtering)
+    // calculate the max & min distances
     auto min_max = minmax_element(matches.begin(), matches.end(),
         [](const DMatch &m1, const DMatch &m2) { return m1.distance < m2.distance; });
     double min_dist = min_max.first->distance;
@@ -219,7 +221,8 @@ int main(int argc, char **argv) {
     printf("-- Max dist : %f \n", max_dist);
     printf("-- Min dist : %f \n", min_dist);
     
-    //当描述子之间的距离大于两倍的最小距离时,即认为匹配有误.但有时候最小距离会非常小,设置一个经验值30作为下限.
+	// When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong. 
+	// But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
     std::vector<DMatch> good_matches;
     for (int i = 0; i < descriptors_1.rows; i++) {
         if (matches[i].distance <= max(2 * min_dist, 30.0)) {
@@ -227,7 +230,7 @@ int main(int argc, char **argv) {
         }
     }
     
-    //-- 第五步:绘制匹配结果
+    //-- Step 5: visualize the matching result
     Mat img_match;
     Mat img_goodmatch;
     drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, img_match);
@@ -240,7 +243,7 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-运行此程序（需要输入两个图像位置），将输出运行结果：
+Run this program (you need to enter the paths of two image manually), the screen output should be like:
 \begin{lstlisting}[language=sh,caption=终端输入：]
 % build/orb_cv 1.png 2.png
 extract ORB cost = 0.0229183 seconds. 
@@ -249,20 +252,20 @@ match ORB cost = 0.000751868 seconds.
 -- Min dist : 4.000000 
 \end{lstlisting}
 
-\autoref{fig:exp1-results}~显示了例程的运行结果。我们看到未筛选的匹配中带有大量的误匹配。经过一次筛选之后，匹配数量减少了许多，但大多数匹配都是正确的。这里，筛选的依据是\textbf{汉明距离小于最小距离的两倍}，这是一种工程上的经验方法，不一定有理论依据。不过，尽管在示例图像中能够筛选出正确的匹配，但我们仍然不能保证在所有其他图像中得到的匹配都是正确的。因此，在后面的运动估计中，还需要使用去除误匹配的算法。在我的机器上，ORB提取花费了22.9毫秒（两张图像），匹配花费了0.75毫秒，可见大部分计算量花在了特征提取上。
+\autoref{fig:exp1-results}~shows the results of the example. We see a large number of false matches before the filtering. After one pass of screening, though the number of matches was reduced a lot, most of the remaining matches were correct. Here, we followed an empirical rule in engineering \textbf{Hamming distance is less than twice the minimum distance} to carry out the filtering, and it may not have a theoretical explanation. However, although we can select out the correct matches in the example image, we still cannot guarantee that the matches obtained in all other images are correct. Therefore, during the motion estimation step, it is necessary to remove mismatches. On my machine, ORB extraction took 22.9 milliseconds (two images), and matching took 0.75 milliseconds. It can be seen that most of the calculation is spent on feature extraction.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=1.0\linewidth]{vo1/exp1-result}
-	\caption{特征提取与匹配结果。}
+	\caption{Feature extraction and matching results.}
 	\label{fig:exp1-results} 
 \end{figure}
 
-\subsection{手写ORB特征}
-下面我们演示手写ORB特征的方法。这部分代码比较多，书上只展示核心部分的代码，其余的周边代码请读者从代码库中获取。
+\subsection{Coding ORB features}
+Below we show the method of coding ORB features from scratch. There are a branch of codes in this section. Only a snippet of the code is shown here. Readers are recommended to obtain the rest from the GitHub code base.
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/orb_self.cpp（片段）]
 typedef vector<uint32_t> DescType;
-// ... 省略图片读取部分代码和测试代码
+// ... omit some image loading and testing code
 // compute the descriptor
 void ComputeORB(const cv::Mat &img, vector<cv::KeyPoint> &keypoints, vector<DescType> &descriptors) {
     const int half_patch_size = 8;
@@ -340,7 +343,7 @@ void BfMatch(
     }
 }
 \end{lstlisting}
-这个演示中我们只展示ORB的计算代码和匹配代码。在计算中，我们用256位的二进制描述，即对应到8个32位的unsigned int数据，用typedef将它表示成DescType。然后，我们根据前面介绍的原理计算FAST特征点的角度，再使用该角度计算描述子。此代码中通过三角函数的原理回避了复杂的$\arctan$以及$\sin$、$\cos$计算，从而达到加速的效果。在BfMatch函数中，我们还使用了SSE指令集中的\_mm\_popcnt\_u32函数来计算一个unsigned int变量中1的个数，从而达到计算汉明距离的效果。该段程序的运行结果如下，匹配结果如\autoref{fig:matches}所示：
+We only show the ORB calculation and matching code. In the calculation, we use 256-bit binary description, which corresponds to 8 32-bit unsigned int data, which is expressed as DescType with typedef. Then, we calculate the angle of the FAST feature point according to the principle introduced above, and then use the angle to calculate the descriptor. To accelerated, some complicated calculations, such as of $\arctan$, $\sin$, and $\cos$, are worked around by the principle of trigonometric functions. In the BfMatch function, we also use the \_mm\_popcnt\_u32 function in the SSE instruction set to calculate the number of 1s in an unsigned int, which is used to achieve the effect of calculating the Hamming distance. The result of this program is as follows, and the matching result is shown in \autoref{fig:matches}:
 
 \begin{lstlisting}[language=sh,caption=终端输出：]
 bad/total: 43/638
@@ -353,38 +356,38 @@ matches: 51
 \begin{figure}[!htp]
     \centering
     \includegraphics[width=0.8\linewidth]{vo1/matches}
-    \caption{匹配结果}
+    \caption{Matching Result}
     \label{fig:matches}
 \end{figure}
 
-可见，这个程序中，ORB的提取只需要3.9毫秒，匹配只需0.86毫秒。我们通过一些简单的算法修改，对ORB的提取加速了5.8倍。请读者注意，编译这个程序需要你的CPU支持SSE指令集，这应该在绝大多数现代的家用CPU上都已经支持。如果我们能够对提取特征部分进一步并行化处理，算法还可以有加速的空间。
+In this program, the extraction of ORB takes 3.9 milliseconds, and the matching takes only 0.86 milliseconds. Through some simple modifications in the algorithm implementation, we accelerated the extraction of ORB by 5.8 times. Keep in mind that compiling this program requires your CPU to support the SSE instruction set, which should already be supported on most modern home CPUs. If we can further parallelize the feature extraction, the algorithm can be further accelerated.
 
-\subsection{计算相机运动}
-我们已经有了匹配好的点对，接下来，我们要根据点对来估计相机的运动。这里由于相机的原理不同，情况发生了变化：
+\subsection{Calculate camera motion}
+Now, we have key points matching. In the next step, we need to estimate the camera's motion based on the matching. It is totally different for different camera settings (or different information available for the calculation):
 
 \begin{enumerate}
-	\item 当相机为单目时，我们只知道2D的像素坐标，因而问题是根据\textbf{两组2D点}估计运动。该问题用\textbf{对极几何}来解决。
-	\item 当相机为双目、RGB-D时，或者通过某种方法得到了距离信息，那么问题就是根据\textbf{两组3D点}估计运动。该问题通常用ICP来解决。
-	\item 如果一组为3D，一组为2D，即，我们得到了一些3D点和它们在相机的投影位置，也能估计相机的运动。该问题通过\textbf{PnP}求解。
+	\item When the camera is monocular, we only know the 2D pixel coordinates, so the problem is to estimate the motion according to \textbf{two sets of 2D points}. This problem is solved by \textbf{epipolar geometry}.
+	\item When the camera is binocular, RGB-D, or the distance is obtained by some method, then the problem is to estimate the motion according to \textbf{two sets of 3D points}. This problem is usually solved by ICP.
+	\item If one set is 3D and one set is 2D, that is, we get some 3D points and their projection positions on the camera, and we can also estimate the movement of the camera. This problem is solved by \textbf{PnP}.
 \end{enumerate}
 
-因此，下面几节就来介绍这三种情形下的相机运动估计。我们将从信息最少的2D−2D情形出发，看看它如何求解，求解过程又有哪些麻烦的问题。
+The following sections will introduce camera motion estimation in these three situations. We will start from the 2D-2D case with the least information and see how it is dealt with and what are the troublesome problems.
 
-\section{2D−2D: 对极几何}
+\section{2D−2D: epipolar geometry}
 \label{sec:epipolar-geometry}
 
-\subsection{对极约束}
+\subsection{epipolar constraints}
 
-现在，假设我们从两张图像中得到了一对配对好的特征点，如\autoref{fig:doubleview}~所示。如果有若干对这样的匹配点，就可以通过这些二维图像点的对应关系，恢复出在两帧之间摄像机的运动。这里“若干对”具体是多少对呢？我们会在下文介绍。下面先来看看两个图像当中的匹配点有什么几何关系。
+Suppose we have a pair of matched feature points from two images, as shown in \autoref{fig:doubleview}~. If there are several pairs of such matching points, the camera motion between the two frames can be recovered through the correspondence between these two-dimensional image points. How many pairs do we need? We will introduce it later. Let's first take a look at the geometric relationship between the matching points in the two images.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.6\linewidth]{vo1/fundamental}
-	\caption{对极几何约束。}
+	\caption{epipolar constraints.}
 	\label{fig:doubleview}
 \end{figure}
 
-以\autoref{fig:doubleview}~为例，我们希望求取两帧图像$I_{1}, I_{2}$之间的运动，设第一帧到第二帧的运动为$\bm{R}, \bm{t}$。两个相机中心分别为$O_{1}, O_{2}$。现在，考虑$I_{1}$中有一个特征点$p_{1}$，它在$I_{2}$中对应着特征点$p_{2}$。我们知道两者是通过特征匹配得到的。如果匹配正确，说明它们确实是\textbf{同一个空间点在两个成像平面上的投影}。这里需要一些术语来描述它们之间的几何关系。首先，连线$\overrightarrow{O_{1}p_{1}}$和连线$\overrightarrow{O_{2}p_{2}}$在三维空间中会相交于点$P$。这时候点$O_{1},O_{2},P$三个点可以确定一个平面，称为\textbf{极平面（Epipolar plane）}。$O_{1}O_{2}$连线与像平面$I_{1},I_{2}$的交点分别为$e_{1},e_{2}$。$e_{1},e_{2}$称为\textbf{极点（Epipoles）}，$O_{1}O_{2}$被称为\textbf{基线（Baseline）}。我们称极平面与两个像平面$I_{1}, I_{2}$之间的相交线$l_{1},l_{2}$为\textbf{极线（Epipolar line）}。
+Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames of image $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\bm{R}, \bm{t}$, and the centers of the two cameras as $O_{1}, O_{2}$ (Origin). Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, which are obtained through feature matching. If the matching is correct, it means that they are indeed \textbf{projection of the same point in space on two image planes}. Now we need some terms to describe the geometric relationship between them. First, the connection $\overrightarrow{O_{1}p_{1}}$ and the connection $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the three-dimensional space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called \textbf{Epipolar plane}. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$ respectively. $e_{1}, e_{2}$ is called \textbf{Epipoles}, and $O_{1}O_{2}$ is called \textbf{Baseline}. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as \textbf{Epipolar line}.
 
 直观讲，从第一帧的角度看，射线$\overrightarrow{O_1 p_1}$是\textbf{某个像素可能出现的空间位置}——因为该射线上的所有点都会投影到同一个像素点。同时，如果不知道$P$的位置，那么当我们在第二幅图像上看时，连线$\overrightarrow{e_2 p_2}$（也就是第二幅图像中的极线）就是$P$可能出现的投影的位置，也就是射线$\overrightarrow{O_1 p_1}$在第二个相机中的投影。现在，由于我们通过特征点匹配确定了$p_2$的像素位置，所以能够推断$P$的空间位置，以及相机的运动。要提醒读者的是，\textbf{这多亏了正确的特征匹配}。如果没有特征匹配，我们就没法确定$p_2$到底在极线的哪个位置了。那时，就必须在极线上搜索以获得正确的匹配，这将在第12讲中提到。
 
