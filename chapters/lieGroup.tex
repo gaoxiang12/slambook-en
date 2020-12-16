@@ -76,12 +76,12 @@ Deriving time on both sides of the equation yields (we use $\dot{\mathbf{R}}$ to
 \[
 \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} + \mathbf{R} (t) \dot{\mathbf{R}} {(t) ^\mathrm{T}} = 0.
 \]
-Move the second term to right and commute the matrices by using the transpose relation:
+Move the second term to right and commute the matrices by using the transposed relation:
 \begin{equation}
 \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} = - \left( \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} \right)^\mathrm{T} .
 \end{equation}
 
-It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \textbf{skew-symmetric} matrix. Recall that we introduced the $^\wedge$ symbol when we mention about the cross product in the formula~\eqref{eq:cross}, which turns a vector into a skew-symmetric matrix. Similarly, for any skew-symmetric matrix, we can also find a unique vector corresponding to it. Let this operation be represented by the symbol $^{\vee}$:
+It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \textbf{skew-symmetric} matrix. Recall that we introduced the $^\wedge$ symbol when we mention the cross product in the formula~\eqref{eq:cross}, which turns a vector into a skew-symmetric matrix. Similarly, for any skew-symmetric matrix, we can also find a unique vector corresponding to it. Let this operation be represented by the symbol $^{\vee}$:
 \begin{equation}
 {\mathbf{a}^ \wedge } = \mathbf{A} = \left[ {\begin{array}{*{20}{c}}
     0&{ - {a_3}}&{{a_2}}\\
@@ -149,7 +149,7 @@ A Lie algebra consists of a set $\mathbb{V}$, a scalar field $\mathbb{F}$, and a
     \item \textbf{Reflexive} \footnote{ Reflexive means that an element operates with itself results in zero. }: $\forall \mathbf{X} \in \mathbb{V}; [\mathbf{X},\mathbf{X}] = \mathbf{0}$.
     \item \textbf{Jacobi Identity}: $\forall \mathbf{X},\mathbf{Y},\mathbf{Z} \in \mathbb{V}; [\mathbf{X}, [ \mathbf{Y},\mathbf{Z}] ] + [\mathbf{Z}, [\mathbf{X},\mathbf{Y}] ] + [\mathbf{Y}, [\mathbf{Z}, \mathbf{X}]] =\mathbf{0}$.
 \end{enumerate}
-The binary operations $[,]$ are called \textbf{Lie brackets}. On the first glance, we require a lot of properties about the operator of Lie bracket.  Compared to the simpler binary operations in the group, the Lie bracket expresses the difference between the two elements. It does not require a combination law, but requires the element and itself to be zero after the brackets. As an example, the cross product $\times$ defined on the 3D vector $\mathbb{R}^3$ is a kind of Lie bracket, so $\mathfrak{g} = (\mathbb{R}^3, \mathbb{R}, \times)$ constitutes a Lie algebra. The reader can try to substitute the cross product into the above four properties to verify the above conclusion.
+The binary operations $[,]$ are called \textbf{Lie brackets}. At first glance, we require a lot of properties about the operator of Lie bracket.  Compared to the simpler binary operations in the group, the Lie bracket expresses the difference between the two elements. It does not require a combination law, but requires the element and itself to be zero after the brackets. As an example, the cross product $\times$ defined on the 3D vector $\mathbb{R}^3$ is a kind of Lie bracket, so $\mathfrak{g} = (\mathbb{R}^3, \mathbb{R}, \times)$ constitutes a Lie algebra. The reader can try to substitute the cross product into the above four properties to verify the above conclusion.
 
 \subsection{Lie Algebra $\mathfrak{so}(3)$}
 The previously mentioned $\boldsymbol{\phi}$ is actually a kind of Lie algebra. The Lie algebra corresponding to $\mathrm{SO}(3)$ is a vector defined on $\mathbb{R}^3$, which we will denote as $\boldsymbol{\phi}$. According to the previous derivation, each $\boldsymbol{\phi}$ can generate a skew-symmetric matrix:

@@ -44,7 +44,7 @@ where $ \mathcal {N} $ means Gaussian distribution, $ \bm{0} $ means zero mean, 
 
 There are two ways to deal with this state estimation problem. Since these data come gradually over time in the SLAM process, we should intuitively hold an estimated state at the current moment and then update it with new data. This method is called the \textbf {incremental} method, or \textbf{filtering}. For a long time in history, researchers have used filters, especially the extended Kalman filter (EKF) and its derivatives, to solve it. The other way is to record the data into a file and looking for the best trajectory and map overall time. This method is called the \textbf {batch} estimation. In other words, we can put all the input and observation data from time 0 to $ k $ together and ask, with such input and observation, how to estimate the entire trajectory and map from time 0 to $ k $?
 
-These two different processing methods lead to many different estimation methods. In general, the incremental method only cares about the state estimation of the \textbf {current moment} $ \bm {x} _k $, but does not consider much about the previous state; relatively, the batch method can be used to get an optimized trajectory in larger time or space scope, which is considered to be superior to the traditional filters \textsuperscript {\cite {Strasdat2012}}, and has become the mainstream method of current visual SLAM. In extreme cases, we can let robots or drones collect data and then bring it back to the computing center for unified processing, which is also the mainstream practice of SfM (Structure from Motion). Of course, in these cases, the method is obviously not \textbf {real time}, which is not the most common application scenario of SLAM. So in SLAM, practical methods are usually some compromises. For example, we fix some historical trajectories and only optimize some trajectories close to the current moment, which leads to the \textbf {sliding window estimation} method to be described later.
+These two different processing methods lead to many estimation methods. In general, the incremental method only cares about the state estimation of the \textbf {current moment} $ \bm {x} _k $, but does not consider much about the previous state; relatively, the batch method can be used to get an optimized trajectory in larger time or space scope, which is considered to be superior to the traditional filters \textsuperscript {\cite {Strasdat2012}}, and has become the mainstream method of current visual SLAM. In extreme cases, we can let robots or drones collect data and then bring it back to the computing center for unified processing, which is also the mainstream practice of SfM (Structure from Motion). Of course, in these cases, the method is obviously not \textbf {real time}, which is not the most common application scenario of SLAM. So in SLAM, practical methods are usually some compromises. For example, we fix some historical trajectories and only optimize some trajectories close to the current moment, which leads to the \textbf {sliding window estimation} method to be described later.
 
 In theory, the batch method is easier to introduce. At the same time, understanding the batch method also makes it easier to understand the incremental method. Therefore, in this section, we focus on the batch optimization method based on nonlinear optimization, and the Kalman filter and more in-depth knowledge will be discussed in the back-end chapter. Since the batch method is discussed, we will consider all the moments from time 1 to $N$ and assume $M$ map points. Define the robot pose and map coordinates at all times as:
 \[
@@ -55,7 +55,7 @@ Similarly, $ \bm {u} $ without subscript is used for input at all times, and $ \
 P( \bm{x},\bm{y} | \bm{z}, \bm{u}).
 \end{equation}
 
-In particular, when we do not know the control input and only have one image, that is, only considering the data brought by the observation equation, it is equivalent to estimating  the conditional probability distribution $ P (\bm {x}, \bm {y} | \bm { z}) $. Such a problem is also called Structure from Motion (SfM), that is, how to reconstruct the three-dimensional spatial structure from images only \textsuperscript {\cite {Agarwal2009}}.
+In particular, when we do not know the control input and only have one image, that is, only considering the data brought by the observation equation, it is equivalent to estimate  the conditional probability distribution $ P (\bm {x}, \bm {y} | \bm { z}) $. Such a problem is also called Structure from Motion (SfM), that is, how to reconstruct the three-dimensional spatial structure from images only \textsuperscript {\cite {Agarwal2009}}.
 
 To estimation the conditional pdf we use the Bayes equation to switch the variables:
 \begin{equation}
@@ -67,7 +67,7 @@ The left side is called \textbf {posterior probability}, and $ P (\bm {z} | \bm 
 {(\bm{x},\bm{y})^*}_{\mathrm{MAP}} = \arg {\mathop{\rm max}\nolimits} P \left( {\bm{x},\bm{y}|\bm{z},\bm{u}} \right) = \arg \max P(\bm{z},\bm{u}|\bm{x},\bm{y})P(\bm{x},\bm{y}).
 \end{equation}
 
-Please note that the denominator part of Bayes' rule has nothing to do with the state $ \bm {x}, \bm {y} $ to be estimated, so it can be just ignored. Bayes' rule tells us that solving the maximum posterior probability is \textbf {equivalent to the estimate the product of maximum likelihood and a priori}. Further, we can also say ``I'm sorry, I don't know in prior where the robot pose or the map points are", then there is no \textbf {prior}. Then, you can solve \textbf {Maximize Likelihood Estimation} (MLE):
+Please note that the denominator part of Bayes' rule has nothing to do with the state $ \bm {x}, \bm {y} $ to be estimated, so it can be just ignored. Bayes' rule tells us that solving the maximum posterior probability is \textbf {equivalent to the estimate the product of maximum likelihood and a priori}. Further, we can also say ``I'm sorry, I don't know in prior where the robot pose or the map points are'', then there is no \textbf {prior}. Then, you can solve \textbf {Maximize Likelihood Estimation} (MLE):
 \begin{equation}
 { (\bm{x},\bm{y})^*}_{\mathrm{MLE}} = \arg \max P( \bm{z},\bm{u}| \bm{x},\bm{y}).
 \end{equation}
@@ -83,7 +83,7 @@ Since we assume the noise item is gaussian, which means ${\bm{v}_k} \sim \mathca
 \[
 P( \bm{z}_{j,k} | \bm{x}_k, \bm{y}_j) = N\left( h(\bm{y}_j, \bm{x}_k), \bm{Q}_{k,j} \right),
 \]
-which is, of course, still a Gaussian distribution. Now let's considering to solve the maximum likelihood estimation under this single observation. 
+which is, of course, still a Gaussian distribution. Now let's consider solving the maximum likelihood estimation under this single observation.
 
 We can rewrite this maximum problem into a \textbf{minimium of negative logarithm} one for Gaussian distributions since they have better mathematical forms under negative logarithm. Consider an arbitrary multi-dimensional Gaussian distribution $\bm{x} \sim \mathcal{N}(\bm{\mu}, \bm{\Sigma})$, its probability density function expansion form is:
 \begin{equation}
@@ -93,7 +93,7 @@ Taking the negative logarithm of both sides:
 \begin{equation}
 	-\ln \left( {P\left( \bm{x} \right)} \right) = \frac{1}{2}\ln \left( {{{\left( {2\pi} \right )}^N}\det \left( \bm{\Sigma} \right)} \right) + \frac{1}{2}{\left( {\bm{x}-\bm{\mu}} \right)^\mathrm{T}}{\bm{\Sigma} ^{-1}}\left( {\bm{x}-\bm{\mu}} \right).
 \end{equation}
-Because the logarithm function is monotonically increasing, maximizing the original function is equivalent to minimizing the negative logarithm. When minimizing $\bm{x}$ in the above formula, the first term has nothing to do with $\bm{x}$ and can be omitted. Therefore, as long as the quadratic term on the right is minimized, the maximum likelihood estimate of the state is obtained. Substituting into the SLAM observation model, it is equivalent to finding such a solution:
+Because the logarithm function is monotonically increasing, maximizing the original function is equivalent to minimizing the negative logarithm. When minimizing $\bm{x}$ in the above formula, the first term has nothing to do with $\bm{x}$ and can be omitted. Therefore, as long as the quadratic term on the right is minimized, the maximum likelihood estimate of the state is obtained. Substituting into the SLAM observation model, it is equivalent to find such a solution:
 \begin{equation}
 	\begin{aligned}
 		(\bm{x}_k,\bm{y}_j)^* &= \arg \max \mathcal{N}(h(\bm{y}_j, \bm{x}_k), \bm{Q }_{k,j}) \\ &= \arg \min \left( {{{\left( {{ \bm{z}_{k,j}}-h\left( {{\bm{x }_k},{\bm{y}_j}} \right)} \right)}^\mathrm{T}} \bm{Q}_{k,j}^{-1}\left( {{\ bm{z}_{k,j}}-h\left( {{\bm{x}_k},{\bm{y}_j}} \right)} \right)} \right).
@@ -124,14 +124,14 @@ In this way, a \textbf{least square problem} is obtained with the same solution 
 Observing the formula~\eqref{eq:least-square} carefully, we find that the least squares problem in SLAM has some specific structures:
 
 \begin{itemize}
-	\item First of all, the objective function of the whole problem consists of many (weighted) error quadratic forms. Although the dimensionality of the overall state variable is very high, each error term is simple and is only related to one or two state variables. For example, the motion error is only related to $\bm{x}_{k-1}, \bm{x}_k$, and the observation error is only related to $\bm{x}_k, \bm{y}_j$. This relationship will give a \textbf{sparse} least square problem, which we will investigate further in the backend chapter.
+	\item First, the objective function of the whole problem consists of many (weighted) error quadratic forms. Although the dimensionality of the overall state variable is very high, each error term is simple and is only related to one or two state variables. For example, the motion error is only related to $\bm{x}_{k-1}, \bm{x}_k$, and the observation error is only related to $\bm{x}_k, \bm{y}_j$. This relationship will give a \textbf{sparse} least square problem, which we will investigate further in the backend chapter.
 
 	\item Secondly, if you use Lie algebra to represent the increment, the problem is the least squares problem of \textbf{unconstrained}. However, if the rotation matrix/transformation matrix is ​​used to describe the pose, the constraint of the rotation matrix itself will be introduced, that is, $\mathrm{s.t.}\ \bm{R}^\mathrm{T} \bm{R} = \bm{I}$ and $\det (\bm{R})=1$ need to be added to the problem. Additional constraints can make optimization more difficult.
 
 	\item Finally, we used a quadratic metric error, which is exactly the $\mathcal{L}_2-$norm. The information matrix is used as the weights of each elemnents. For example, if an observation is very accurate, the covariance matrix will be ``small'' and the information matrix will be ``large'', so this error term will have a higher weight than the others in the whole problem. We will see some drawbacks of the $\mathcal{L}_2$ error later.
 \end{itemize}
 
-We introduce how to solve this least-squares problem, which requires some \textbf{basic knowledge of nonlinear optimization}. In particular, we want to discuss how to solve such a general unconstrained nonlinear least-squares problem. In the following lectures, we will make extensive use of this lecture's results and discuss in detail its application in the front and back ends of SLAM.
+We introduce how to solve this least-squares problem, which requires some \textbf{basic knowledge of nonlinear optimization}. In particular, we want to discuss how to solve such a general unconstrained nonlinear least-squares problem. In the following lectures, we will make extensive use of this lecture's results and discuss in detail its application in the front and back ends of SLAM\@.
 
 \subsection{Example: Batch state estimation}
 Maybe it's better to give an example here. Consider a very simple discrete-time system:
@@ -163,12 +163,12 @@ According to the previous statements, the error variable can be constructed as:
 \begin{equation}
     {e_{u,k}} = {x_k}-{x_{k-1}}-{u_k}, \quad {e_{z,k}} = {z_k}-{x_k},
 \end{equation}
-Then the objective function of least squares is:
+Then the objective function of the least squares is:
 \begin{equation}
     \min \sum\limits_{k = 1}^3 {e_{u,k}^\mathrm{T} Q_k^{-1}{e_{u,k}}} + \sum\limits_{k = 1 }^3 {e_{z,k}^\mathrm{T}{R^{-1}_k}{e_{z,k}}}.
 \end{equation}
 
-In addition, since this system is a linear one, we can easily write the equations in vector/matrix form. Define the vector $\bm{y}=[\bm{u}, \bm{z}]^\mathrm{T}$, then the error can be defined as: 
+In addition, since this system is a linear one, we can easily write the equations in the vector/matrix form. Define the vector $\bm{y}=[\bm{u}, \bm{z}]^\mathrm{T}$, then the error can be defined as:
 \begin{equation}
     \bm{y}-\bm{H}\bm{x} = \bm{e} \sim \mathcal{N}(\bm{0}, \boldsymbol{\Sigma}),
 \end{equation}
@@ -219,7 +219,7 @@ We reach the minimum, maximum, or saddle points by solving this equation (or, in
 
 Now things get much simpler. We turn the problem of solving \textbf{the derivative function equals zero} into a problem of \textbf{looking for decreasing increments} $\Delta \bm{x}_k$. We will see that since the objective function can be linearly approximated at the current estimation, the increment calculation will be simpler \footnote{Linear cases are always the easiest ones.}. When the function decreases until the increment becomes very small, it is considered that the algorithm converges, and the objective function reaches a minimum value. In this process, the problem is how to find the increment at each iteration point, which is a local problem. We only need to be concerned about the local properties of $f$ at the iteration value rather than the global properties. Such methods are widely used in optimization, machine learning, and other fields.
 
-Next, we examine how to find this increment $\Delta \bm{x}_k$. This part of knowledge belongs to the field of numerical optimization. Let's take q quick look at some of the widely used results.
+Next, we examine how to find this increment $\Delta \bm{x}_k$. This part of knowledge belongs to the field of numerical optimization. Let's take a quick look at some widely used results.
 
 \subsection{First and Second-order Method}
 Now consider the $k$-th iteration. Suppose we are at $\bm{x}_k$ and want to find the increment $\Delta \bm{x}_k$, then the most intuitive way is to make the Taylor expansion of the objective function in $\bm{x}_k$:
