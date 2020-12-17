@@ -17,7 +17,7 @@
 - [x] Review the use of an/a before "u" (vowel or consonant sound verification). HINT: Just search for " <a/an> u" for finding the cases.
 - [ ] Grammarly verification
   - [x] \include{chapters/preface-en}
-  - [ ] \include{chapters/preface}
+  - [x] \include{chapters/preface}
   - [ ] \include{chapters/whatSlam}
   - [ ] \include{chapters/rigidBody}
   - [ ] \include{chapters/lieGroup}
