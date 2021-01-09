@@ -1,0 +1,47 @@
+% !Mode:: "TeX:UTF-8"
+\chapter{矩阵求导}
+本节我们来简单回顾一下有关矩阵求导方面的知识。
+
+首先，标量函数的求导是显然的。假设一个函数$f(x)$对$x$求导，那么将得到$\frac{\mathrm{d}f}{\mathrm{d}x}$这样一个导数，显然它仍然是一个标量。下面我们分别讨论当$x$为向量或者$f$为向量函数的情况。
+\section{标量函数对向量求导}
+先考虑$\bm{x}$为向量的情况。假设$\bm{x} \in \mathbb{R}^m$，为列向量，那么：
+\begin{equation}
+\frac{{\mathrm{d}f}}{{\mathrm{d}\bm{x}}} = {\left[ {\frac{{\mathrm{d}f}}{{\mathrm{d}{x_1}}}, \cdots ,\frac{{\mathrm{d}f}}{{\mathrm{d}{x_m}}}} \right]^\mathrm{T}} \in {\mathbb{R}^m}.
+\end{equation}
+这将得到一个$m \times 1$的向量。有时候，我们也写成对$\bm{x}^\mathrm{T}$的求导：
+\begin{equation}
+\frac{{\mathrm{d}f}}{{\mathrm{d}\bm{x}^\mathrm{T}}} =  {\left[ {\frac{{\mathrm{d}f}}{{\mathrm{d}{x_1}}}, \cdots ,\frac{{\mathrm{d}f}}{{\mathrm{d}{x_m}}}} \right]}.
+\end{equation}
+这得到一个行向量。我们一般称$\frac{\mathrm{d}f}{\mathrm{d}\bm{x}}$为梯度或者Jacobian，但要注意，在不同的领域中 ，人们使用的习惯并不完全相同。
+
+\section{向量函数对向量求导}
+一个向量函数也可以对向量求导。考虑$\bm{F}(\bm{x})$为一个向量函数：$$\bm{F}(\bm{x}) = [f_1(\bm{x}), \cdots, f_n(\bm{x})]^\mathrm{T},$$其中每一个$f_k$都是一个自变量为向量，取值为标量的函数。考虑这样的函数对$\bm{x}$求导时，通常的做法是写为：
+\begin{equation}
+\frac{{\partial \bm{F}}}{{\partial {\bm{x}^\mathrm{T}}}} = \left[ {\begin{array}{*{20}{c}}
+    {\frac{{\partial {f_1}}}{{\partial {\bm{x}^\mathrm{T}}}}}\\
+    \vdots \\
+    {\frac{{\partial {f_n}}}{{\partial {\bm{x}^\mathrm{T}}}}}
+    \end{array}} \right] = \left[ {\begin{array}{*{20}{c}}
+    {\frac{{\partial {f_1}}}{{\partial {x_1}}}}&{\frac{{\partial {f_1}}}{{\partial {x_2}}}}& \cdots &{\frac{{\partial {f_1}}}{{\partial {x_m}}}}\\
+    {\frac{{\partial {f_2}}}{{\partial {x_1}}}}&{\frac{{\partial {f_2}}}{{\partial {x_2}}}}& \cdots &{\frac{{\partial {f_2}}}{{\partial {x_m}}}}\\
+    \vdots & \vdots & \ddots & \vdots \\
+    {\frac{{\partial {f_n}}}{{\partial {x_1}}}}&{\frac{{\partial {f_n}}}{{\partial {x_2}}}}& \cdots &{\frac{{\partial {f_n}}}{{\partial {x_m}}}}
+    \end{array}} \right] \in {\mathbb{R}^{n \times m}}
+\end{equation}
+
+也就是写成列函数对行向量求导的形式，这将得到一个$n \times m$的雅可比矩阵。这种写法是规范的，比如典型的例子就是：
+\begin{equation}
+\frac{\partial \bm{Ax}} {\partial\bm{x}^\mathrm{T}} = \bm{A}.
+\end{equation}
+
+反之，一个行向量函数也可以对列向量求导，结果为之前的转置：
+\begin{equation}
+\frac{{\partial \bm{F}}^\mathrm{T}}{{\partial {\bm{x}}}}  = \left(\frac{{\partial \bm{F}}}{{\partial {\bm{x}^\mathrm{T}}}} \right)^ \mathrm{T}.
+\end{equation}
+
+在本书中，我们习惯使用前者，即列向量对行向量求导。但是这种写法要求每次都对被求导变量加上转置符号，比较繁琐。在不引起歧义的情况下，我们将忽略分母上的转置符号，简单地记作：
+\begin{equation}
+\frac{\partial \bm{Ax}} {\partial\bm{x}} = \bm{A}.
+\end{equation}
+
+我们也可以定义矩阵函数对矩阵的求导，但这在本书中并没有用到，在此略过。

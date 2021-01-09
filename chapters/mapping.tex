@@ -949,12 +949,12 @@ Octomap还有一些可以探索的地方，例如，我们可以方便地查询�
 
 这种现象显然不是我们想要的，我们希望重建结果是光滑的、完整的，符合我们对地图的认识的。在这种思想下，出现了一种以“建图”为主体，而定位居于次要地位的做法，也就是本节要介绍的实时三维重建。由于三维重建把重建准确地图作为主要目标，所以基本都需要利用GPU进行加速，甚至需要非常高级的GPU或多个GPU进行并行加速，通常需要较重的计算设备。与之相反，SLAM是朝轻量级、小型化方向发展，有些方案甚至放弃了建图和回环检测部分，只保留了视觉里程计。而实时重建则正在朝大规模、大型动态场景的重建方向发展。
 
-自从RGB-D传感器出现以来，利用RGB-D图像进行实时重建形成了一个重要的发展方向，陆续产生了Kinect Fusion\textsuperscript{\cite{Newcombe2011}}、Dynamic Fusion\textsuperscript{\cite{Newcombe2015}}、Elastic Fusion\textsuperscript{\cite{Whelan2015}}、Fusion4D\textsuperscript{\cite{Dou2016}}、Volumn Deform\textsuperscript{\cite{Innmann2016}}等成果。其中，Kinect Fusion完成了基本的模型重建，但仅限于小型场景；后续的工作则是将它向大型的、运动的，甚至变形场景下拓展。我们把它们看成实时重建一个大类的工作，但由于种类繁多，不可能详细讨论每一种的工作原理。\autoref{fig:fusions}~展示了一部分重建结果，可以看到这些建模结果非常精细，比单纯拼接点云要细腻很多。
+自从RGB-D传感器出现以来，利用RGB-D图像进行实时重建形成了一个重要的发展方向，陆续产生了Kinect Fusion\textsuperscript{\cite{Newcombe2011}}、Dynamic Fusion\textsuperscript{\cite{Newcombe2015}}、Elastic Fusion\textsuperscript{\cite{Whelan2015}}、Fusion4D\textsuperscript{\cite{Dou2016}}、Volume Deform\textsuperscript{\cite{Innmann2016}}等成果。其中，Kinect Fusion完成了基本的模型重建，但仅限于小型场景；后续的工作则是将它向大型的、运动的，甚至变形场景下拓展。我们把它们看成实时重建一个大类的工作，但由于种类繁多，不可能详细讨论每一种的工作原理。\autoref{fig:fusions}~展示了一部分重建结果，可以看到这些建模结果非常精细，比单纯拼接点云要细腻很多。
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.9\textwidth]{mapping/fusions.pdf}
-	\caption{各种实时三维重建的模型。（a）Kinect Fusion；（b）Dynamic Fusion；（c）Volumn Deform；（d）Fusion4D；（e）Elastic Fusion。}
+	\caption{各种实时三维重建的模型。（a）Kinect Fusion；（b）Dynamic Fusion；（c）Volume Deform；（d）Fusion4D；（e）Elastic Fusion。}
 	\label{fig:fusions}
 \end{figure}
 
