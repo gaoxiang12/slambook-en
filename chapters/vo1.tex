@@ -389,84 +389,84 @@ Suppose we have a pair of matched feature points from two images, as shown in \a
 
 Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames of image $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\bm{R}, \bm{t}$, and the centers of the two cameras as $O_{1}, O_{2}$ (Origin). Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, which are obtained through feature matching. If the matching is correct, it means that they are indeed \textbf{projection of the same point in space on two image planes}. Now we need some terms to describe the geometric relationship between them. First, the connection $\overrightarrow{O_{1}p_{1}}$ and the connection $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the three-dimensional space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called \textbf{Epipolar plane}. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$ respectively. $e_{1}, e_{2}$ is called \textbf{Epipoles}, and $O_{1}O_{2}$ is called \textbf{Baseline}. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as \textbf{Epipolar line}.
 
-直观讲，从第一帧的角度看，射线$\overrightarrow{O_1 p_1}$是\textbf{某个像素可能出现的空间位置}——因为该射线上的所有点都会投影到同一个像素点。同时，如果不知道$P$的位置，那么当我们在第二幅图像上看时，连线$\overrightarrow{e_2 p_2}$（也就是第二幅图像中的极线）就是$P$可能出现的投影的位置，也就是射线$\overrightarrow{O_1 p_1}$在第二个相机中的投影。现在，由于我们通过特征点匹配确定了$p_2$的像素位置，所以能够推断$P$的空间位置，以及相机的运动。要提醒读者的是，\textbf{这多亏了正确的特征匹配}。如果没有特征匹配，我们就没法确定$p_2$到底在极线的哪个位置了。那时，就必须在极线上搜索以获得正确的匹配，这将在第12讲中提到。
+From the first frame, the ray $\overrightarrow{O_1 p_1}$ represents \textbf{spatial locations where a pixel may appear}, since all points on the ray will be projected to the same pixel. Meanwhile, if we don’t know the location of $P$, when we look at the second image, the connection $\overrightarrow{e_2 p_2}$ (i.e. the epipolar line in the second image) is possible projected positions of the point $P$, as well as the projection of the ray $\overrightarrow{O_1 p_1}$ in the second image. Now, since we have determined the pixel location of $p_2$ through feature point matching, we can infer the spatial location of $P$ and the movement of the camera, as long as the feature matching is correct. If there is no feature matching, we can't determine where the $p_2$ is on the epipolar line. At that time, you must search on the epipolar line $l_2$ to get the correct match, which will be discussed in Lecture 12.
 
-现在，我们从代数角度来看一下这里的几何关系。在第一帧的坐标系下，设$P$的空间位置为
+Now, let's look at the geometric relationship algebraically. Define the spatial position of $P$ in the first frame to be
 \[
 \bm{P}=[X,Y,Z]^\mathrm{T}.
 \]
-根据第5讲介绍的针孔相机模型，我们知道两个像素点$\bm{p}_1,\bm{p}_2$的像素位置为
+According to the pinhole camera model introduced in Lecture 5, we know that the pixel positions of the two pixels $\bm{p}_1,\bm{p}_2$ are
 \begin{equation}
 s_1 {\bm{p}_1} = \bm{KP},\quad s_2 \bm{p}_2 = \bm{K}\left( \bm{RP + t} \right).
 \end{equation}
 
-这里$\bm{K}$为相机内参矩阵，$\bm{R}, \bm{t}$为两个坐标系的相机运动。具体来说，这里计算的是$\bm{R}_{21}$和$\bm{t}_{21}$，因为它们把第一个坐标系下的坐标转换到第二个坐标系下。如果我们愿意，也可以把它们写成李代数形式。
+where $\bm{K}$ is the camera intrinsic parameters matrix, and $\bm{R}, \bm{t}$ are the camera motions between two camera frames. Specifically, they are $\bm{R}_{21}$ and $\bm{t}_{21}$, i.e. transformation from the first frame to the second. We can also write them in Lie algebra form.
 
-有时候，我们会使用齐次坐标表示像素点。在使用齐次坐标时，一个向量将等于它自身乘上任意的非零常数。这通常用于表达一个投影关系。例如$s_1 \bm{p}_1$和$\bm{p}_1$成投影关系，它们在齐次坐标的意义下是相等的。我们称这种相等关系为\textbf{尺度意义下相等}（equal up to a scale），记作：
+Sometimes, we use homogeneous coordinates to represent pixels. When using homogeneous coordinates, a vector will be equal to itself multiplied by any non-zero constant. This is usually used to express a projection relationship. For example, $s_1 \bm{p}_1$ and $\bm{p}_1$ form a projection relationship, and they are equal in the sense of homogeneous coordinates. We call this \textbf{equal up to a scale} (equal up to a scale), denoted as:
 \begin{equation}
 s\bm{p} \simeq \bm{p}.
 \end{equation}
-那么，上述两个投影关系可写为：
+Then, the relationship between two projections can be written as:
 \begin{equation}
  {\bm{p}_1} \simeq \bm{KP},\quad \bm{p}_2 \simeq \bm{K}\left( \bm{RP + t} \right).
 \end{equation}
 
-现在，取：
+Now, let
 \begin{equation}
 {\bm{x}_1} = {\bm{K}^{ - 1}}{\bm{p}_1}, \quad {\bm{x}_2} = {\bm{K}^{ - 1}}{\bm{p}_2}.
 \end{equation}
 
-这里的$\bm{x}_1, \bm{x}_2$是两个像素点的归一化平面上的坐标。代入上式，得：
+Here, $\bm{x}_1, \bm{x}_2$ are the coordinates on the normalized plane of two pixels. Substituting to the above equation, we get:
 \begin{equation}
 {\bm{x}_2} \simeq \bm{R} {\bm{x}_1} + \bm{t}.
 \end{equation}
 
-两边同时左乘$\bm{t}^\wedge$。回忆$^\wedge$的定义，这相当于两侧同时与$\bm{t}$做外积：
+Left multiply both sides by $\bm{t}^\wedge$. Recalling the definition of $^\wedge$, this is equivalent to the outer product of both sides with $\bm{t}$:
 \begin{equation}
 \bm{t}^\wedge \bm{x}_2 \simeq \bm{t}^\wedge \bm{R} \bm{x}_1.
 \end{equation}
 
-然后，两侧同时左乘$\bm{x}_2^\mathrm{T}$：
+Then, left multiply $\bm{x}_2^\mathrm{T}$ on both sides:
 \begin{equation}
 \bm{x}_2^\mathrm{T} \bm{t}^\wedge \bm{x}_2 \simeq \bm{x}_2^\mathrm{T} \bm{t}^\wedge \bm{R} \bm{x}_1.
 \end{equation}
 
-观察等式左侧，$\bm{t}^\wedge \bm{x}_2$是一个与$\bm{t}$和$\bm{x}_2$都垂直的向量。把它再和$\bm{x}_2$做内积时，将得到0。由于等式左侧严格为零，那么乘以任意非零常数之后也为零，于是我们可以把$\simeq$写成通常的等号。因此，我们就得到了一个简洁的式子：
+On the left side, $\bm{t}^\wedge \bm{x}_2$ is a vector perpendicular to both $\bm{t}$ and $\bm{x}_2$. When its inner product with $\bm{x}_2$ will get 0. Since the left side of the equation is strictly zero, it is also zero after multiplying by any non-zero constant, so we can write $\simeq$ as the usual equal sign. Therefore, we have a concise equation:
 \begin{equation}
  \bm{x}_2^\mathrm{T} \bm{t}^\wedge \bm{R} \bm{x}_1 = 0.
 \end{equation}
 
-重新代入$\bm{p}_1, \bm{p}_2$，有：
+Substituting $\bm{p}_1, \bm{p}_2$ again, we have:
 \begin{equation}
 \bm{p}_2^\mathrm{T} \bm{K}^{-\mathrm{T}} \bm{t}^\wedge \bm{R} \bm{K}^{-1} \bm{p}_1  = 0.
 \end{equation}
 
-这两个式子都称为\textbf{对极约束}，它以形式简洁著名。它的几何意义是$O_1, P, O_2$三者共面。对极约束中同时包含了平移和旋转。我们把中间部分记作两个矩阵：基础矩阵（Fundamental Matrix）$\bm{F}$和本质矩阵（Essential Matrix）$\bm{E}$，于是可以进一步简化对极约束：
+Both equations are called \textbf{antipolar constraint}, which is famous for its conciseness. Geometically, it means $O_1, P, O_2$ are coplanar. The epipolar constraint encodes both translation and rotation. We denote two matrices: Fundamental Matrix $\bm{F}$ and Essential Matrix $\bm{E}$, so the epipolar constraint can be further simplified:
 \begin{equation}
 \bm{E} = \bm{t}^ \wedge \bm{R}, \quad \bm{F} = \bm{K}^{ -\mathrm{T}} \bm{E} {\bm{K}^{ - 1}}, \quad \bm{x}_2^\mathrm{T} \bm{E} {\bm{x}_1} = \bm{p}_2^\mathrm{T} \bm{F} {\bm{p}_1} = 0.
 \end{equation}
 
-对极约束简洁地给出了两个匹配点的空间位置关系。于是，相机位姿估计问题变为以下两步：
+The epipolar constraint gives the spatial relationship of two matching points concisely. Therefore, the camera pose estimation problem can be summarized as the following two steps:
 
 \begin{enumerate}
-	\item 根据配对点的像素位置求出$\bm{E}$或者$\bm{F}$。
-	\item 根据$\bm{E}$或者$\bm{F}$求出$\bm{R}, \bm{t}$。
+	\item Find $\bm{E}$ or $\bm{F}$ based on the pixel positions of the matched points.
+	\item Find $\bm{R}, \bm{t}$ based on $\bm{E}$ or $\bm{F}$.
 \end{enumerate}
 
-由于$\bm{E}$和$\bm{F}$只相差了相机内参，而内参在SLAM中通常是已知的\footnote{在SfM研究中则有可能是未知而有待估计的。}，所以实践当中往往使用形式更简单的$\bm{E}$。我们以$\bm{E}$为例，介绍上面两个问题如何求解。
+Since $\bm{E}$ and $\bm{F}$ only differ from the camera internal parameters, and the internal parameters are usually known in SLAM problem \footnote{ in SfM research, it may be unknown and need to be estimated. }, so the simpler form $\bm{E}$ is often used in practice. Let's take $\bm{E}$ as an example to introduce how to solve the above two problems.
 
-\subsection{本质矩阵}
-根据定义，本质矩阵$\bm{E} = \bm{t}^\wedge \bm{R}$。它是一个$3\times 3$的矩阵，内有9个未知数。那么，是不是任意一个$3 \times 3$的矩阵都可以被当成本质矩阵呢？从$\bm{E}$的构造方式上看，有以下值得注意的地方：
+\subsection{Essential Matrix}
+By definition, the essential matrix $\bm{E} = \bm{t}^\wedge \bm{R}$. It is a matrix of $3\times 3$ with 9 unknown variables. So, can any matrix of the size $3 \times 3$ be an essential matrix? From the structure of $\bm{E}$, there are the following points worth noting:
 
 \begin{itemize}
-	\item 本质矩阵是由对极约束定义的。由于对极约束是\textbf{等式为零}的约束，所以对$\bm{E}$乘以任意非零常数后，\textbf{对极约束依然满足}。我们把这件事情称为$\bm{E}$在不同尺度下是等价的。
-	\item 根据$\bm{E} = \bm{t}^ \wedge \bm{R}$，可以证明\textsuperscript{\cite{Hartley2003}}，本质矩阵$\bm{E}$的奇异值必定是$[\sigma, \sigma, 0]^\mathrm{T}$的形式。这称为\textbf{本质矩阵的内在性质}。
-	\item 另一方面，由于平移和旋转各有3个自由度，故$\bm{t}^\wedge \bm{R}$共有6个自由度。但由于尺度等价性，故$\bm{E}$实际上有5个自由度。
+	\item The essential matrix is defined by the epipolar constraint. Since the epipolar constraint is the constraint of an \textbf{equal-to-zero equation}, after multiplying $\bm{E}$ by any non-zero constant, \textbf{polar constraint is still satisfied}. We call this $\bm{E}$ 's equivalence under different scales.
+	\item According to $\bm{E} = \bm{t}^ \wedge \bm{R}$, it can be proved that \textsuperscript{\cite{Hartley2003}}, the singular value of the essential matrix $\bm{E}$ must be in the form of $[\sigma, \sigma, 0]^\mathrm{T}$. This is called \textbf{intrinsic properties of essential matrix}.
+	\item On the other hand, since translation and rotation each have 3 degrees of freedom, $\bm{t}^\wedge \bm{R}$ has 6 degrees of freedom. But due to the equivalence of scales, $\bm{E}$ actually has 5 degrees of freedom.
 \end{itemize}
 
-$\bm{E}$具有5个自由度的事实，表明我们最少可以用5对点来求解$\bm{E}$。但是，$\bm{E}$的内在性质是一种非线性性质，在估计时会带来麻烦，因此，也可以只考虑它的\textbf{尺度等价性}，使用8对点来估计$\bm{E}$——这就是经典的\textbf{八点法（Eight-point-algorithm）}\textsuperscript{\cite{Hartley1997, Longuet-Higgins1987}}。八点法只利用了$\bm{E}$的线性性质，因此可以在线性代数框架下求解。下面我们来看八点法是如何工作的。
+The fact that $\bm{E}$ has 5 degrees of freedom indicates that we can use at least 5 pairs of points to solve $\bm{E}$. However, the intrinsic property of $\bm{E}$ is non-linear, which could cause trouble in the estimation. Therefore, it is also possible to consider only its \textbf{scale equivalence} and use 8 pairs of matched points to estimate $\bm{E}$——This is the classic \textbf{Eight-point-algorithm}\textsuperscript{\cite{Hartley1997, Longuet-Higgins1987}}. The eight-point method only uses the linear properties of $\bm{E}$, so it can be solved under the framework of linear algebra. Let's take a look at how the eight-point method works.
 
-考虑一对匹配点，它们的归一化坐标为$\bm{x}_{1}=[u_{1},v_{1},1]^\mathrm{T}$, $\bm{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$。根据对极约束，有：
+Consider a pair of matched points, their normalized coordinates are $\bm{x}_{1}=[u_{1},v_{1},1]^\mathrm{T}$, $\bm{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$. According to the polar constraints, we have:
 \begin{equation}
 \begin{pmatrix} 
 u_{2},v_{2},1
@@ -482,16 +482,16 @@ u_{1}\\v_{1}\\1
 =0.
 \end{equation}
 
-我们把矩阵$\bm{E}$展开，写成向量的形式：
+We rewrite the matrix $\bm{E}$ in the vector form:
 \[
 \bm{e}= [e_{1},e_{2},e_{3},e_{4},e_{5},e_{6},e_{7},e_{8},e_{9}]^{\mathrm{T}},
 \]
-那么对极约束可以写成与$\bm{e}$有关的线性形式：
+Then the epipolar constraint can be written in a linear form related to $\bm{e}$:
 \begin{equation}
 [u_{2}u_{1},u_{2}v_{1},u_{2},v_{2}u_{1},v_{2}v_{1},v_{2},u_{1},v_{1},1] \cdot  \bm{e}=0.
 \end{equation}
 
-同理，对于其他点对也有相同的表示。我们把所有点都放到一个方程中，变成线性方程组（$u^i, v^i$表示第$i$个特征点，依此类推）：
+Analogously, we stack all the points into one equation and obtain a linear equation system (where $u^i, v^i$ represent the $i$th feature point): 
 \begin{equation}
 \label{Eq:eight-point}
 \begin{pmatrix}
@@ -506,13 +506,13 @@ e_{1}\\ e_{2}\\ e_{3}\\  e_{4}\\ e_{5}\\ e_{6}\\ e_{7}\\ e_{8}\\ e_{9}
 =0.
 \end{equation}
 
-这8个方程构成了一个线性方程组。它的系数矩阵由特征点位置构成，大小为$8 \times 9$。$\bm{e}$位于该矩阵的零空间中。如果系数矩阵是满秩的（即秩为8），那么它的零空间维数为1，也就是$\bm{e}$构成一条线。这与$\bm{e}$的尺度等价性是一致的。如果8对匹配点组成的矩阵满足秩为8的条件，那么$\bm{E}$的各元素就可由上述方程解得。
+These 8 equations form a linear equation system. Its coefficient matrix is composed of 2D feature point positions, and its size is $8 \times 9$. $\bm{e}$ is located in the null space of this matrix. If the coefficient matrix is of full rank (i.e. 8), then its null space dimension is 1, meaning that $\bm{e}$ forms a line. This is consistent with the scale equivalence of $\bm{e}$. If the matrix composed of 8 pairs of matching points meets the condition of rank 8, then the elements of $\bm{E}$ can be solved uniquely by the above equation.
 
-接下来的问题是如何根据已经估得的本质矩阵$\bm{E}$，恢复出相机的运动$\bm{R}, \bm{t}$。这个过程是由奇异值分解（SVD）得到的。设$\bm{E}$的SVD分解为
+The next question is how to recover the movement of the camera $\bm{R}, \bm{t}$ according to the estimated essential matrix $\bm{E}$. This process is obtained by singular value decomposition (SVD). Let the SVD decomposition of $\bm{E}$ be
 \begin{equation}
 \bm{E} = \bm{U} \bm{\Sigma} \bm{V}^\mathrm{T},
 \end{equation}
-其中$\bm{U}, \bm{V}$为正交阵，$\bm{\Sigma}$为奇异值矩阵。根据$\bm{E}$的内在性质，我们知道$\bm{\Sigma} = \mathrm{diag}( \sigma, \sigma, 0 )$。在SVD分解中，对于任意一个$\bm{E}$，存在两个可能的$\bm{t}, \bm{R}$与它对应：
+where $\bm{U}, \bm{V}$ are orthogonal matrices, and $\bm{\Sigma}$ are singular value matrices. According to the intrinsic properties of $\bm{E}$, we know that $\bm{\Sigma} = \mathrm{diag}( \sigma, \sigma, 0 )$. In SVD decomposition, for any $\bm{E}$, there are two possible $\bm{t}, \bm{R}$:
 \begin{equation}
 \begin{array}{l}
 \bm{t}_1^ \wedge  = \bm{U}{\bm{R}_Z}(\frac{\pi }{2}) \bm{\Sigma} {\bm{U}^\mathrm{T}}, \quad {\bm{R}_1} = \bm{U} \bm{R}_Z^\mathrm{T}(\frac{\pi }{2}){ \bm{V}^\mathrm{T}}\\
@@ -520,9 +520,9 @@ e_{1}\\ e_{2}\\ e_{3}\\  e_{4}\\ e_{5}\\ e_{6}\\ e_{7}\\ e_{8}\\ e_{9}
 \end{array}
 \end{equation}
 
-其中$\bm{R}_Z\left(\frac{\pi }{2}\right)$表示沿$Z$轴旋转$90^\circ$得到的旋转矩阵。同时，由于$-\bm{E}$和$\bm{E}$等价，所以对任意一个$\bm{t}$取负号，也会得到同样的结果。因此，从$\bm{E}$分解到$\bm{t}, \bm{R}$时，一共存在\textbf{4个}可能的解。
+Among them, $\bm{R}_Z\left(\frac{\pi }{2}\right)$ represents the rotation matrix obtained by rotating $90^\circ$ along the $Z$ axis. Since $-\bm{E}$ is equivalent to $\bm{E}$, taking the minus sign for any $\bm{t}$ will also get the same result. Therefore, when decomposing from $\bm{E}$ to $\bm{t}, \bm{R}$, there are a total of \textbf{4} possible solutions.
 
-\autoref{fig:epipolar-solution}~形象地展示了分解本质矩阵得到的4个解。我们已知空间点在相机（蓝色线）上的投影（红色点），想要求解相机的运动。在保持红色点不变的情况下，可以画出4种可能的情况。不过幸运的是，只有第一种解中$P$在两个相机中都具有正的深度。因此，只要把任意一点代入4种解中，检测该点在两个相机下的深度，就可以确定哪个解是正确的了。
+\autoref{fig:epipolar-solution}~ shows the 4 solutions obtained by decomposing the essential matrix. We know the projection (red point) of the space point on the camera (blue line), and want to solve the camera's motion. In the case of keeping the red point unchanged, 4 possible situations can be drawn. Fortunately, only in the first solution, $P$ has positive depths in both cameras. Therefore, we can substitute any points into the four solutions and check the depth of the point under two cameras, to determine which solution is correct.
 
 \begin{figure}[!htp]
 	\centering
@@ -531,22 +531,22 @@ e_{1}\\ e_{2}\\ e_{3}\\  e_{4}\\ e_{5}\\ e_{6}\\ e_{7}\\ e_{8}\\ e_{9}
 	\label{fig:epipolar-solution}
 \end{figure}
 
-如果利用$\bm{E}$的内在性质，那么它只有5个自由度。所以最少可以通过5对点来求解相机运动\textsuperscript{\cite{Li2006, Nister2004a}}。然而这种做法形式复杂，从工程实现角度考虑，由于平时通常会有几十对乃至上百对的匹配点，从8对减至5对意义并不明显。为保持简单，我们这里就只介绍基本的八点法。
+If you use the intrinsic properties of $\bm{E}$, then it has only 5 degrees of freedom. So at least 5 pairs of matched points can be used to solve the camera motion \textsuperscript{\cite{Li2006, Nister2004a}}. However, this approach is more complicated. For engineering realization, since there are usually dozens or even hundreds of matching points, it is often not helpful to reduce from 8 pairs to 5 pairs. To keep it simple, we only introduce the basic eight-point method here.
 
-剩下的问题还有一个：根据线性方程解出的$\bm{E}$，可能不满足$\bm{E}$的内在性质——它的奇异值不一定为${\sigma}, {\sigma}, 0$的形式。这时，我们会刻意地把$\bm{\Sigma}$矩阵调整成上面的样子。通常的做法是，对八点法求得的$\bm{E}$进行SVD分解后，会得到奇异值矩阵$\bm{\Sigma} =  \mathrm{diag} ( \sigma_1, \sigma_2, \sigma_3)$，不妨设$\sigma_1 \geqslant \sigma_2 \geqslant \sigma_3$。取：
+There is one remaining problem: $\bm{E}$ solved according to linear equations may not satisfy the intrinsic properties of $\bm{E}$, i.e. its singular value is not necessarily in the form of ${\sigma}, {\sigma}, 0$. At this time, we will deliberately adjust the $\bm{\Sigma}$ matrix to look like the above. The usual procedure is to perform SVD decomposition on the $\bm{E}$ obtained by the eight-point method, and the singular value matrix $\bm{\Sigma} = \mathrm{diag} (\sigma_1, \sigma_2, \ sigma_3)$, might as well set $\sigma_1 \geqslant \sigma_2 \geqslant \sigma_3$. take:
 \begin{equation}
 \bm{E} = \bm{U} \mathrm{diag} (\frac{\sigma_1+\sigma_2}{2}, \frac{\sigma_1+\sigma_2}{2}, 0) \bm{V}^\mathrm{T}.
 \end{equation}
-这相当于是把求出来的矩阵投影到了$\bm{E}$所在的流形上。当然，更简单的做法是将奇异值矩阵取成$\mathrm{diag} (1,1,0)$，因为$\bm{E}$具有尺度等价性，所以这样做也是合理的。
+This is equivalent to projecting the calculated essential matrix onto the manifold where $\bm{E}$ is located. A simpler approach is to take the singular value matrix as $\mathrm{diag} (1,1,0)$, due to $\bm{E}$'s scale equivalence, so it is also reasonable.
 
-\subsection{单应矩阵}
-除了基本矩阵和本质矩阵，二视图几何中还存在另一种常见的矩阵：单应矩阵（Homography）$\bm{H}$，它描述了两个平面之间的映射关系。若场景中的特征点都落在同一平面上（比如墙、地面等），则可以通过单应性来进行运动估计。这种情况在无人机携带的俯视相机或扫地机携带的顶视相机中比较常见。由于之前没有提到过单应，因此这里稍微介绍一下。
+\subsection{Homography}
+In addition to the fundamental matrix and the essential matrix, there is another common matrix in two-view geometry: the homography matrix $\bm{H}$, which describes the mapping relationship between two planes. If the feature points in the scene all fall on the same plane (such as walls, ground, etc.), motion can be estimated through homography. This situation is more common in top-view cameras carried by drones or sweepers. 
 
-单应矩阵通常描述处于共同平面上的一些点在两张图像之间的变换关系。考虑在图像$I_{1}$和$I_{2}$有一对匹配好的特征点$p_{1}$和$p_{2}$。这些特征点落在平面$P$上，设这个平面满足方程：
+The homography matrix usually describes the transformation between some points on a common plane between two images. Consider that there is a pair of matched feature points $p_{1}$ and $p_{2}$ in the images $I_{1}$ and $I_{2}$. These feature points fall on the plane $P$. Let this plane satisfy the equation:
 \begin{equation}
 \bm{n}^\mathrm{T} \bm{P} + d = 0.
 \end{equation}
-稍加整理，得：
+Rearrange it:
 \begin{equation}
 - \frac{\bm{n}^\mathrm{T} \bm{P} }{d} = 1.
 \end{equation}
@@ -559,12 +559,12 @@ e_{1}\\ e_{2}\\ e_{3}\\  e_{4}\\ e_{5}\\ e_{6}\\ e_{7}\\ e_{8}\\ e_{9}
 &\simeq \bm{K} \left( \bm{R} - \frac{\bm{t} \bm{n}^\mathrm{T} }{d} \right) \bm{K}^{-1} \bm{p}_1.
 \end{align*}
 
-于是，我们得到了一个直接描述图像坐标$\bm{p}_1$和$\bm{p}_2$之间的变换，把中间这部分记为$\bm{H}$，于是：
+So, we got a direct description of the transformation between $\bm{p}_1$ and $\bm{p}_2$, denoting the middle part as $\bm{H}$, so:
 \begin{equation}
 \bm{p}_2 \simeq \bm{H} \bm{p}_1.
 \end{equation}
 
-它的定义与旋转、平移及平面的参数有关。与基础矩阵$\bm{F}$类似，单应矩阵$\bm{H}$也是一个$3 \times 3$的矩阵，求解时的思路也和$\bm{F}$类似，同样可以先根据匹配点计算$\bm{H}$，然后将它分解以计算旋转和平移。把上式展开，得：
+Its definition is related to the parameters of rotation, translation and the plane. Similar to the fundamental matrix $\bm{F}$, the homography matrix $\bm{H}$ is also a matrix of $3 \times 3$. Solving this is similar to that of $\bm{F}$. Calculate $\bm{H}$ based on the matching points, and then decompose it to find rotation and translation. Expand the above formula, get:
 \begin{equation}
 \begin{pmatrix} 
 u_{2}\\v_{2}\\1
@@ -580,14 +580,14 @@ u_{1}\\v_{1}\\1
 \end{pmatrix}.
 \end{equation}
 
-请注意，这里的等号依然是$\simeq$而不是普通的等号，所以$\bm{H}$矩阵也可以乘以任意非零常数。我们在实际处理中可以令$h_9 = 1$（在它取非零值时）。然后根据第3行，去掉这个非零因子，于是有：
+Note that the equal sign here is still $\simeq$, not the ordinary equal sign, so the $\bm{H}$ matrix can also be multiplied by any non-zero constant. We can make $h_9 = 1$ in practice (when it takes a non-zero value). Then according to the third row, remove this non-zero factor. So we have:
 \[
 \begin{aligned}
 u_{2}&=\frac{h_{1}u_{1}+h_{2}v_{1}+h_{3}}{h_{7}u_{1}+h_{8}v_{1}+h_{9}}\\
 v_{2}&=\frac{h_{4}u_{1}+h_{5}v_{1}+h_{6}}{h_{7}u_{1}+h_{8}v_{1}+h_{9}}.
 \end{aligned}
 \]
-整理得：
+Rearrange:
 \[
 \begin{gathered}
 h_{1}u_{1}+h_{2}v_{1}+h_{3}-h_{7}u_{1}u_{2}-h_{8}v_{1}u_{2}=u_{2}\\
@@ -595,7 +595,7 @@ h_{4}u_{1}+h_{5}v_{1}+h_{6}-h_{7}u_{1}v_{2}-h_{8}v_{1}v_{2}=v_{2}.
 \end{gathered}
 \]
 
-这样一组匹配点对就可以构造出两项约束（事实上有三个约束，但是因为线性相关，只取前两个），于是自由度为8的单应矩阵可以通过4对匹配特征点算出（在非退化的情况下，即这些特征点不能有三点共线的情况），即求解以下的线性方程组（当$h_9 = 0$时，右侧为零）：
+A pair of matching point can construct two constraints (in fact, there are three constraints, but considering their linear correlation, only the first two are taken), so the homography matrix with 8 degrees of freedom can be estimated by 4 pairs of matching feature points (In the case of non-degenerate, that is, these feature points cannot have three collinear points), that is, to solve the following linear equations (when $h_9 = 0$, the right side is zero):
 \begin{equation}
 \begin{pmatrix}
 u_{1}^{1}& v_{1}^{1}& 1 & 0 & 0 & 0 & -u_{1}^{1}u_{2}^{1} & -v_{1}^{1}u_{2}^{1}\\
@@ -616,22 +616,22 @@ u_{2}^{1}\\ v_{2}^{1}\\ u_{2}^{2}\\ v_{2}^{2}\\u_{2}^{3}\\ v_{2}^{3}\\u_{2}^{4}\
 \end{pmatrix}.
 \end{equation}
 
-这种做法把$\bm{H}$矩阵看成了向量，通过解该向量的线性方程来恢复$\bm{H}$，又称直接线性变换法（Direct Linear Transform）。与本质矩阵相似，求出单应矩阵以后需要对其进行分解，才可以得到相应的旋转矩阵$\bm{R}$和平移向量$\bm{t}$。分解的方法包括数值法\textsuperscript{\cite{faugeras1988motion, Zhang1996}}与解析法\textsuperscript{\cite{malis2007deeper}}。与本质矩阵的分解类似，单应矩阵的分解同样会返回4组旋转矩阵与平移向量，并且同时可以计算出它们分别对应的场景点所在平面的法向量。如果已知成像的地图点的深度全为正值（即在相机前方），则又可以排除两组解。最后仅剩两组解，这时需要通过更多的先验信息进行判断。通常我们可以通过假设已知场景平面的法向量来解决，如场景平面与相机平面平行，那么法向量$\bm{n}$的理论值为$\bm{1}^\mathrm{T}$。
+This approach regards the $\bm{H}$ matrix as a vector, and estimates the $\bm{H}$ by solving the linear equation of the vector, also known as the Direct Linear Transform. Similar to the essential matrix, the homography matrix needs to be decomposed after obtaining the homography matrix to get the corresponding rotation matrix $\bm{R}$ and translation vector $\bm{t}$. The decomposition method includes numerical method \textsuperscript{\cite{faugeras1988motion, Zhang1996}} and analytical method \textsuperscript{\cite{malis2007deeper}}. Similar to the decomposition of the essential matrix, the decomposition of the homography matrix will also return 4 sets of rotation matrices and translation vectors, and meanwhile the normal vectors of the planes where the corresponding scene points located. If the depths of the projected map points are all positive (that is, in front of the camera), then two sets of solutions can be excluded. In the end, only two sets of solutions are left, and more prior information is needed to make a final decision. Usually we can solve it by assuming the normal vector of the known scene plane. If the scene plane is parallel to the camera plane, then the theoretical value of the normal vector $\bm{n}$ is $\bm{1}^\mathrm{T}$ .
 
-单应性在SLAM中具有重要意义。当特征点共面或者相机发生纯旋转时，基础矩阵的自由度下降，这就出现了所谓的退化（degenerate）。现实中的数据总包含一些噪声，这时候如果继续使用八点法求解基础矩阵，基础矩阵多余出来的自由度将会主要由噪声决定。为了能够避免退化现象造成的影响，通常我们会同时估计基础矩阵$\bm{F}$和单应矩阵$\bm{H}$，选择重投影误差比较小的那个作为最终的运动估计矩阵。
+Homography is of great significance in SLAM. When the feature points are coplanar or the camera experiences purely rotation, the degree of freedom of the fundamental matrix decreases, which causes the degeneration. The actual data is always noisy. If you stick to the eight-point method to solve the fundamental matrix, the redundant freedom of the fundamental matrix will be mainly determined by the noise. In order to avoid the effects of degradation, we usually estimate the fundamental matrix $\bm{F}$ and the homography matrix $\bm{H}$ at the same time, and choose the one with the smaller reprojection error to estimate the motion.
 
-\section{实践：对极约束求解相机运动}
-下面，我们来练习一下如何通过本质矩阵求解相机运动。上一节实践部分的程序提供了特征匹配，而这次我们就使用匹配好的特征点来计算$\bm{E}, \bm{F}$和$\bm{H}$，进而分解$\bm{E}$得到$\bm{R}, \bm{t}$。整个程序使用OpenCV提供的算法进行求解。我们把上一节的特征提取封装成函数，以供后面使用。本节只展示位姿估计部分的代码。
+\section{Practice: Solving camera motion with epipolar constraints}
+In the following, let's solve the camera motion through the essential matrix. The program in the practice part of the previous section provides feature matching, and here we use the matching feature points to calculate $\bm{E}, \bm{F}$ and $\bm{H}$, and then decompose $ \bm{E}$ to get $\bm{R} and \bm{t}$. The whole program is solved using the algorithm provided by OpenCV. We encapsulate the feature extraction in the previous section into functions for later use. This section only shows the code for the pose estimation.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp （片段）]
 void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
     std::vector<KeyPoint> keypoints_2,
     std::vector<DMatch> matches,
     Mat &R, Mat &t) {
-    // 相机内参,TUM Freiburg2
+    // Camera Intrinsics,TUM Freiburg2
     Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
     
-    //-- 把匹配点转换为vector<Point2f>的形式
+    //-- Convert the matching point to the form of vector<Point2f>
     vector<Point2f> points1;
     vector<Point2f> points2;
     
@@ -640,39 +640,39 @@ void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
         points2.push_back(keypoints_2[matches[i].trainIdx].pt);
     }
     
-    //-- 计算基础矩阵
+    //-- Calculate fundamental matrix
     Mat fundamental_matrix;
     fundamental_matrix = findFundamentalMat(points1, points2, CV_FM_8POINT);
     cout << "fundamental_matrix is " << endl << fundamental_matrix << endl;
     
-    //-- 计算本质矩阵
-    Point2d principal_point(325.1, 249.7);  //相机光心, TUM dataset标定值
-    double focal_length = 521;      //相机焦距, TUM dataset标定值
+    //-- Calculate essential matrix
+    Point2d principal_point(325.1, 249.7);  // camera principal point, calibrated in TUM dataset
+    double focal_length = 521;      // camera focal length, calibrated in TUM dataset
     Mat essential_matrix;
     essential_matrix = findEssentialMat(points1, points2, focal_length, principal_point);
     cout << "essential_matrix is " << endl << essential_matrix << endl;
     
-    //-- 计算单应矩阵
-    //-- 但是本例中场景不是平面，单应矩阵意义不大
+    //-- Calculate homography matrix
+    //-- But the scene is not planar, and calculating the homography matrix here is of little significance
     Mat homography_matrix;
     homography_matrix = findHomography(points1, points2, RANSAC, 3);
     cout << "homography_matrix is " << endl << homography_matrix << endl;
     
-    //-- 从本质矩阵中恢复旋转和平移信息.
+    //-- Recover rotation and translation from the essential matrix.
     recoverPose(essential_matrix, points1, points2, R, t, focal_length, principal_point);
     cout << "R is " << endl << R << endl;
     cout << "t is " << endl << t << endl;
 }
 \end{lstlisting}
 
-该函数提供了从特征点求解相机运动的部分，然后，我们在主函数中调用它，就能得到相机的运动：
+This function shows how to solve the camera motion from the feature point, and then, we call it in the main function to get the camera motion:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp （片段）]
 int main( int argc, char** argv ){
     if (argc != 3) {
         cout << "usage: pose_estimation_2d2d img1 img2" << endl;
         return 1;
     }
-    //-- 读取图像
+    //-- Fetch images
     Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
     Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
     assert(img_1.data && img_2.data && "Can not load images!");
@@ -680,20 +680,20 @@ int main( int argc, char** argv ){
     vector<KeyPoint> keypoints_1, keypoints_2;
     vector<DMatch> matches;
     find_feature_matches(img_1, img_2, keypoints_1, keypoints_2, matches);
-    cout << "一共找到了" << matches.size() << "组匹配点" << endl;
+    cout << "In total, we get " << matches.size() << " set of feature points" << endl;
     
-    //-- 估计两张图像间运动
+    //-- Estimate the motion between two frames
     Mat R, t;
     pose_estimation_2d2d(keypoints_1, keypoints_2, matches, R, t);
     
-    //-- 验证E=t^R*scale
+    //-- Check E=t^R*scale
     Mat t_x =
         (Mat_<double>(3, 3) << 0, -t.at<double>(2, 0), t.at<double>(1, 0),
         t.at<double>(2, 0), 0, -t.at<double>(0, 0),
         -t.at<double>(1, 0), t.at<double>(0, 0), 0);
     cout << "t^R=" << endl << t_x * R << endl;
     
-    //-- 验证对极约束
+    //-- Check epipolar constraints
     Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
     for (DMatch m: matches) {
         Point2d pt1 = pixel2cam(keypoints_1[m.queryIdx].pt, K);
@@ -707,12 +707,12 @@ int main( int argc, char** argv ){
 }
 \end{lstlisting}
 
-我们在函数中输出了$\bm{E}, \bm{F}$和$\bm{H}$的数值，然后验证了对极约束是否成立，以及$\bm{t}^\wedge \bm{R}$和$\bm{E}$在非零数乘下等价的事实。现在，调用此程序即可看到输出结果：
-\begin{lstlisting}[language=sh,caption=终端输入：]
+We get the values of $\bm{E}, \bm{F}$ and $\bm{H}$ in the function, and then verify whether the epipolar constraint is satisfied, and $\bm{t}^ \wedge \bm{R}$ and $\bm{E}$ are equivalent to non-zero numbers. Now, execute this program to see the output result:
+\begin{lstlisting}[language=sh,caption=Terminal Input：]
 % build/pose_estimation_2d2d 1.png 2.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
-一共找到了 79 组匹配点
+In total, we get 79 set of feature points
 fundamental_matrix is 
 [4.844484382466111e-06, 0.0001222601840188731, -0.01786737827487386;
 -0.0001174326832719333, 2.122888800459598e-05, -0.01775877156212593;
@@ -744,38 +744,38 @@ epipolar constraint = [-0.0008009088410884102]
 ......
 \end{lstlisting}
 
-在程序的输出结果可以看出，对极约束的满足精度约在$10 ^{-3}$量级。根据前面的讨论，分解得到的$\bm{R}, \bm{t}$一共有4种可能性。不过，OpenCV会替我们使用三角化检测角点的深度是否为正，从而选出正确的解。
+It can be seen from the output of the program that the accuracy of meeting the epipolar constraints is around the order of $10 ^{-3}$. According to the previous discussion, there are 4 possibilities for $\bm{R}, \bm{t}$ obtained by decomposition. In this program, OpenCV will use triangulation to detect whether the depth of the detected point is positive to select the correct solution.
 
-\subsection*{讨论}
-从演示程序中可以看到，输出的$\bm{E}$和$\bm{F}$之间相差了相机内参矩阵。虽然它们在数值上并不直观，但可以验证它们的数学关系。从$\bm{E}, \bm{F}$和$\bm{H}$都可以分解出运动，不过$\bm{H}$需要假设特征点位于平面上。对于本实验的数据，这个假设是不好的，所以我们这里主要用$\bm{E}$来分解运动。
+\subsection*{Discussion}
+From demo program that the resulted $\bm{E}$ and $\bm{F}$ are different by a camera internal parameter matrix. Although it is not numerically intuitive, their mathematical relationship can be verified. Motion can be decomposed from $\bm{E}, \bm{F}$ and $\bm{H}$, but $\bm{H}$ needs to assume that the feature points are on the same plane. For the data of this experiment, this assumption is not true, so we mainly use $\bm{E}$ to find the motion.
 
-值得一提的是，由于$\bm{E}$本身具有尺度等价性，它分解得到的$\bm{t}, \bm{R}$也有一个尺度等价性。而$\bm{R} \in \mathrm{SO}(3)$自身具有约束，所以我们认为$\bm{t}$具有一个\textbf{尺度}。换言之，在分解过程中，对$\bm{t}$乘以任意非零常数，分解都是成立的。因此，我们通常把$\bm{t}$进行\textbf{归一化}，让它的长度等于1。
+It is worth mentioning that since $\bm{E}$ itself has scale equivalence, the $\bm{t}, \bm{R}$ also have scale equivalence. And $\bm{R} \in \mathrm{SO}(3)$ has its own constraints, so we think that $\bm{t}$ has a \textbf{scale}. In other words, in the decomposition process, if $\bm{t}$ is multiplied by any non-zero constant, the decomposition is still valid. Therefore, we usually \textbf{normalize} $\bm{t}$ to make its length equal to 1.
 
-\subsubsection{尺度不确定性}
-对$\bm{t}$长度的归一化，直接导致了\textbf{单目视觉的尺度不确定性（Scale Ambiguity）}。例如，程序中输出的$\bm{t}$第一维约为0.822。这个0.822究竟是指0.822米还是0.822厘米，我们是没法确定的。因为对$\bm{t}$乘以任意比例常数后，对极约束依然是成立的。换言之，在单目SLAM中，对轨迹和地图同时缩放任意倍数，我们得到的图像依然是一样的。这在第2讲中就已经向读者介绍过了。
+\subsubsection{Scale Ambiguity}
+The normalization of $\bm{t}$ directly leads to \textbf{Scale Ambiguity of monocular vision}. For example, the first dimension of $\bm{t}$ output in the program is about 0.822. We are unsure that it refers to 0.822 meters or 0.822 centimeters. Because after multiplying $\bm{t}$ by any constant, the epipolar constraint is still valid. In other words, in monocular SLAM, the trajectory and map are simultaneously zoomed at any multiple, and the image we get is still the same. This has already been introduced in the Chapter 2.
 
-在单目视觉中，我们对两张图像的$\bm{t}$归一化相当于\textbf{固定了尺度}。虽然我们不知道它的实际长度是多少，但我们以这时的$\bm{t}$为单位1，计算相机运动和特征点的3D位置。这被称为单目SLAM的\textbf{初始化}。在初始化之后，就可以用3D−2D来计算相机运动了。初始化之后的轨迹和地图的单位，就是初始化时固定的尺度。因此，单目SLAM有一步不可避免的\textbf{初始化}。初始化的两张图像必须有一定程度的平移，而后的轨迹和地图都将以此步的平移为单位。
+In monocular vision, the normalization of $\bm{t}$ for two images is equivalent to \textbf{fixing scale}. Although we don't know its actual length, we use $\bm{t}$ as the unit 1 to calculate the camera motion and the 3D position of the feature points. This is called \textbf{initialization} of monocular SLAM. After initialization, 3D-2D can be used to calculate camera motion. The unit of the trajectory and map after initialization is the scale fixed during initialization. Therefore, monocular SLAM has an inevitable \textbf{initialization} step. The two initialized images must have a certain amount of translation, and then the unit of trajectory and map will be determined by this translation.
 
-除了对$\bm{t}$进行归一化之外，另一种方法是令初始化时所有的特征点平均深度为1，也可以固定一个尺度。相比于令$\bm{t}$长度为1的做法，把特征点深度归一化可以控制场景的规模大小，使计算在数值上更稳定些。不过这并没有理论上的差别。
+In addition to normalizing $\bm{t}$, another method is to set the average depth of all the feature points during initialization to 1, or a fixed scale. Compared to set the length of $\bm{t}$ to 1, normalizing the depth of the feature points can control the scale of the scene and make the calculation more numerically stable. But there is no theoretical difference.
 
-\subsubsection{初始化的纯旋转问题}
-从$\bm{E}$分解到$\bm{R}, \bm{t}$的过程中，如果相机发生的是纯旋转，导致$\bm{t}$为零，那么，得到的$\bm{E}$也将为零，这将导致我们无从求解$\bm{R}$。不过，此时我们可以依靠$\bm{H}$求取旋转，但仅有旋转时，我们无法用三角测量估计特征点的空间位置（这将在下文提到），于是，另一个结论是，\textbf{单目初始化不能只有纯旋转，必须要有一定程度的平移}。如果没有平移，单目将无法初始化。在实践当中，如果初始化时平移太小，会使得位姿求解与三角化结果不稳定，从而导致失败。相对地，如果把相机左右移动而不是原地旋转，就容易让单目SLAM初始化。因而，有经验的SLAM研究人员，在单目SLAM情况下经常选择让相机进行左右平移以顺利地进行初始化。
+\subsubsection{The problem of initialization caused by pure rotation}
+In the decomposition of $\bm{E}$ to get $\bm{R}, \bm{t}$, if the camera is purely rotated, causing $\bm{t}$ to be zero, then $\bm{E}$ will also be zero, which will make it impossible for us to solve $\bm{R}$. However, at this time we can rely on $\bm{H}$ to find the rotation, but when only the rotation is performed, we cannot use triangulation to estimate the spatial position of the feature points (this will be introduced later), so we can conclude that \Textbf{Monocular initialization cannot only be pure rotation, it must have a certain amount of translation}. If there is no translation, the monocular can not be initialized. In practice, if the translation is too small during initialization, it will make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating in place, it is easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in the case of monocular SLAM.
 
-\subsubsection{多于8对点的情况}
-当给定的点数多于8对时（比如，例程找到了79对匹配），我们可以计算一个最小二乘解。回忆式\eqref{Eq:eight-point}中线性化后的对极约束，我们把左侧的系数矩阵记为$\bm{A}$：
+\subsubsection{More than 8 pairs of matched points}
+When we get more than 8 pairs of matched points (for example, we found 79 pairs of matches), we can calculate a least squares solution. Recalling the linearized epipolar constraint in \eqref{Eq:eight-point}, we denote the coefficient matrix on the left as $\bm{A}$:
 \begin{equation}
 \bm{A} \bm{e} = \bm{0} .
 \end{equation}
 
-对于八点法，$\bm{A}$的大小为$8 \times 9$。如果给定的匹配点多于$8$，该方程构成一个超定方程，即不一定存在$\bm{e}$使得上式成立。因此，可以通过最小化一个二次型来求：
+For the eight-point method, the size of $\bm{A}$ is $8 \times 9$. If the given matching points are more than $8$, the equation constitutes an overdetermined equation, that is, $\bm{e}$ does not necessarily exist to make the above formula true. Therefore, it can be solved by minimizing in a quadratic form:
 \begin{equation}
 \mathop {\min }\limits_{\bm{e}} \left\| \bm{Ae} \right\|_2^2 = \mathop {\min }\limits_{\bm{e}} { \bm{e}^\mathrm{T}} {\bm{A}^\mathrm{T}} \bm{Ae}.
 \end{equation}
 
-于是就求出了在最小二乘意义下的$\bm{E}$矩阵。不过，当可能存在误匹配的情况时，我们会更倾向于使用\textbf{随机采样一致性（Random Sample Concensus，RANSAC）}来求，而不是最小二乘。RANSAC是一种通用的做法，适用于很多带错误数据的情况，可以处理带有错误匹配的数据。
+So the $\bm{E}$ matrix in the sense of least squares is obtained. However, due to potential mismatches, we prefer to use \textbf{Random Sample Concensus (RANSAC)} instead of least squares to solve the above problem. RANSAC is general, applicable to many cases with incorrect data, and can handle data with incorrect matching.
 
-\section{三角测量}
-之前两节我们使用对极几何约束估计了相机运动，也讨论了这种方法的局限性。在得到运动之后，下一步我们需要用相机的运动估计特征点的空间位置。在单目SLAM中，仅通过单张图像无法获得像素的深度信息，我们需要通过\textbf{三角测量（Triangulation）（或三角化）}的方法来估计地图点的深度，如\autoref{fig:triangluar}所示。
+\section{Triangulation}
+In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of \textbf{Triangulation}, shown in \autoref{fig: triangluar}.
 
 \begin{figure}[!ht]
 	\centering
@@ -784,26 +784,26 @@ epipolar constraint = [-0.0008009088410884102]
 	\label{fig:triangluar}
 \end{figure}
 
-三角测量是指，通过在不同位置在同一个路标点进行观察，从观察到的位置推断确定路标点的距离。三角测量最早由高斯提出并应用于测量学中，它在天文学、地理学的测量中都有应用。例如，我们可以通过不同季节观察到的星星的角度，估计它离我们的距离。在SLAM中，我们主要用三角化来估计像素点的距离。
+Triangulation refers to observing the same landmark point at different locations and determining the distance of the landmark point from the observed locations. Triangulation was first proposed by Gauss and used in metrology. It can be also applied to astronomy and geography. For example, we can estimate the distance to us from the angle of the star observed in different seasons. In SLAM, we mainly use triangulation to estimate the distance of pixels.
 
-和上一节类似，考虑图像$I_{1}$和$I_{2}$，以左图为参考，右图的变换矩阵为$\bm{T}$。相机光心为$O_{1}$和$O_{2}$。在$I_{1}$中有特征点$p_{1}$，对应$I_{2}$中有特征点$p_{2}$。理论上直线$O_{1}p_{1}$与$O_{2}p_{2}$在场景中会相交于一点$P$，该点即两个特征点所对应的地图点在三维场景中的位置。然而由于噪声的影响，这两条直线往往无法相交。因此，可以通过最二小乘法求解。
+Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference, and the transformation matrix to the right image is $\bm{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. There is a feature point $p_{1}$ in $I_{1}$, which corresponds to a feature point $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the map point corresponding to the two feature points in the 3D scene. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least square.
 
-按照对极几何中的定义，设$\bm{x}_1, \bm{x}_2$为两个特征点的归一化坐标，那么它们满足：
+According to the definition in epipolar geometry, let $\bm{x}_1, \bm{x}_2$ be the normalized coordinates of two feature points, then they satisfy:
 \begin{equation}
 s_2 \bm{x}_2 = s_1  \bm{R} \bm{x}_1 + \bm{t}.  
 \end{equation}
 
-现在已知$\bm{R}, \bm{t}$，我们想要求解两个特征点的深度$s_1, s_2$。从几何上看，可以在射线$O_1 p_1$上寻找3D点，使其投影位置接近$\bm{p}_2$，同理也可以在$O_2 p_2$上找，或者在两条线的中间。不同的策略对应着不同的计算方式，当然它们大同小异。比如，我们希望计算$s_1$，那么先对上式两侧左乘一个$\bm{x}_2^\wedge$，得：
+Now we know $\bm{R}$ and $\bm{t}$, we want to find the depth $s_1$ and $s_2$ of two feature points. Geometically, you can find a 3D point on the ray $O_1 p_1$ to make its projection close to $\bm{p}_2$. Similarly, you can also find it on $O_2 p_2$, or in the middle of two lines . Different strategies correspond to different calculation methods, but they return similar results. For example, if we want to calculate $s_1$, we first multiply both sides of the above formula by $\bm{x}_2^\wedge$ to get:
 \begin{equation}
 \label{eq:x1tox2}
 s_2 \bm{x}_2^\wedge \bm{x}_2 = 0 = s_1 \bm{x}_2^\wedge \bm{R} \bm{x}_1 + \bm{x}_2^\wedge \bm{t}. 
 \end{equation}
 
-该式左侧为零，右侧可看成$s_2$的一个方程，可以根据它直接求得$s_2$。有了$s_2$，$s_1$也非常容易求出。于是，我们就得到了两帧下的点的深度，确定了它们的空间坐标。当然，由于噪声的存在，我们估得的$\bm{R}, \bm{t}$不一定精确使式\eqref{eq:x1tox2}为零，所以更常见的做法是求最小二乘解而不是直接的解。
+The left side of this equation is zero, and the right side can be regarded as an equation of $s_1$, and $s_1$ can be obtained directly from it. With $s_1$, $s_2$ is also very easy to calculate. Thus, we get the depth of the points under the two frames and determine their spatial coordinates. Definitely, due to the existence of noise, our estimated $\bm{R}, \bm{t}$ may not exactly make the equation \eqref{eq:x1tox2} zero, so a more common approach is to find the least square solution rather than a direct solution.
 
-\section{实践：三角测量}
-\subsection{三角测量代码}
-下面，我们演示如何根据之前利用对极几何求解的相机位姿，通过三角化求出上一节特征点的空间位置。我们调用OpenCV提供的triangulation函数进行三角化。
+\section{Practice: Triangulation}
+\subsection{Triangulation Program}
+In the following, we demonstrate how to obtain the spatial positions of the feature points in the previous section through triangulation based on the camera pose previously solved by epipolar geometry. We will use the triangulation function provided by OpenCV.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/triangulation.cpp（片段）]
 void triangulation(
@@ -825,7 +825,7 @@ void triangulation(
 	Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 	vector<Point2f> pts_1, pts_2;
 	for (DMatch m:matches) {
-		// 将像素坐标转换至相机坐标
+		// Convert pixel coordinates to camera coordinates
 		pts_1.push_back(pixel2cam(keypoint_1[m.queryIdx].pt, K));
 		pts_2.push_back(pixel2cam(keypoint_2[m.trainIdx].pt, K));
 	}
@@ -833,7 +833,7 @@ void triangulation(
 	Mat pts_4d;
 	cv::triangulatePoints(T1, T2, pts_1, pts_2, pts_4d);
 	
-	// 转换成非齐次坐标
+	// Convert to non-homogeneous coordinates
 	for (int i = 0; i < pts_4d.cols; i++) {
 		Mat x = pts_4d.col(i);
 		x /= x.at<float>(3, 0); // 归一化
@@ -847,16 +847,16 @@ void triangulation(
 }
 \end{lstlisting}
 
-同时，在main函数中加入三角测量部分，然后画出各点的深度示意图。读者可以自行运行此程序查看三角化结果。
+Meanwhile, we can add the triangulation part to the main function, and then draw the depth of each point. Readers can run this program to view the triangulation results.
 
-\subsection{讨论}
-关于三角测量，还有一个必须注意的地方。
+\subsection{Discussion}
+Regarding triangulation, there is one more thing that must be noted.
 
-三角测量是由\textbf{平移}得到的，有平移才会有对极几何中的三角形，才谈得上三角测量。因此，纯旋转是无法使用三角测量的，因为对极约束将永远满足。当然实际数据往往不会完全等于零。在平移存在的情况下，我们还要关心三角测量的不确定性，这会引出一个\textbf{三角测量的矛盾}。
+Triangulation is caused by \textbf{translation}. Only when there is enough amount of translation, triangles in the epipolar geometry can be formed, and only then can triangulation be implemented. Therefore, triangulation cannot be used for pure rotation, because the epipolar constraint will always be satisfied. Definitely, the actual data is often not completely equal to zero. In the presence of translation, we should also concern about the uncertainty of triangulation, which will lead to a \textbf{triangulation contradiction}.
 
-如\autoref{fig:triangulation-discuss}~所示，当平移很小时，像素上的不确定性将导致较大的深度不确定性。也就是说，如果特征点运动一个像素$\delta x$，使得视线角变化了一个角度$\delta \theta$，那么将测量到深度值有$\delta d$的变化。从几何关系可以看到，当$\bm{t}$较大时，$\delta d$将明显变小，这说明平移较大时，在同样的相机分辨率下，三角化测量将更精确。对该过程的定量分析可以使用正弦定理得到。
+As shown in \autoref{fig:triangulation-discuss}~, when the translation is small, the uncertainty on the pixel will result in a larger depth uncertainty. That is to say, if the feature point moves by one pixel $\delta x$, so that the line of sight angle changes by an angle $\delta \theta$, then the measured depth will experience a change of $\delta d$. It can be seen from the geometric relationship that when $\bm{t}$ is larger, $\delta d$ will be significantly smaller, meaning that when the translation is larger, the triangulation measurement will be more accurate at the same camera resolution. The quantitative analysis of the process can be proceeded by using the law of sine.
 
-因此，要提高三角化的精度，其一是提高特征点的提取精度，也就是提高图像分辨率——但这会导致图像变大，增加计算成本。另一方式是使平移量增大。但是，这会导致图像的\textbf{外观}发生明显的变化，比如箱子原先被挡住的侧面显示出来，或者物体的光照发生变化，等等。外观变化会使得特征提取与匹配变得困难。总而言之，增大平移，可能导致匹配失效；而平移太小，则三角化精度不够——这就是三角化的矛盾。我们把这个问题称为“视差”（parallax）。
+Therefore, to improve the accuracy of triangulation, one is to improve the accuracy of feature points extraction, that means to increase the image resolution, but this will cause the image to become larger and increase the computational cost. Another way is to increase the amount of translation. However, this will cause obvious changes in the \textbf{appearance} of the image, for example, the side of the box that was originally blocked can be exposed, or the lighting of the object changes, etc. Changes in appearance will make feature extraction and matching more difficult. In a nutshell, increasing the translation may lead to failure of matching; and if the translation is too small, the accuracy of the triangulation is insufficient. This is the contradiction of triangulation. We call this problem "parallax".
 
 \begin{figure}[!ht]
 	\centering
@@ -865,19 +865,19 @@ void triangulation(
 	\label{fig:triangulation-discuss}
 \end{figure}
 
-在单目视觉中，由于单目图像没有深度信息，我们要等待特征点被追踪几帧之后，产生了足够的视角，再用三角化来确定新增特征点的深度值。这个又时也被称为延迟三角化\textsuperscript{\cite{Davison2003}}。但是，如果相机发生了原地旋转，导致视差很小，那么就不好估计新观测到的特征点的深度。这种情况在机器人场合下更加常见，因为原地旋转往往是一个机器人常见的指令。在这种情况下，单目视觉就可能出现追踪失败、尺度不正确等情况。
+In monocular vision, since the image has no depth information, we have to wait for the feature points to be tracked for a few frames, and then use triangulation to determine the depth of the new feature points. This is also called delayed triangulation \textsuperscript{\cite{Davison2003}}. However, if the camera rotates in place, causing the parallax to be small, it is difficult to estimate the depth of the newly observed feature points. This situation is more common in robotics, as rotation is a common command for robots. In this case, monocular vision may suffer from tracking failures and incorrect scales.
 
-虽然本节只介绍了三角化的深度估计，但只要我们愿意，也能够定量地计算每个特征点的\textbf{位置}及\textbf{不确定性}。所以，如果假设特征点服从高斯分布，并且不断地对它进行观测，在信息正确的情况下，我们就能够期望\textbf{它的方差会不断减小乃至收敛}。这就得到了一个\textbf{滤波器}，称为\textbf{深度滤波器（Depth Filter）}。不过，由于它的原理较复杂，我们将留到后面再详细讨论它。下面，我们来讨论从3D−2D的匹配点来估计相机运动，以及3D−3D的估计方法。
+Although this section only introduces the depth estimation of triangulation, we can also quantitatively calculate the \textbf{location} and \textbf{uncertainty} of each feature point. Therefore, if we assume that the feature point obeys the Gaussian distribution and continuously observe it, with the correct information, we can expect \textbf{its variance will continue to decrease and even converge}. This can be referred to as \textbf{Depth Filter}. However, since its principle is more complicated, we will discuss it in detail later. Next, we will discuss the estimation of camera motion from 3D-2D matching points, as well as 3D-3D estimation methods.
 
 \section{3D−2D：PnP}
-PnP（Perspective-n-Point）是求解3D到2D点对运动的方法。它描述了当知道$n$个3D空间点及其投影位置时，如何估计相机的位姿。前面说到，2D−2D的对极几何方法需要8个或8个以上的点对（以八点法为例），且存在着初始化、纯旋转和尺度的问题。然而，如果两张图像中其中一张特征点的3D位置已知，那么最少只需3个点对（以及至少一个额外点验证结果）就可以估计相机运动。特征点的3D位置可以由三角化或者RGB-D相机的深度图确定。因此，在双目或RGB-D的视觉里程计中，我们可以直接使用PnP估计相机运动。而在单目视觉里程计中，必须先进行初始化，然后才能使用PnP。3D−2D方法不需要使用对极约束，又可以在很少的匹配点中获得较好的运动估计，是最重要的一种姿态估计方法。
+PnP (Perspective-n-Point) is a method to solve 3D to 2D paired point motion. It describes how to estimate the pose of the camera when the $n$ 3D space points and their projection positions are known. As mentioned earlier, the 2D-2D epipolar geometry method requires 8 or more point pairs (take the eight-point method as an example), and there have problems with initialization, pure rotation, and scale. However, if the 3D position of one of the feature points in the two images is known, then we need at least 3 point pairs (and at least one additional point to verify the result) to estimate the camera motion. The 3D position of the feature point can be determined by triangulation or the depth map of an RGB-D camera. Therefore, in binocular or RGB-D visual odometry, we can directly use PnP to estimate camera motion. In the monocular visual odometry, initialization must be conducted before using PnP. The 3D-2D method does not require epipolar constraints, and can obtain better motion estimation in a few matching points. It is the most important pose estimation method.
 
-PnP问题有很多种求解方法，例如，用3对点估计位姿的P3P\textsuperscript{\cite{GaoHouTangEtAl2003}}、直接线性变换（DLT）、EPnP（Efficient PnP）\textsuperscript{\cite{LepetitMoreno-NoguerFua2008}}、UPnP\textsuperscript{\cite{Penate-SanchezAndrade-CettoMoreno-Noguer2013}}，等等。此外，还能用\textbf{非线性优化}的方式，构建最小二乘问题并迭代求解，也就是万金油式的Bundle Adjustment。我们先来看DLT，然后再讲解Bundle Adjustment。
+There are many ways to solve PnP problems, for example, P3P\textsuperscript{\cite{GaoHouTangEtAl2003}}, direct linear transformation (DLT), EPnP (Efficient PnP)\textsuperscript{\cite{LepetitMoreno-NoguerFua2008 }}, UPnP\textsuperscript{\cite{Penate-SanchezAndrade-CettoMoreno-Noguer2013}}, etc. In addition, the method of \textbf{non-linear optimization} can be used to construct a least-square problem and iteratively solve it, which is commonly called the Bundle Adjustment. Let's look at DLT first, and then we will explain Bundle Adjustment.
 
-\subsection{直接线性变换}
-我们考虑这样一个问题：已知一组3D点的位置，以及它们在某个相机中的投影位置，求该相机的位姿。这个问题也可以用于求解给定地图和图像时的相机状态问题。如果把3D点看成在另一个相机坐标系中的点的话，也可以用来求解两个相机的相对运动问题。我们从简单的问题出发。
+\subsection{Direct Linear Transformation}
+Consider such a problem: the positions of a set of 3D points and their projection positions in a certain camera are known, find the pose of the camera. This problem can also be used to solve the problem of camera pose when a given map and image are given. If the 3D point is regarded as a point in another camera coordinate system, it can also be used to solve the relative motion problem of two cameras. We will start from simple questions.
 
-考虑某个空间点$P$，它的齐次坐标为${\bm{P}}=(X,Y,Z,1)^{\mathrm{T}}$。在图像$I_{1}$中，投影到特征点${\bm{x}}_{1}=(u_{1},v_{1},1)^{\mathrm{T}}$（以归一化平面齐次坐标表示）。此时相机的位姿$\bm{R}, \bm{t}$是未知的。与单应矩阵的求解类似，我们定义增广矩阵$[\bm{R}|\bm{t}]$为一个$3\times 4$的矩阵，包含了旋转与平移信息\footnote{请注意，这和$\mathrm{SE}(3)$中的变换矩阵$\bm{T}$是不同的。}。我们将其展开形式列写如下：
+Consider a 3D spatial point $P$, its homogeneous coordinates are ${\bm{P}}=(X,Y,Z,1)^{\mathrm{T}}$. In the image $I_{1}$, it is projected to the feature point ${\bm{x}}_{1}=(u_{1},v_{1},1)^{\mathrm{T}}$(expressed in the normalized plane homogeneous coordinates). At this time, the pose of the camera $\bm{R}, \bm{t}$ is unknown. Similar to the solution of the homography matrix, we define the $3\times 4$ augmented matrix $[\bm{R}|\bm{t}]$, encoding rotation and translation information \footnote{this is different from the transformation matrix $\bm{T}$ in $\mathrm{SE}(3)$. }. We will write its expanded form as follows:
 \begin{equation}
 s
 \begin{pmatrix}
@@ -894,28 +894,28 @@ X \\ Y \\ Z \\ 1
 \end{pmatrix}.
 \end{equation}
 
-用最后一行把$s$消去，得到两个约束：
+Eliminate $s$ with the last row to get two constraints:
 \[
 u_{1}=\frac{t_{1}X+t_{2}Y+t_{3}Z+t_{4}}{t_{9}X+t_{10}Y+t_{11}Z+t_{12}},\quad
 v_{1}=\frac{t_{5}X+t_{6}Y+t_{7}Z+t_{8}}{t_{9}X+t_{10}Y+t_{11}Z+t_{12}}.
 \]
 
-为了简化表示，定义$\bm{T}$的行向量：
+To simplify the representation, define $\bm{T}$ as a row vector:
 \[
 \bm{t}_{1}=(t_{1},t_{2},t_{3},t_{4})^\mathrm{T},
 \bm{t}_{2}=(t_{5},t_{6},t_{7},t_{8})^\mathrm{T},
 \bm{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^\mathrm{T},
 \]
-于是有：
+Now we have:
 \[
 \bm{t}_1^\mathrm{T}\bm{P}-\bm{t}_3^\mathrm{T}\bm{P} u_1=0,
 \]
-和
+and
 \[
 \bm{t}_2^\mathrm{T}\bm{P}-\bm{t}_3^\mathrm{T}\bm{P} v_1=0.
 \]
 
-请注意，$\bm{t}$是待求的变量，可以看到，每个特征点提供了两个关于$\bm{t}$的线性约束。假设一共有$N$个特征点，则可以列出如下线性方程组：
+Please note that $\bm{t}$ is the variable to be found. As you can see, each feature point provides two linear constraints on $\bm{t}$. Assuming there are a total of $N$ feature points, the following linear equations can be constructed:
 \begin{equation}
 \begin{pmatrix}
 \bm{P}_{1}^{\mathrm{T}} & 0 & -u_{1}\bm{P}_{1}^{\mathrm{T}}	\\
@@ -930,20 +930,20 @@ v_{1}=\frac{t_{5}X+t_{6}Y+t_{7}Z+t_{8}}{t_{9}X+t_{10}Y+t_{11}Z+t_{12}}.
 =0.
 \end{equation}
 
-由于$\bm{t}$一共有12维，因此，最少通过6对匹配点即可实现矩阵$\bm{T}$的线性求解，这种方法称为直接线性变换（Direct Linear Transform，DLT）。当匹配点大于6对时，也可以使用SVD等方法对超定方程求最小二乘解。
+Since $\bm{t}$ has a total dimension of 12, the linear solution of matrix $\bm{T}$ can be achieved by at least 6 pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least square solution of the overdetermined equation.
 
-在DLT求解中，我们直接将$\bm{T}$矩阵看成了12个未知数，忽略了它们之间的联系。因为旋转矩阵$\bm{R} \in \mathrm{SO}(3)$，用DLT求出的解不一定满足该约束，它是一个一般矩阵。平移向量比较好办，它属于向量空间。对于旋转矩阵$\bm{R}$，我们必须针对DLT估计的$\bm{T}$左边$3 \times 3$的矩阵块，寻找一个最好的旋转矩阵对它进行近似。这可以由QR分解完成\textsuperscript{\cite{Hartley2003, Chen1994}}，也可以像这样来计算\textsuperscript{\cite{Barfoot2016,Green1952}}：
+In the DLT solution, we directly regard the $\bm{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\bm{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the constraint, it is a general matrix. The translation vector is easier to handle, it belongs to the vector space. For the rotation matrix $\bm{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\bm{T}$ estimated by DLT. This can be done by QR decomposition \textsuperscript{\cite{Hartley2003, Chen1994}}, or it can be calculated like this \textsuperscript{\cite{Barfoot2016,Green1952}}:
 \begin{equation}
 \bm{R} \leftarrow {\left( {\bm{R}{\bm{R}^\mathrm{T}}} \right)^{ - \frac{1}{2}}} \bm{R}.
 \end{equation}
-这相当于把结果从矩阵空间重新投影到$\mathrm{SE}(3)$流形上，转换成旋转和平移两部分。
+This can be seen as reprojecting the result from the matrix space onto the $\mathrm{SE}(3)$ manifold and converting it into two parts: rotation and translation.
 
-需要解释的是，我们这里的$\bm{x}_1$使用了归一化平面坐标，去掉了内参矩阵$\bm{K}$的影响——这是因为内参$\bm{K}$在SLAM中通常假设为已知。即使内参未知，也能用PnP去估计$\bm{K}, \bm{R}, \bm{t}$三个量。然而由于未知量增多，效果会差一些。
+What needs to be mentioned is that our $\bm{x}_1$ here uses normalized plane coordinates and neglects the influence of the intrinsic parameter matrix $\bm{K}$, this is because the intrinsic parameter $\bm{K}$ is usually assumed to be known in SLAM. Even if the intrinsic parameters are unknown, PnP can be used to estimate the three quantities $\bm{K}, \bm{R}, \bm{t}$. However, due to the increase in the number of unknown variables, the quantity of the result may be worse.
 
 \subsection{P3P}
-下面讲的P3P是另一种解PnP的方法。它仅使用3对匹配点，对数据要求较少，因此这里也简单介绍一下（这部分推导借鉴了文献\cite{web:p3p}）。
+P3P is another way to solve PnP. It only uses 3 pairs of matching points and requires less data (this part refers to the literature \cite{web:p3p}).
 
-P3P需要利用给定的3个点的几何关系。它的输入数据为3对3D−2D匹配点。记3D点为$A, B, C$，2D点为$a,b,c$，其中小写字母代表的点为对应大写字母代表的点在相机成像平面上的投影，如\autoref{fig:p3p}~所示。此外，P3P还需要使用一对验证点，以从可能的解中选出正确的那一个（类似于对极几何情形）。记验证点对为$D-d$，相机光心为$O$。请注意，我们知道的是$A,B,C$在\textbf{世界坐标系中的坐标}，而不是\textbf{在相机坐标系中的坐标}。一旦3D点在相机坐标系下的坐标能够算出，我们就得到了3D−3D的对应点，把PnP问题转换为了ICP问题。
+P3P requires to establish geometric relationships of the given 3 points. Its input data is 3 pairs of 3D-2D matching points. Define 3D points as $A, B, C$, 2D points as $a, b, c$, where the point represented by the lowercase letter is the projection of the point on the camera image plane represented by the corresponding uppercase letter, as shown in \autoref{fig: p3p}~. In addition, P3P also needs to a pair of verification points to select the correct one from the possible solutions (similar to the case of epipolar geometry). Denote the verification point pair as $D-d$ and the camera principal point as $O$. Suppose that $A, B, C$ are in \textbf{the world coordinate frame}, not \textbf{camera coordinate}. Once the coordinates of the 3D point in the camera coordinate system can be calculated, we get the 3D−3D corresponding point and convert the PnP problem to the ICP problem.
 
 \begin{figure}[!ht]
 	\centering
@@ -952,17 +952,17 @@ P3P需要利用给定的3个点的几何关系。它的输入数据为3对3D−2
 	\label{fig:p3p}
 \end{figure}
 
-首先，显然三角形之间存在对应关系：
+Obviously, there is a relationship between triangles:
 \begin{equation}
 \Delta Oab - \Delta OAB, \quad \Delta Obc - \Delta OBC, \quad \Delta Oac - \Delta OAC.
 \end{equation}
 
-来考虑$Oab$和$OAB$的关系。利用余弦定理，有：
+Consider the relationship between $Oab$ and $OAB$. Using the law of cosines, there are:
 \begin{equation}
 O{A^2} + O{B^2} - 2OA \cdot OB \cdot \cos \left\langle a,b \right \rangle  = A{B^2}.
 \end{equation}
 
-对于其他两个三角形亦有类似性质，于是有：
+The other two triangles have similar properties, so we further get:
 \begin{equation}
 \begin{array}{l}
 O{A^2} + O{B^2} - 2OA \cdot OB \cdot \cos \left\langle a,b \right \rangle  = A{B^2}\\
@@ -971,7 +971,7 @@ O{A^2} + O{C^2} - 2OA \cdot OC \cdot \cos \left\langle a,c \right \rangle  = A{C
 \end{array}
 \end{equation}
 
-对以上三式全体除以$OC^2$，并且记$x=OA/OC, y=OB/OC$，得：
+Divide all the above three equations by $OC^2$ on both sides, and let $x=OA/OC, y=OB/OC$, we get:
 \begin{equation}
 \begin{array}{l}
 {x^2} + {y^2} - 2xy\cos \left\langle a,b \right \rangle  = A{B^2}/O{C^2}\\
@@ -980,7 +980,7 @@ O{A^2} + O{C^2} - 2OA \cdot OC \cdot \cos \left\langle a,c \right \rangle  = A{C
 \end{array}
 \end{equation}
 
-记$v = AB^2/OC^2, uv = BC^2/OC^2, wv = AC^2/OC^2$，有：
+Let $v = AB^2/OC^2, uv = BC^2/OC^2, wv = AC^2/OC^2$， we then have：
 \begin{equation}
 \begin{array}{l}
 {x^2} + {y^2} - 2xy\cos \left\langle a,b \right \rangle  - v = 0\\
@@ -989,7 +989,7 @@ O{A^2} + O{C^2} - 2OA \cdot OC \cdot \cos \left\langle a,c \right \rangle  = A{C
 \end{array}
 \end{equation}
 
-我们可以把第一个式子中的$v$放到等式一边，并代入其后两式，得：
+Move $v$ in the first equation to the right side, and combine it with the other two equations, we have:
 \begin{equation}
 \begin{array}{l}
 \left( {1 - u} \right){y^2} - u{x^2} - \cos \left\langle b,c \right \rangle y + 2uxy\cos \left\langle a,b \right \rangle  + 1 = 0 \\
@@ -997,49 +997,49 @@ O{A^2} + O{C^2} - 2OA \cdot OC \cdot \cos \left\langle a,c \right \rangle  = A{C
 \end{array}
 \end{equation}
 
-注意这些方程中的已知量和未知量。由于我们知道2D点的图像位置，3个余弦角$\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left\langle a,c \right \rangle$是已知的。同时，$u=BC^2/AB^2, w=AC^2/AB^2$可以通过$A,B,C$在世界坐标系下的坐标算出，变换到相机坐标系下之后，这个比值并不改变。该式中的$x,y$是未知的，随着相机移动会发生变化。因此，该方程组是关于$x,y$的一个二元二次方程（多项式方程）。解析地求解该方程组是一个复杂的过程，需要用吴消元法。这里不展开对该方程解法的介绍，感兴趣的读者请参阅文献\cite{GaoHouTangEtAl2003}。类似于分解$\bm{E}$的情况，该方程最多可能得到4个解，但我们可以用验证点来计算最可能的解，得到$A,B,C$在相机坐标系下的3D坐标。然后，根据3D−3D的点对，计算相机的运动$\bm{R}, \bm{t}$。这部分将在7.9节介绍。
+Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=BC^2/AB^2, w=AC^2/AB^2$ can be calculated by the coordinates of $A, B, C$ in the world frame, transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the system of equations is a quadratic equation (polynomial equation) about two unknowns $x, y$. Solving the equations analytically is complicated and requires Wu's elimination method. It will not be introduced here, interested readers could refer to the literature \cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\bm{E}$, this equation may get 4 solutions at most, but we can use the verification points to select the most probable solution, and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\bm{R}, \bm{t}$ can be calculated, which will be introduced in section 7.9.
 
-从P3P的原理可以看出，为了求解PnP，我们利用了三角形相似性质，求解投影点$a,b,c$在相机坐标系下的3D坐标，最后把问题转换成一个3D到3D的位姿估计问题。在后文将看到，带有匹配信息的3D−3D位姿求解非常容易，所以这种思路是非常有效的。其他的一些方法，例如EPnP，亦采用了这种思路。然而，P3P也存在着一些问题：
+From the principle of P3P to solve PnP, we use the similarity of triangles to solve the 3D coordinates of the projection points $a, b, c$ in the camera frame, and finally convert the problem into a 3D to 3D pose estimation problem. As we will see later, it is easy to solve the 3D-3D pose with matching information, so this idea is very effective. Some other methods, such as EPnP, also adopted this idea. However, P3P also has some deficiencies:
 
 \begin{enumerate}
-	\item P3P只利用3个点的信息。当给定的配对点多于3组时，难以利用更多的信息。
-	\item 如果3D点或2D点受噪声影响，或者存在误匹配，则算法失效。
+	\item P3P only includes the information of 3 points. When the given matched points are more than 3, it is difficult to use more information.
+	\item If the 3D point or 2D point is affected by noise, or there is a mismatch, the algorithm goes into trouble.
 \end{enumerate}
 
-所以后续人们还提出了许多别的方法，如EPnP、UPnP等。它们利用更多的信息，而且用迭代的方式对相机位姿进行优化，以尽可能地消除噪声的影响。不过，相对于P3P来说，原理会更加复杂一些，所以我们建议读者阅读原始的论文，或通过实践来理解PnP过程。在SLAM当中，通常的做法是先使用P3P/EPnP等方法估计相机位姿，然后构建最小二乘优化问题对估计值进行调整（Bundle Adjustment）。在相机运动足够连续时，也可以假设相机不动或匀速运动，用推测值作为初始值进行优化。接下来我们从非线性优化角度来看一下PnP问题。
+People also proposed many other methods, such as EPnP, UPnP and so on. They use more information and optimize the camera pose in an iterative way to eliminate the effects of noise as much as possible. However, compared to P3P, the principles are more complicated, so we recommend that readers read the original papers or understand the PnP process by practice. In SLAM, the usual approach is to first estimate the camera pose using methods such as P3P/EPnP, and then construct a least squares optimization problem to adjust the estimated values (Bundle Adjustment). When the camera motion is sufficiently continuous, or you can also assume that the camera does not move or move at a constant speed, you can use the estimated values as the initial values for optimization. Next we look at the PnP problem from the perspective of nonlinear optimization.
 
 %
-%\subsubsection{随机采样一致（RANSAC）}
-%特征匹配的环节会不可避免地出现大量的错误匹配，它们将严重影响之后姿态估计的准确度，因此我们需要设法把错误的匹配剔除。下面以八点法计算基础矩阵为例，讲解RANSAC如何执行，基础矩阵的意义与推导，及八点法将在本书的第\ref{sec:funmatrix}节进行详细讲解。\par
+%\subsubsection{Random sample consensus（RANSAC）}
+%During the feature matching process, a large number of incorrect matches will inevitably occur, which will seriously affect the accuracy of pose estimation. Therefore, we need to eliminate incorrect matches. The following uses the eight-point method to calculate the fundamental matrix as an example to explain how to perform RANSAC, the meaning and derivation of the fundamental matrix, and the eight-point method will be explained in detail in section \ref{sec:funmatrix} of this book. \par
 %
 %\begin{enumerate}
-%	\item 随机在所有匹配点对中抽取8对，设为组$M_{k}$,$k=1,2,...,K$。
-%	\item 使用组$M_{k}$,使用八点法计算相应的基础矩阵，$F_{k}$。
-%	\item 对于当前的每一个内点点对$In_{i}$,$i=1,2,...,I$, 计算$F_{k}$的重投影误差$e_{k}$ （关于重投影误差请参阅本书第\ref{sec:reprojection}节）。若$e_{k}^{i}$小于指定阈值$threshold$,则判断该点对有效，对$F_{k}^{i}$的评分为$score_{k}^{i}=\frac{1}{e_{k}^{i}}$。否则将该点对从内点点对中剔除。最终对$F_{k}$的评分$score_{k}$就是所有有效点评分$score_{k}^{i}$之和。
-%	\item 重复1,2,3步,直到达到最大的迭代次数$MaxIteration$，该值手动设定。最终要取的8对匹配点就是评分最高的$F_{k}$所对应的组$M_{k}$。
+	% \item randomly select 8 pairs from all pairs of matching point and set them as the group $M_{k}$, $k=1, 2, ..., K$.
+	% \item use the group $M_{k}$, and uses the eight-point method to calculate the corresponding fundamental matrix, $F_{k}$.
+	% \item For each pair of interior points $In_{i}$,$i=1,2,...,I$, calculate the reprojection error $e_{k}$ of $F_{k}$ (refer to section \ref{sec:reprojection} of this book for reprojection error). If $e_{k}^{i}$ is less than a specific threshold $threshold$, this pair is judged to be valid, and the score for $F_{k}^{i}$ is $score_{k}^{i}=\frac{1}{e_{k}^{i}}$. Otherwise, the point pair is removed from the interior points pair. The final score $score_{k}$ for $F_{k}$ is the sum of all valid scores $score_{k}^{i}$.
+	% \item Repeat steps 1, 2, 3 until it reaches the maximum number of iterations $MaxIteration$, which is defined manually. The final 8 pairs of matching points are the group $M_{k}$ corresponding to the highest scored $F_{k}$.
 %\end{enumerate}
 %
 %
-%事实上RANSAC是一种算法思想，对于不同的模型，有不同的参数及评价标准。如上述例子中是基础矩阵，参数是8对匹配点，而评价标准是最小化重投影误差。理论上迭代次数越大，越有可能找到模型的最佳参数。但是由于SLAM中实时性的需要，我们需要在找到合理模型参数的情况下，迭代次数最少。假设$u$是找到一组内点的概率，$v=1-u$是找到一组外点的概率，$p$是至少有一组参数不包含外点的概率（通常设为$99\%$），$m$为所需的参数数量,$N$为迭代次数。则有：
+% In fact, RANSAC is an algorithmic idea. For different models, there are different parameters and evaluation criteria. As in the above example, it is the fundamental matrix, the parameter is 8 pairs of matching points, and the evaluation criterion is to minimize the reprojection error. In theory, the greater the number of iterations, the more likely it is to find the best parameters of the model. However, due to the real-time requirements in SLAM, we need to minimize the number of iterations while finding reasonable model parameters. Suppose $u$ is the probability of finding a set of interior points, $v=1-u$ is the probability of finding a set of exterior points, and $p$ is the probability that at least one set of parameters does not contain the exterior points (usually set to $99\% $), $m$ is the number of parameters required, and $N$ is the number of iterations. Then there are:
 %
 %\begin{equation}
 %1-p=(1-u^{m})^{N}
 %\end{equation}
 %
-%所以最小迭代次数可以由以下式子找出，$u$和$v$通常使用经验值。
+% So the minimum number of iterations can be found by the following formula, $u$ and $v$ usually use empirical values.
 %
 %\begin{equation}
 %N=\frac{log(1-p)}{1-(1-v)^{m}}
 %\end{equation}
 
 
-\subsection{最小化重投影误差求解PnP}
+\subsection{Solve PnP by minimizing reprojection error}
 \label{sec:BA-vo1}
-除了使用线性方法之外，我们还可以把PnP问题构建成一个关于重投影误差的非线性最小二乘问题。这将用到本书第\ref{cpt:4}讲和第\ref{cpt:5}讲的知识。前面说的线性方法，往往是\textbf{先求相机位姿，再求空间点位置}，而非线性优化则是把它们都看成优化变量，放在一起优化。这是一种非常通用的求解方式，我们可以用它对PnP或ICP给出的结果进行优化。这一类\textbf{把相机和三维点放在一起进行最小化}的问题，统称为Bundle Adjustment（光束法平差），简称为BA\footnote{需要说明的是，BA在不同文献、语境下的意义并不完全一致。有些学者仅把最小化重投影误差的问题称为BA，而另一些学者的BA概念更加宽泛一些，即使这个BA只有一个相机，或加入了其他类似的传感器，可以都称为BA。我个人更喜欢宽泛一些的BA概念，所以在这里计算PnP的方法也称为BA。}。
+Other than the linear method, we can also construct the PnP problem as a nonlinear least-square problem about reprojection errors. This will use the knowledge from the \ref{cpt:4} and \ref{cpt:5} chapters of this book. The linear method mentioned above is often \textbf{a first look for the camera pose and the position of the points in space}, while nonlinear optimization treats them as optimization variables and optimizes them together. This is a very general solution method, we can use it to optimize the results given by PnP or ICP. This type of problems, \textbf{putting the camera and 3D points together to minimize}, are generally referred to as Bundle Adjustment\footnote{The meaning of BA in different documents and contexts are not exactly the same. Some scholars only refer to the problem of minimizing reprojection errors as BA, while others have a broader definition of BA. Even if the BA has only one camera or other similar sensors, it can be called BA. I personally prefer the broader definition, so the method of calculating PnP here is also called BA.}.
 
-我们完全可以在PnP中构建一个Bundle Adjustment问题对相机位姿进行优化。如果相机是连续运动的（比如大多数SLAM过程），也可以直接用BA求解相机位姿。我们将在本节给出此问题在两个视图下的基本形式，然后在第9讲讨论较大规模的BA问题。
+We can build a Bundle Adjustment problem in PnP to optimize the camera pose. If the camera is moving continuously (as in the majority of SLAM processes), you can also use BA directly to solve the camera pose. In this section, we will give the basic form of this problem in two views, and then discuss the larger-scale BA problem in Lecture 9.
 
-考虑$n$个三维空间点$P$及其投影$p$，我们希望计算相机的位姿$\bm{R}, \bm{t}$，它的李群表示为$\bm{T}$。假设某空间点坐标为$\bm{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$，其投影的像素坐标为$\bm{u}_i=[u_i,v_i]^\mathrm{T}$。根据第\ref{cpt:5}讲的内容，像素位置与空间点位置的关系如下：
+Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\bm{R}, \bm{t}$ of the camera, and its Lie group is expressed as $\bm{T}$. Suppose the coordinates of a point in space are $\bm{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$, and their projected pixel coordinates are $\bm{u}_i=[u_i,v_i]^\ mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
 \begin{equation}
 s_i \left[ 
 \begin{array}{l}
@@ -1050,17 +1050,17 @@ u_i \\ v_i \\ 1
 X_i \\ Y_i \\ Z_i \\ 1
 \end{array} \right]  .
 \end{equation}
-写成矩阵形式就是：
+In matrix form, it is:
 \[
 {{s_i {\bm{u}}_i} = \bm{K} \bm{T} \bm{P}}_i.
 \]
 
-这个式子隐含了一次从齐次坐标到非齐次的转换，否则按矩阵的乘法来说，维度是不对的\footnote{ $ \bm{T} {\bm{P}_i}$结果是$4 \times 1$的，而其左侧的$\bm{K}$是$3 \times 3$的，所以必须把$\bm{T}\bm{P}_i$的前三维取出来，变成三维的非齐次坐标。或者，用$\bm{R}\bm{P}+\bm{t}$亦无不可。}。现在，由于相机位姿未知及观测点的噪声，该等式存在一个误差。因此，我们把误差求和，构建最小二乘问题，然后寻找最好的相机位姿，使它最小化：
+This equation includes a conversion from homogeneous coordinates to non-homogeneous coordinates implicitly. Otherwise, according to the matrix multiplication, the dimension is wrong \footnote{The result of $ \bm{T} {\bm{P}_i}$ is $4 \times 1$, and the $\bm{K}$ on the left is $3 \times 3$, so the first three dimensions of $\bm{T}\bm{P}_i$ must be taken out and changed into three dimension non-homogeneous coordinates. Or, using $\bm{R}\bm{P}+\bm{t}$}. Now, due to the unknown camera pose and the noise of the observation points, there is a residual in the equation. Therefore, we sum up the residuals, construct a least-square problem, and then minimize it to find the most reliable camera pose:
 \begin{equation}
 {\bm{T}^*} = \arg \mathop {\min }\limits_{\bm{T}}  \frac{1}{2}\sum\limits_{i = 1}^n {\left\| {{{\bm{u}}_i} - \frac{1}{s_i} \bm{K}\bm{T}{\bm{P}}_i} \right\|_2^2} .
 \end{equation}
 
-该问题的误差项，是将3D点的投影位置与观测位置作差，所以称为\textbf{重投影误差}。使用齐次坐标时，这个误差有3维。不过，由于${\bm{u}}$最后一维为1，该维度的误差一直为零，因而我们更多时候使用非齐次坐标，于是误差就只有2维了。如\autoref{fig:reprojection}~所示，我们通过特征匹配知道了$p_1$和$p_2$是同一个空间点$P$的投影，但是不知道相机的位姿。在初始值中，$P$的投影$\hat{p}_2$与实际的$p_2$之间有一定的距离。于是我们调整相机的位姿，使得这个距离变小。不过，由于这个调整需要考虑很多个点，所以最后的效果是整体误差的缩小，而每个点的误差通常都不会精确为零。
+The residual term of this problem is the difference between the projection position of the 3D points and the observation positions, so it is called \textbf{reprojection error}. When using homogeneous coordinates, this error has 3 dimensions. However, since the last dimension of ${\bm{u}}$ is 1, the error of this dimension is always zero, so more often we use non-homogeneous coordinates, thus the error is only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P$\hat{p}_2$ and the actual $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
 
 \begin{figure}[!htp]
 	\centering
@@ -1069,24 +1069,24 @@ X_i \\ Y_i \\ Z_i \\ 1
 	\label{fig:reprojection}
 \end{figure}
 
-最小二乘优化问题已经在第\ref{cpt:6}讲介绍过了。使用李代数，可以构建无约束的优化问题，很方便地通过高斯牛顿法、列文伯格—马夸尔特方法等优化算法进行求解。不过，在使用高斯牛顿法和列文伯格—马夸尔特方法之前，我们需要知道每个误差项关于优化变量的导数，也就是\textbf{线性化}：
+We have already discussed the least-square optimization problem in the Chapter \ref{cpt:6}. Using Lie algebra, unconstrained optimization problems can be constructed, which can be easily solved by optimization algorithms such as Gauss Newton method and Levenberg-Marquardt method. However, before using the Gauss-Newton method and Levenberg-Marquardt method, we need to find the derivative of each error term with respect to the optimization variable, which is \textbf{linearization}:
 \begin{equation}
 \bm{e}( \bm{x} + \Delta \bm{x} ) \approx \bm{e}(\bm{x}) + \bm{J} ^\mathrm{T}\Delta \bm{x}.
 \end{equation}
 
-这里的$\bm{J}^\mathrm{T}$的形式是值得讨论的，甚至可以说是关键所在。我们固然可以使用数值导数，但如果能够推导出解析形式，则优先考虑解析导数。现在，当$\bm{e}$为像素坐标误差（2维），$\bm{x}$为相机位姿（6维）时，$\bm{J}^\mathrm{T}$将是一个$2 \times 6$的矩阵。我们来推导$\bm{J}^\mathrm{T}$的形式。
+The form of $\bm{J}^\mathrm{T}$ is worth discussing, and it can even be said to be the key. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer to analytical derivatives. Now, $\bm{e}$ is the pixel coordinate error (2-dimensional) and $\bm{x}$ is the camera pose (6-dimensional), $\bm{J}^\mathrm{T}$ is a matrix of $2 \times 6$. Let's derive the form of $\bm{J}^\mathrm{T}$.
 
-回忆李代数的内容，我们介绍了如何使用扰动模型来求李代数的导数。首先，记变换到相机坐标系下的空间点坐标为$\bm{P}'$，并且将其前3维取出来：
+We have introduced how to use the perturbation model to find the derivative of Lie algebra. First, define the coordinates of the space point in the camera frame as $\bm{P}'$, and take out the first 3 dimensions:
 \begin{equation}
 \bm{P}' = \left( \bm{T}{\bm{P}} \right)_{1:3}= [X', Y', Z']^\mathrm{T}.
 \end{equation}
 
-那么，相机投影模型相对于$\bm{P}'$为
+Then, the camera projection model with respect to $\bm{P}'$ is:
 \begin{equation}
 s {\bm{u}} = \bm{K} \bm{P}'.
 \end{equation}
 
-展开：
+Expand:
 \begin{equation}
 \left[ \begin{array}{l}
 su\\
@@ -1103,18 +1103,18 @@ Z'
 \end{array} \right].
 \end{equation}
 
-利用第3行消去$s$（实际上就是$\bm{P}'$的距离），得：
+Use the third row to eliminate $s$ (actually it is the distance of $\bm{P}'$), we get:
 \begin{equation}
 \label{eq:uv2xyz}
 u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 \end{equation}
 
-这与第\ref{cpt:5}讲的相机模型是一致的。当我们求误差时，可以把这里的$u,v$与实际的测量值比较，求差。在定义了中间变量后，我们对$\bm{T}$左乘扰动量$\delta \boldsymbol{\xi}$，然后考虑$\bm{e}$的变化关于扰动量的导数。利用链式法则，可以列写如下：
+This is consistent with the camera model described in \ref{cpt:5}. When we find the error, we can compare the $u, v$ here with the actual measured value to find the difference. After defining the intermediate variables, we left multiply $\bm{T}$ by a disturbance quantity $\delta \boldsymbol{\xi}$, and then consider the derivative of the change of $\bm{e}$ with respect to the disturbance quantity. Using the chain rule, it is:
 \begin{equation}
 \frac{{\partial \bm{e}}}{{\partial \delta \boldsymbol{\xi} }} = \mathop {\lim }\limits_{\delta \boldsymbol{\xi}  \to 0} \frac{{\bm{e}\left( {\delta \boldsymbol{\xi}  \oplus \boldsymbol{\xi} } \right)-\bm{e}(\boldsymbol{\xi})}}{{\delta \boldsymbol{\xi} }}  = \frac{{\partial \bm{e}}}{{\partial \bm{P}'}}\frac{{\partial \bm{P}'}}{{\partial \delta \boldsymbol{\xi} }}.
 \end{equation}
 
-这里的$\oplus$指李代数上的左乘扰动。第一项是误差关于投影点的导数，在式\eqref{eq:uv2xyz}已经列出了变量之间的关系，易得：
+Here $\oplus$ refers to the disturbance left multiplication in Lie algebra. The first item is the derivative of the error with respect to the projection point. The relationship between the variables is in the equation \eqref{eq:uv2xyz}, and it is easy to get:
 \begin{equation}
 \frac{{\partial \bm{e}}}{{\partial \bm{P}'}} = -\left[ 
 {\begin{array}{*{20}{c}}
@@ -1127,7 +1127,7 @@ u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 \end{array}} \right].
 \end{equation}
 
-而第二项为变换后的点关于李代数的导数，根据\ref{sec:se3-diff}节中的推导，得：
+The second term is the derivative of the transformed point with respect to the Lie algebra. According to the section \ref{sec:se3-diff}, we get:
 \begin{equation}
 \frac{{\partial \left( \bm{TP} \right)}}{{\partial \delta \boldsymbol{\xi} }} = {\left( \bm{TP} \right)^ \odot } = \left[ 
 \begin{array}{*{20}{cc}}
@@ -1137,12 +1137,12 @@ u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 \right].
 \end{equation}
 
-而在$\bm{P}'$的定义中，我们取出了前3维，于是得：
+In the definition of $\bm{P}'$, we took out the first 3 dimensions, so we get:
 \begin{equation}
 \frac{{\partial \bm{P}'}}{{\partial \delta \boldsymbol{\xi} }} = \left[ { \bm{I}, - {\bm{P}'^ \wedge }} \right].
 \end{equation}
 
-将这两项相乘，就得到了$2 \times 6$的雅可比矩阵：
+Multiply these two items together, we get the $2 \times 6$ Jacobian matrix:
 \begin{equation}
 \label{eq:jacob-uv2xi}
 \frac{{\partial \bm{e}}}{{\partial \delta \boldsymbol{\xi} }} = - \left[ {\begin{array}{*{20}{c}}
@@ -1151,18 +1151,18 @@ u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 	\end{array}} \right].
 \end{equation}
 
-这个雅可比矩阵描述了重投影误差关于相机位姿李代数的一阶变化关系。我们保留了前面的负号，这是因为误差是由\textbf{观测值减预测值}定义的。它当然也可反过来，定义成“预测值减观测值”的形式。在那种情况下，只要去掉前面的负号即可。此外，如果$\mathfrak{se}(3)$的定义方式是旋转在前，平移在后，只要把这个矩阵的前3列与后3列对调即可。
+This Jacobian matrix describes the first-order derivative of the reprojection error with respect to the Lie algebra of the camera pose. We keep the negative sign in front of it because the error is defined by \textbf{observed value minus predicted value}. It can also be reversed and defined in the form of "predicted value minus observed value". In that case, just remove the negative sign in front. In addition, if the definition of $\mathfrak{se}(3)$ is rotation followed by translation, just swap the first 3 columns and the last 3 columns of this Jacobian matrix.
 
-另一方面，除了优化位姿，我们还希望优化特征点的空间位置。因此，需要讨论$\bm{e}$关于空间点$\bm{P}$的导数。所幸这个导数矩阵相对来说容易一些。仍利用链式法则，有：
+On top of optimizing the pose, we want to optimize the spatial position of the feature points. Therefore, we also need to discuss the derivative of $\bm{e}$ with respect to the space point $\bm{P}$. Fortunately, this derivative matrix is relatively easy. Still using the chain rule, there are:
 \begin{equation}
 \frac{{\partial \bm{e}}}{{\partial \bm{P} }} = \frac{{\partial \bm{e}}}{{\partial \bm{P}'}}\frac{{\partial \bm{P}'}}{{\partial \bm{P} }}.
 \end{equation}
 
-第一项在前面已推导，关于第二项，按照定义
+The first item has been deduced before, and the second item is defined as:
 \[
 \bm{P}'= (\bm{T} \bm{P})_{1:3} = \bm{R} \bm{P} + \bm{t},
 \]
-我们发现$\bm{P}'$对$\bm{P}$求导后将只剩下$\bm{R}$。于是：
+We find that after $\bm{P}'$ differentiates $\bm{P}$, only $\bm{R}$ is left. then:
 \begin{equation}
 \label{eq:jacob-uv2P}
 \frac{{\partial \bm{e}}}{{\partial \bm{P} }} = -\left[ 
@@ -1172,30 +1172,30 @@ u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 \end{array} \right] \bm{R}.
 \end{equation}
 
-于是，我们推导出了观测相机方程关于相机位姿与特征点的两个导数矩阵。它们\textbf{十分重要}，能够在优化过程中提供重要的梯度方向，指导优化的迭代。
+Now, we derived the two Jacobian matrices of the observation camera equation with respect to the camera pose and feature points. They are \textbf{very important} to provide gradient directions in the optimization and guide the iteration of optimization.
 
-\section{实践：求解PnP}
-\subsection{使用EPnP求解位姿}
-下面，我们通过实验理解一下PnP的过程。首先，我们演示如何使用OpenCV的EPnP求解PnP问题，然后通过非线性优化再次求解。在第二版书中，我们将增加一个手写优化的实验。由于PnP需要使用3D点，为了避免初始化带来的麻烦，我们使用了RGB-D相机中的深度图（1_depth.png）作为特征点的3D位置。首先来看OpenCV提供的PnP函数：
+\section{Practice: Solving PnP}
+\subsection{Use EPnP to solve pose}
+In the following, we will have a deeper understand of the PnP process through practice. First, we demonstrate how to use OpenCV's EPnP to solve the PnP problem, and then solve it again through nonlinear optimization. In the second edition of the book, we also add a handwriting optimization practice. Since PnP needs to use 3D points, in order to avoid the trouble of initialization, we use the depth map (1_depth.png) in the RGB-D camera as the 3D position of the feature points. First look at the PnP function provided by OpenCV:
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
 int main( int argc, char** argv ) {
     Mat r, t;
-   solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false); // 调用OpenCV 的 PnP 求解，可选择EPNP，DLS等方法
+   solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false); // Call OpenCV's PnP, you can choose from EPNP, DLS and other methods
    Mat R;
-   cv::Rodrigues(r, R); // r为旋转向量形式，用Rodrigues公式转换为矩阵
+   cv::Rodrigues(r, R); // r is in the form of rotation vector, and converted to a rotation matrix by Rodrigues formula
    cout << "R=" << endl << R << endl;
    cout << "t=" << endl << t << endl;
 }
 \end{lstlisting}
 
-在例程中，得到配对特征点后，我们在第一个图的深度图中寻找它们的深度，并求出空间位置。以此空间位置为3D点，再以第二个图像的像素位置为2D点，调用EPnP求解PnP问题。程序输出如下：
+In the example, after obtaining the matched feature points, we look for their depth in the depth map of the first image and find their spatial position. Taking this spatial position as a 3D point, and then taking the pixel position of the second image as a 2D point, call EPnP to solve the PnP problem. The program output is as follows:
 
 \begin{lstlisting}[language=sh,caption=终端输入：]
 % build/pose_estimation_3d2d 1.png 2.png d1.png d2.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
-一共找到了79组匹配点
+In total, we get 79 set of feature points
 3d-2d pairs: 76
 R=
 [0.9978662025826269, -0.05167241613316376, 0.03991244360207524;
@@ -1207,11 +1207,11 @@ t=
 0.06138584177157709]
 \end{lstlisting}
 
-读者可以对比先前2D−2D情况下求解的$\bm{R},\bm{t}$看看有什么不同。可以看到，在有3D信息时，估计的$\bm{R}$几乎是相同的，而$\bm{t}$相差得较多。这是由于引入了新的深度信息所致。不过，由于Kinect采集的深度图本身会有一些误差，所以这里的3D点也不是准确的。在较大规模的BA中，我们会希望把位姿和所有三维特征点同时优化。
+Readers can compare $\bm{R},\bm{t}$ solved in the previous 2D-2D case to see the difference. It can be seen that when 3D information is involved, the estimated $\bm{R}$ is almost the same, while the $\bm{t}$ is quite different. This is due to the inclusion of depth information. However, since the depth map collected by Kinect has some noise, the 3D points here are not accurate. In a larger-scale BA, we would like to optimize the pose and all three-dimensional feature points at the same time.
 
 
-\subsection{手写位姿估计}
-下面演示如何使用非线性优化的方式计算相机位姿。我们先手写一个高斯牛顿法的PnP，然后再演示如何调用g2o来求解。  
+\subsection{Handwriting pose estimation}
+The following demonstrates how to use nonlinear optimization to calculate the camera pose. We first write a PnP of Gauss-Newton method, and then demonstrate how to solve it by g2o.  
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
 void bundleAdjustmentGaussNewton(
 const VecVector3d &points_3d,
@@ -1286,10 +1286,10 @@ Sophus::SE3d &pose) {
 }
 \end{lstlisting}
 
-在这个小函数中，我们根据前面的理论推导，实现一个简单的高斯牛顿迭代优化。之后我们将比较OpenCV、手写实现和g2o实现之间的效率差异。
+In this function, we implement a simple Gauss-Newton iteration optimization based on the previous theoretical derivation. Then we will compare the efficiency of OpenCV, handwritten implementation and g2o implementation.
 
-\subsection{使用g2o进行BA优化}
-在手写了一遍优化流程之后，我们再来看如何用g2o实现同样的操作（事实上用Ceres也完全类似）。g2o的基本知识在第\ref{cpt:6}讲中已经介绍过了。在使用g2o之前，我们要把问题建模成一个图优化问题，如\autoref{fig:ba-graph}~所示。
+\subsection{BA optimization by g2o}
+After handwriting the optimization process, let's look at how to achieve the same functionality using the library g2o (in fact, it is completely similar with Ceres). The basic knowledge of g2o has been introduced in Lecture \ref{cpt:6}. Before using g2o, we have to model the problem as a graph optimization problem, as shown in \autoref{fig:ba-graph}~.
 
 \begin{figure}[!htp]
 	\centering
@@ -1298,18 +1298,18 @@ Sophus::SE3d &pose) {
 	\label{fig:ba-graph}
 \end{figure}
 
-在这个图优化中，节点和边的选择如下：
+In this graph optimization, the nodes and edges are defined as follows:
 \begin{enumerate}
-	\item \textbf{节点}：第二个相机的位姿节点$\bm{T} \in \mathrm{SE}(3)$。
-	\item \textbf{边}：每个3D点在第二个相机中的投影，以观测方程来描述：
+	\item \textbf{Node}: The pose of the second camera $\bm{T} \in \mathrm{SE}(3)$.
+	\item \textbf{Edge}: The projection of each 3D point in the second camera, described by the observation equation:
 	\[
 	\bm{z}_j = h(\bm{T}, \bm{P}_{j}).
 	\]
 \end{enumerate}
 
-由于第一个相机位姿固定为零，我们没有把它写到优化变量里，但在更多的场合里，我们会考虑更多相机的估计。现在我们根据一组3D点和第二个图像中的2D投影，估计第二个相机的位姿。所以我们把第一个相机画成虚线，表明不希望考虑它。
+Since the pose of the first camera is fixed to zero, we excluded it from the optimization variables, but in the normal occasions, we will consider estimations of a lot of camera poses. Now we estimate the pose of the second camera based on a set of 3D points and the 2D projection in the second image. We drew the first camera as a dotted line to indicate that we don't want to consider it.
 
-g2o提供了许多关于BA的节点和边，例如g2o/\\types/sba/types\_six\_dof\_expmap.h中提供了李代数表达的节点和边。在第二版书中，我们自己实现一个VertexPose顶点和EdgeProjection边，如下：
+g2o provides many nodes and edges about BA. For example, g2o/\\types/sba/types\_six\_dof\_expmap.h provides nodes and edges expressed by Lie algebra. In the second edition of the book, we implement a VertexPose vertex and EdgeProjection edge ourselves, as follows:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
 /// vertex and edges used in g2o ba
 class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d> {
@@ -1373,22 +1373,22 @@ class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose>
 };
 \end{lstlisting}
 
-这里实现了顶点的更新和边的误差计算。下面就是将它们组成一个图优化问题：
+This implements vertex update and edge error calculation. The following is to combine them into a graph optimization problem:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
 void bundleAdjustmentG2O(
 const VecVector3d &points_3d,
 const VecVector2d &points_2d,
 const Mat &K,
 Sophus::SE3d &pose) {
-	// 构建图优化，先设定g2o
+	// Build graph optimization, first let's define g2o
 	typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;  // pose is 6, landmark is 3
-	typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // 线性求解器类型
-	// 梯度下降方法，可以从GN, LM, DogLeg 中选
+	typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;
+	// Gradient descent method, you can choose from GN, LM, DogLeg
 	auto solver = new g2o::OptimizationAlgorithmsGaussNewton(
 		g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
-	g2o::SparseOptimizer optimizer;     // 图模型
-	optimizer.setAlgorithm(solver);   // 设置求解器
-	optimizer.setVerbose(true);       // 打开调试输出
+	g2o::SparseOptimizer optimizer;     // Graph model
+	optimizer.setAlgorithm(solver);   // Set up the solver
+	optimizer.setVerbose(true);       // Turn on verbose output for debugging
 	
 	// vertex
 	VertexPose *vertex_pose = new VertexPose(); // camera vertex_pose
@@ -1429,13 +1429,13 @@ Sophus::SE3d &pose) {
 }
 \end{lstlisting}
 
-程序大体上和第6讲的g2o类似。我们首先声明了g2o图优化器，并配置优化求解器和梯度下降方法。然后根据估计到的特征点，将位姿和空间点放到图中。最后调用优化函数进行求解。最后，运行的部分输出如下：
+The program is similar to g2o in lecture 6. We first declare the g2o graph optimizer, and configure the optimization solver and gradient descent method. Then based on the estimated feature points, put the pose and spatial points into the graph. Finally, the optimization function is called. The partial output of the run is as follows:
 
 \begin{lstlisting}[language=sh,caption=终端输入：]
 ./build/pose_estimation_3d2d 1.png 2.png 1_depth.png 2_depth.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
-一共找到了79组匹配点
+In total, we get 79 set of feature points
 3d-2d pairs: 76
 solve pnp in opencv cost time: 0.000332991 seconds.
 R=
@@ -1475,41 +1475,41 @@ pose estimated by g2o =
 solve pnp by g2o cost time: 0.000923095 seconds.
 \end{lstlisting}
 
-从估计结果上看，三者基本一致。从优化时间来看， 我们自己实现的高斯牛顿法以0.15毫秒排在第一，其次是OpenCV的PnP，最后是g2o的实现。尽管如此，三者的用时都在1毫秒以内，这说明位姿估计算法并不耗费计算量。
+Those three results are basically the same. In terms of efficiency, the Gauss-Newton method implemented by ourselves ranked first with 0.15 milliseconds, followed by OpenCV's PnP, and finally the implementation of g2o. Nonetheless, the time for the three is within 1 millisecond, which shows that the pose estimation algorithm does not really consume computational effort.
 
-Bundle Adjustment是一种通用的做法。它可以不限于两幅图像。我们完全可以放入多幅图像匹配到的位姿和空间点进行迭代优化，甚至可以把整个SLAM过程放进来。那种做法规模较大，主要在后端使用，我们会在第10讲再次遇到这个问题。在前端，我们通常考虑局部相机位姿和特征点的小型Bundle Adjustment问题，希望对它进行实时求解和优化。
+Bundle Adjustment is common. It may not be limited to two images. We can put the poses and spatial points matched by multiple images for iterative optimization, and even put the entire SLAM process in. That approach is large in scale and mainly used in the back-end. We will deal with this problem again in Lecture 10. At the front end, we usually consider a small Bundle Adjustment problem regarding local camera poses and feature points, aiming to solve and optimize it in real time.
 
-\section{3D−3D：ICP}
-最后，我们来介绍3D−3D的位姿估计问题。假设我们有一组配对好的3D点（比如我们对两幅RGB-D图像进行了匹配）：
+\section{3D−3D：Iterative Closest Point (ICP)}
+In the end, we will introduce the 3D-3D pose estimation problem. Suppose we have a set of matched 3D points (for example, we matched two RGB-D images):
 \[
 \bm{P} = \{ \bm{p}_1, \cdots, \bm{p}_n \}, \quad \bm{P}' = \{ \bm{p}_1', \cdots, \bm{p}_n'\},
 \]
-现在，想要找一个欧氏变换$\bm{R}, \bm{t}$，使得\footnote{这个例子和前两章的符号稍有不同。如果把它们关联起来的话，那么把$\bm{p}_i$看成第二个图像中的数据，把$\bm{p}_i'$看成第一个图像中的数据，得到的$\bm{R},\bm{t}$是一致的。}：
+Now, we want to find an Euclidean transformation $\bm{R}, \bm{t}$, which makes \footnote{slightly different from the symbols in the previous two chapters. You can consider $\bm{p}_i$ as the data in the second image, and $\bm{p}_i'$ as the data in the first image, and consistently geting $ \bm{R},\bm{t}$.}:
 \[
 \forall i, \bm{p}_i = \bm{R} \bm{p}_i' + \bm{t}.
 \]
 
-这个问题可以用迭代最近点（Iterative Closest Point，ICP）求解。读者应该注意到了，3D−3D位姿估计问题中并没有出现相机模型，也就是说，仅考虑两组3D点之间的变换时，和相机并没有关系。因此，在激光SLAM中也会碰到ICP，不过由于激光数据特征不够丰富，我们无从知道两个点集之间的\textbf{匹配关系}，只能认为距离最近的两个点为同一个，所以这个方法称为迭代最近点。而在视觉中，特征点为我们提供了较好的匹配关系，所以整个问题就变得更简单了。在RGB-D SLAM中，可以用这种方式估计相机位姿。下文我们用ICP指代\textbf{匹配好的}两组点间的运动估计问题。
+This problem can be solved by Iterative Closest Point (ICP). The camera model does not appear in the 3D−3D pose estimation, meaning that when only the transformation between two sets of 3D points is considered, it has nothing to do with the camera. Therefore, ICP is also feasible in laser SLAM, but since the features in laser data are not rich enough, it is hard to know the \textbf{matching relationship} between the two point sets, and we can only consider the two closest points to be the same. So this method is called iterative closest point. In vision, the feature points provide us with a better matching relationship, so the whole problem becomes simpler. In RGB-D SLAM, the camera pose can be estimated in this way. In the following, we use ICP to refer to the motion estimation problem between the two sets of \textbf{matched} points.
 
-和PnP类似，ICP的求解也分为两种方式：利用线性代数的求解（主要是SVD）， 以及利用非线性优化方式的求解（类似于Bundle Adjustment）。下面分别进行介绍。
+Similar to PnP, the solution to ICP can be divided into two ways: using linear algebra (mainly SVD), and using nonlinear optimization (similar to Bundle Adjustment). They will be introduced separately below.
 
-\subsection{SVD方法}
-首先来看以SVD为代表的代数方法。根据前面描述的ICP问题，我们先定义第$i$对点的误差项：
+\subsection{Using linear algebra (SVD)}
+First look at SVD, on behalf of the algebraic method. According to the ICP problem described above, we first define the error term for the point $i$ as:
 \begin{equation}
 \bm{e}_i = \bm{p}_i - (\bm{R} \bm{p}_i' + \bm{t} ) .
 \end{equation}
 
-然后，构建最小二乘问题，求使误差平方和达到极小的$\bm{R}, \bm{t}$：
+Then, construct a least-square problem to find the $\bm{R}, \bm{t}$ by minimization of sum of the squared errors:
 \begin{equation}
 \mathop {\min }\limits_{\bm{R}, \bm{t}} \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{\bm{p}_i} - \left( {\bm{R}{\bm{p}_i}' + \bm{t}} \right)} \right)} \|^2_2.
 \end{equation}
 
-下面来推导它的求解方法。首先，定义两组点的质心：
+First, define the centroids of the two sets of points as:
 \begin{equation}
 \bm{p} = \frac{1}{n}\sum_{i=1}^n ( \bm{p}_i ), \quad \bm{p}' = \frac{1}{n} \sum_{i=1}^n ( \bm{p}_i' ). 
 \end{equation}
 
-请注意，质心是没有下标的。随后，在误差函数中做如下的处理：
+Note that the centroid is not subscripted. Then, in the error function:
 \begin{align*}
 \begin{array}{ll}
 \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\bm{p}_i} - \left( {\bm{R}{ \bm{p}_i}' + \bm{t}} \right)} \right\|}^2}}  & = \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\bm{p}_i} - \bm{R}{\bm{p}_i}' - \bm{t} - \bm{p} + \bm{Rp}' + \bm{p} - \bm{Rp}'} \right\|}^2}} \\
@@ -1519,76 +1519,76 @@ Bundle Adjustment是一种通用的做法。它可以不限于两幅图像。我
 \end{array}
 \end{align*}
 
-注意到交叉项部分中$\left( {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right)$在求和之后为零，因此优化目标函数可以简化为
+Since $\left( {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right)$ is zero after the summation, so the optimization objective function can be simplified to
 \begin{equation}
 \mathop {\min }\limits_{\bm{R}, \bm{t}} J = \frac{1}{2}\sum\limits_{i = 1}^n {{\left\| {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right\|}^2} + {{\left\| {\bm{p} - \bm{Rp}' - \bm{t}} \right\|}^2} .
 \end{equation}
 
-仔细观察左右两项，我们发现左边只和旋转矩阵$\bm{R}$相关，而右边既有$\bm{R}$也有$\bm{t}$，但只和质心相关。只要我们获得了$\bm{R}$，令第二项为零就能得到$\bm{t}$。于是，ICP可以分为以下三个步骤求解：
+Carefully observe those two terms, we find that the first term is only related to the rotation matrix $\bm{R}$, while the second has both $\bm{R}$ and $\bm{t}$, but only related to the centroid. As long as we get $\bm{R}$, we can get $\bm{t}$ by making the second term zero. Therefore, ICP can be solved in the following three steps:
 
 \begin{mdframed}
 \begin{enumerate}
-	\item 计算两组点的质心位置$\bm{p}, \bm{p}'$，然后计算每个点的\textbf{去质心坐标}：
+	\item Calculate the centroid positions of the two groups of points $\bm{p}, \bm{p}'$, and then calculate the \textbf{de-centroid coordinates} of each point:
 	\[
 	\bm{q}_i = \bm{p}_i - \bm{p}, \quad \bm{q}_i' = \bm{p}_i' - \bm{p}'.
 	\]
-	\item 根据以下优化问题计算旋转矩阵：
+	\item The rotation matrix is calculated according to the following optimization problem:
 	\begin{equation}
 		\bm{R}^* = \arg \mathop {\min }\limits_{\bm{R}} \frac{1}{2}\sum\limits_{i = 1}^n {{\left\| {{\bm{q}_i} - \bm{R} \bm{q}_i' } \right\|}^2}.
 	\end{equation}
-	\item 根据第2步的$\bm{R}$计算$\bm{t}$：
+	\item Calculate $\bm{t}$ according to $\bm{R}$ in step 2:
 	\begin{equation}
 	\label{eq:pnp-solve-t}
 	\bm{t}^* = \bm{p} - \bm{R} \bm{p}'.
 	\end{equation}
 \end{enumerate}
 \end{mdframed}
-	
-我们看到，只要求出了两组点之间的旋转，平移量是非常容易得到的。所以我们重点关注$\bm{R}$的计算。展开关于$\bm{R}$的误差项，得：
+
+We find that once the rotation between the two sets of points is found, and the translation is easy to obtain. So we focus on the calculation of $\bm{R}$. Expand the error term about $\bm{R}$, get:
 \begin{equation}
  \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\bm{q}_i} - \bm{R} \bm{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \bm{q}_i^\mathrm{T} \bm{q}_i + \bm{q}_i^{ \prime \mathrm{T}}  \bm{R}^\mathrm{T} \bm{R} \bm{q}^\prime_i - 2\bm{q}_i^\mathrm{T} \bm{R} \bm{q}^\prime_i.
 \end{equation}
 
-注意到第一项和$\bm{R}$无关，第二项由于$\bm{R}^\mathrm{T}\bm{R}=\bm{I}$，亦与$\bm{R}$无关。因此，实际上优化目标函数变为
+The first item is not relevant to $\bm{R}$. The second item can also be ignored since $\bm{R}^\mathrm{T}\bm{R}=\bm{I}$. Therefore, the actual optimization objective function becomes the simplest form of
 \begin{equation}
 \sum\limits_{i = 1}^n - \bm{q}_i^\mathrm{T} \bm{R} \bm{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \bm{R} \bm{q}_i^{\prime} \bm{q}^{\mathrm{T}}_i \right) = - \mathrm{tr} \left( \bm{R} \sum\limits_{i = 1}^n \bm{q}_i^{\prime} \bm{q}^{\mathrm{T}}_i \ \right).
 \end{equation}
 
-接下来，我们介绍怎样通过SVD解出上述问题中最优的$\bm{R}$。关于最优性的证明较为复杂，感兴趣的读者请参考文献\cite{Arun1987, PomerleauColasSiegwart2015}。为了解$\bm{R}$，先定义矩阵：
+Next, we introduce how to solve the optimal $\bm{R}$ in the above problem through SVD. The proof of optimality is more complicated, and interested readers can refer to the literature \cite{Arun1987, PomerleauColasSiegwart2015}. To find $\bm{R}$, first define the matrix:
 \begin{equation}
 \bm{W} =  \sum\limits_{i = 1}^n \bm{q}_i \bm{q}^{\prime \mathrm{T}}_i.
 \end{equation}
 
-$\bm{W}$是一个$3 \times 3$的矩阵，对$\bm{W}$进行SVD分解，得：
+$\bm{W}$ is a $3 \times 3$ matrix. Performing SVD decomposition on $\bm{W}$, we get:
 \begin{equation}
 \bm{W} = \bm{U \Sigma V}^\mathrm{T}.
 \end{equation}
 
-其中，$\bm{\Sigma}$为奇异值组成的对角矩阵，对角线元素从大到小排列，而$\bm{U}$和$\bm{V}$为对角矩阵。当$\bm{W}$满秩时，$\bm{R}$为
+$\bm{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\bm{U}$ and $\bm{V}$ are diagonal matrices. When $\bm{W}$ is of full rank, $\bm{R}$ is
 \begin{equation}
 \bm{R} = \bm{U} \bm{V}^\mathrm{T}.
 \end{equation}
 
-解得$\bm{R}$后，按式\eqref{eq:pnp-solve-t}求解$\bm{t}$即可。如果此时$\bm{R}$的行列式为负取，则取$-\bm{R}$作为最优值。
+Once solving $\bm{R}$, use the equation \eqref{eq:pnp-solve-t} to solve $\bm{t}$. If the determinant of $\bm{R}$ is negative, then $-\bm{R}$ is taken as the optimal value.
 
-\subsection{非线性优化方法}
-求解ICP的另一种方式是使用非线性优化，以迭代的方式去找最优值。该方法和我们前面讲述的PnP非常相似。以李代数表达位姿时，目标函数可以写成
+\subsection{Using non-linear optimization}
+Another way to solve ICP is to use non-linear optimization to find the optimal value iteratively. This method is similar to the PnP we described earlier. When expressing the poses in Lie algebra, the objective function can be written as
 \begin{equation}
 \mathop {\min }\limits_{\boldsymbol{\xi}} = \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{{\bm{p}}_i} - \exp \left( \boldsymbol{\xi}^\wedge \right) {\bm{p}}'_i} \right)} \|^2_2.
 \end{equation}
 
-单个误差项关于位姿的导数在前面已推导，使用李代数扰动模型即可：
+The derivative of a single error term with respect to the pose has been derived above, using the Lie algebra perturbation model:
 \begin{equation}
 \frac{{\partial \bm{e}}}{{\partial \delta \boldsymbol{\xi} }} =  - {\left( {\exp \left( {{ \boldsymbol{\xi} ^ \wedge }} \right){{\bm{p}}_i}'} \right)^ \odot }.
 \end{equation}
 
-于是，在非线性优化中只需不断迭代，就能找到极小值。而且，可以证明\textsuperscript{\cite{Barfoot2016}}，ICP问题存在唯一解或无穷多解的情况。在唯一解的情况下，只要能找到极小值解，那么\textbf{这个极小值就是全局最优值}——因此不会遇到局部极小而非全局最小的情况。这也意味着ICP求解可以任意选定初始值。这是已匹配点时求解ICP的一大好处。
+Therefore, in nonlinear optimization, it only needs to iterate continuously to find the minimum value. Moreover, it can be proved that \textsuperscript{\cite{Barfoot2016}}, the ICP problem has a unique solution or an infinite number of solutions. In the case of a unique solution, as long as the minimum value solution can be found, then \textbf{this minimum value is the global optimal value}. So the local minimum is always the global minimum. This also means that the initial value of the ICP solution can be arbitrarily selected. This is a big advantage of solving ICP when the points have been matched already.
 
-需要说明的是，我们这里讲的ICP是指已由图像特征给定了匹配的情况下进行位姿估计的问题。在匹配已知的情况下，这个最小二乘问题实际上具有解析解\textsuperscript{\cite{Faugeras1986, Horn1987, Sharp2002}}，所以并没有必要进行迭代优化。ICP的研究者们往往更加关心匹配未知的情况。那么，为什么我们要介绍基于优化的ICP呢？这是因为，某些场合下，例如在RGB-D SLAM中，一个像素的深度数据可能有，也可能测量不到，所以我们可以混合着使用PnP和ICP优化：对于深度已知的特征点，建模它们的3D−3D误差；对于深度未知的特征点，则建模3D−2D的重投影误差。于是，可以将所有的误差放在同一个问题中考虑，使得求解更加方便。
+It should be noted that the ICP we are talking about here refers to the problem of pose estimation when the matching is given by the image features. In the case of known matching, this least squares problem actually has an analytical solution \textsuperscript{\cite{Faugeras1986, Horn1987, Sharp2002}}, so iterative optimization is not necessary. ICP researchers tend to be more concerned about the unknown matching situation. So, why do we introduce optimization-based ICP? This is because, in some cases, such as in RGB-D SLAM, the depth of a pixel may or may not be measured, so we can combine PnP and ICP optimization: For feature points with known depth, model their 3D-3D errors; for feature points with unknown depths, model 3D-2D reprojection errors. Therefore, all errors can be considered in the same problem, making the solution more convenient.
 
-\section{实践：求解ICP}
-\subsection{SVD方法}
-下面演示一下如何使用SVD及非线性优化来求解ICP。本节我们使用两幅RGB-D图像，通过特征匹配获取两组3D点，最后用ICP计算它们的位姿变换。由于OpenCV目前还没有计算两组带匹配点的ICP的方法，而且它的原理也并不复杂，所以我们自己来实现一个ICP。
+\section{Practice: Solving ICP}
+\subsection{Using SVD}
+Let's demonstrate how to use SVD and nonlinear optimization to solve ICP. In this section, we use two RGB-D images to obtain two sets of 3D points through feature matching, and finally use ICP to calculate their pose transformation. Since OpenCV does not currently have a method to calculate two sets of ICPs with matching points, and its principle is not complicated, we will implement an ICP by ourselves.
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose\_estimation\_3d3d.cpp（片段）]
 void pose_estimation_3d3d(
 const vector<Point3f> &pts1,
@@ -1639,13 +1639,13 @@ Mat &R, Mat &t) {
 }
 \end{lstlisting}
 
-ICP的实现方式和前文讲述的是一致的。我们调用Eigen进行SVD，然后计算$\bm{R}, \bm{t}$矩阵。我们输出了匹配后的结果，不过请注意，由于前面的推导是按照$\bm{p}_i = \bm{R} \bm{p}_i' + \bm{t}$进行的，这里的$\bm{R}, \bm{t}$是第二帧到第一帧的变换，与前面PnP部分是相反的。所以在输出结果中，我们同时打印了逆变换：
+The implementation of ICP is consistent with the previous theoritical part. We call Eigen for SVD, and then calculate the $\bm{R}, \bm{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\bm{p}_i = \bm{R} \bm{p}_i' + \bm{t}$, here is $\bm{R}, \bm{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
 
 \begin{lstlisting}[language=sh,caption=终端输入：]
 ./build/pose_estimation_3d3d 1.png 2.png 1_depth.png 2_depth.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
-一共找到了79组匹配点
+In total, we get 79 set of feature points
 3d-3d pairs: 74
 W=  11.9404 -0.567258   1.64182
 -1.79283   4.31299  -6.57615
@@ -1671,10 +1671,10 @@ t_inv = [-0.1429199667309695;
 0.03832465717628181]
 \end{lstlisting}
 
-读者可以比较一下ICP与PnP、对极几何的运动估计结果之间的差异。可以认为，在这个过程中我们使用了越来越多的信息（没有深度—有一个图的深度—有两个图的深度），因此，在深度准确的情况下，得到的估计也将越来越准确。但是，由于Kinect的深度图存在噪声，而且有可能存在数据丢失的情况，我们不得不丢弃一些没有深度数据的特征点。这可能导致ICP的估计不够准确，并且，如果特征点丢弃得太多，可能引起由于特征点太少，无法进行运动估计的情况。
+Readers can compare the difference between ICP and PnP, and the motion estimation results of epipolar geometry. We can conclude that we are using more and more information (no depth - the depth of one image - the depth of two images). Therefore, when the depth is accurate, the estimates will be more and more accurate. However, due to the noise in Kinect's depth map and the possibility of data loss, we have to discard some feature points without depth data. This may cause the estimation of ICP to be inaccurate, and if too many feature points are discarded, it may cause a situation where motion estimation cannot be performed due to too few feature points.
 
-\subsection{非线性优化方法}
-下面考虑用非线性优化来计算ICP。我们依然使用李代数来优化相机位姿。对我们来说，RGB-D相机每次可以观测到路标点的三维位置，从而产生一个3D观测数据。我们使用上一个实验中的VertexPose，然后定义3D-3D的一元边：
+\subsection{Using non-linear optimization}
+Now consider using nonlinear optimization to calculate ICP. We still use Lie algebra to optimize the camera pose. The RGB-D camera can observe the 3D position of the landmarks every time, thereby generating 3D observation data. We use the VertexPose in the previous practice, and then define the unary edges of 3D-3D:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose\_estimation\_3d3d.cpp]
 
 /// g2o edge
@@ -1706,9 +1706,9 @@ class EdgeProjectXYZRGBDPoseOnly : public g2o::BaseUnaryEdge<3, Eigen::Vector3d,
 };
 \end{lstlisting}
 
-这是一个一元边，写法类似于前面提到的g2o::EdgeSE3ProjectXYZ，不过观测量从2维变成了3维，内部没有相机模型，并且只关联到一个节点。请读者注意这里雅可比矩阵的书写，它必须与我们前面的推导一致。雅可比矩阵给出了关于相机位姿的导数，是一个$3 \times 6$的矩阵。
+They are unary edges, written similar to the g2o::EdgeSE3ProjectXYZ mentioned earlier, but the observation has changed from 2 to 3 dimensions, there is no camera model involved, and only one node is related. Please pay attention to the form of the Jacobian matrix here, it must be consistent with our previous derivation. The Jacobian matrix gives the derivative of the camera pose and is $3 \times 6$.
 
-调用g2o进行优化的代码是相似的，我们设定好图优化的节点和边即可。这部分代码请读者查看源文件，这里不再列出。现在，来看看优化的结果：
+The code for using g2o for optimization is similar, we just set the nodes and edges for graph optimization. Readers are suggested check the source file for this part of the code, which is not listed here. Now, let’s take a look at the results of the optimization:
 
 \begin{lstlisting}[language=sh, caption=终端输出：]
 iteration= 0	 chi2= 1.811539	 time= 1.7046e-05	 cumTime= 1.7046e-05	 edges= 74	 schur= 0
@@ -1726,55 +1726,55 @@ T=
 0          0          0          1
 \end{lstlisting}
 
-我们发现，只迭代一次后总体误差就已经稳定不变，说明仅在一次迭代之后算法即已收敛。从位姿求解的结果可以看出，它和前面SVD给出的位姿结果几乎一模一样，这说明SVD已经给出了优化问题的解析解。所以，本实验中可以认为SVD给出的结果是相机位姿的最优值。
+We found that the overall error has become stable after only one iteration, indicating that the algorithm has converged after only one iteration. From the result of the pose, it can be seen that it is almost the same as the pose calculated by the previous SVD, which shows that SVD has already given an analytical solution to the optimization problem. Therefore, in this practice, it can be considered that the result given by SVD is the optimal value of the camera pose.
 
-需要说明的是，在本例的ICP中，我们使用了在两个图都有深度读数的特征点。然而事实上，只要其中一个图深度确定，我们就能用类似于PnP的误差方式，把它们也加到优化中来。同时，除了相机位姿之外，将空间点也作为优化变量考虑，亦是一种解决问题的方式。我们应当清楚，实际的求解是非常灵活的，不必拘泥于某种固定的形式。如果同时考虑点和相机，整个问题就变得\textbf{更自由}了，你可能会得到其他的解。比如，可以让相机少转一些角度，而把点多移动一些。这从另一侧面反映出，在Bundle Adjustment里面，我们会希望有尽可能多的约束，因为多次观测会带来更多的信息，使我们能够更准确地估计每个变量。
+It should be noted that in the practice of ICP, we used feature points that have depth readings in both images. However, in fact, as long as the depth of one of the images is determined, we can use errors similar to PnP to add them to the optimization. In addition to the camera pose, considering the spatial points as optimization variables is also a way to solve the problem. We should be clear that the actual solution is very flexible and does not need to be bound to a certain fixed form. If you consider points and cameras at the same time, the whole problem becomes \textbf{more flexible}, and you may get other solutions. For example, you can make the camera rotate less and move the point more. This reflects that in Bundle Adjustment, we would like to have as many constraints as possible, because multiple observations will bring more information and enable us to estimate each variable more accurately.
 
-\section{小结}
-本讲介绍了基于特征点的视觉里程计中的几个重要的问题。包括：
+\section{Summary}
+This chapter introduces several important issues in visual odometry based on feature points. include:
 
 \begin{enumerate}
-	\item 特征点是如何提取并匹配的。
-	\item 如何通过2D−2D的特征点估计相机运动。
-	\item 如何从2D−2D的匹配估计一个点的空间位置。
-	\item 3D−2D的PnP问题，其线性解法和Bundle Adjustment解法。
-	\item 3D−3D的ICP问题，其线性解法和Bundle Adjustment解法。
+	\item How the feature points are extracted and matched.
+	\item How to estimate camera motion through 2D-2D feature points.
+	\item How to estimate the spatial position of a point from a 2D−2D match.
+	\item 3D−2D PnP problem, its linear solution and Bundle Adjustment solution.
+	\item 3D−3D ICP problem, its linear solution and Bundle Adjustment solution.
 \end{enumerate}
 
-本讲内容较为丰富，且结合应用了前几讲的基本知识。读者若觉得理解有困难，可以对前面知识稍加回顾。最好亲自做一遍实验，以理解整个运动估计的内容。
+This chapter is complicated in content and combines the basic knowledge of the previous lectures. If readers find it difficult to understand, they can go back to review the previous knowledge. It is best to do the practice yourself to entirely understand the content of the motion estimation.
 
-需要解释的是，为保证行文流畅，我们省略了大量关于某些特殊情况的讨论。例如，如果在对极几何求解过程中给定的特征点共面，会发生什么情况（这在单应矩阵$\bm{H}$中提到了）？共线又会发生什么情况？在PnP和ICP中若给定这样的解，又会导致什么情况？求解算法能否识别这些特殊的情况，并报告所得的解可能不可靠？能否给出估计的$\bm{T}$的不确定度？尽管它们都是值得研究和探索的，然而对它们的讨论更适合留到具体的论文中。本书的目标在于广泛的知识覆盖面和基础知识，我们对这些问题暂不展开，同时在工程实现中，这些情况也甚少出现。如果你关心这些少见的情况，可以阅读\cite{Hartley2003}等论文。
+What needs to be mentioned here is we have omitted a lot of discussion about some special situations. For example, what happens if the given feature points are coplanar during the solution of the epipolar geometry (this is mentioned in the homography matrix $\bm{H}$)? What happens to collinear? Given such a solution in PnP and ICP, what will happen? Can the solution algorithm recognize these special cases and report that the resulting solution may be unreliable? Can you give the estimated uncertainty of $\bm{T}$? Although they are all worthy of research and exploration, the discussion on them is more suitable in specific papers. The goal of this book is extensive knowledge coverage and basic knowledge. We will not expand on these issues for now. At the same time, these situations rarely occur in engineering. If you care about these rare situations, you can read papers such as \cite{Hartley2003}.
 
-\section*{习题}
+\section*{Exercises}
 \begin{enumerate}
-	\item 除了本书介绍的ORB特征点外，你还能找到哪些特征点？请说说SIFT或SURF的原理，并对比它们与ORB之间的优劣。
-	\item 设计程序调用OpenCV中的其他种类特征点。统计在提取1000个特征点时在你的机器上所用的时间。
-	\item[\optional] 我们发现，OpenCV提供的ORB特征点在图像当中分布不够均匀。你是否能够找到或提出让特征点分布更加均匀的方法？
-	\item 研究FLANN为何能够快速处理匹配问题。除了FLANN之外，还有哪些可以加速匹配的手段？
-	\item 把演示程序使用的EPnP改成其他PnP方法，并研究它们的工作原理。
-	\item 在PnP优化中，将第一个相机的观测也考虑进来，程序应如何书写？最后结果会有何变化？
-	\item 在ICP程序中，将空间点也作为优化变量考虑进来，程序应如何书写？最后结果会有何变化？
-	\item[\optional] 在特征点匹配过程中，不可避免地会遇到误匹配的情况。如果我们把错误匹配输入到PnP或ICP中，会发生怎样的情况？你能想到哪些避免误匹配的方法？
-	\item[\optional] 使用Sophus的SE3类，自己设计g2o的节点与边，实现PnP和ICP的优化。
-	\item[\optional] 在Ceres中实现PnP和ICP的优化。
+	\item In addition to the ORB feature points introduced in this book, what other feature points do you know? Please elaborate the principles of SIFT or SURF, and compare their advantages and disadvantages with ORB.
+	\item Design a program to call other types of feature points in OpenCV. Compare their time spent on your machine when extracting 1000 feature points.
+	\item[\optional] We found that the ORB feature points provided by OpenCV are not evenly distributed in the image. Can you find or propose a way to make the distribution of feature points more evenly?
+	\item Investigate why FLANN can quickly handle matching problems. In addition to FLANN, what other ways to accelerate matching?
+	\item Substitute the EPnP used in the demo program with other PnP methods and investigate their working principles.
+	\item In PnP optimization, taking the observation of the first camera into consideration, how should the problem/program be formed? How will the final result change?
+	\item In the ICP program, if the spatial point is also considered as an optimization variable, how should the program be written? How will the final result change?
+	\item[\optional] In the feature point matching, mismatches will inevitably be encountered. What happens if we put the wrong match into PnP or ICP? What methods can you think of to avoid mismatches?
+	\item[\optional] Use the SE3 class in Sophus to design the nodes and edges of g2o by yourself to implement the optimization of PnP and ICP.
+	\item[\optional] Implement the optimization of PnP and ICP in Ceres.
 \end{enumerate}
 
-%\section*{深度滤波器（Depth Filter）}
-%使用上述线性求解三角化的方法，求得的三维点坐标总是不确定的，多次对同一个点的测量往往会估计出不同的深度。受噪声影响，当基线越短的时候，深度受噪声影响的敏感度就越大。因此我们需要设法去削减这种单次测量求解所包含的误差。深度滤波器通过多次测量同一个地图点，不断地去逼近地图点的真实深度，是一种十分有效的方法。\cite{vogiatzis2011video}\par
-%其核心思想是，一个有效的深度测量值$d_{n}$在真实的深度$D$附近是呈高斯分布的，而一个无效的测量值$d_{bad}$在一定深度范围$[D_{min},D_{max}]$内均匀分布，测量值有效的概率为$\alpha$。用概率分布函数表示就是：
+%\section*{Depth Filter}
+%Using the above linear solution triangulation method, the 3D point coordinates obtained are always uncertain, and multiple measurements of the same point will often estimate different depths. Affected by noise, when the baseline is shorter, the depth is more sensitive to noise. Therefore, we need to reduce the error contained in a single measurement solution. The depth filter measures the same map point multiple times to continuously approach the true depth of the map point, which is a very effective method. \cite{vogiatzis2011video}\par
+%The core concept is that a valid depth measurement value $d_{n}$ has a Gaussian distribution around the real depth $D$, while an invalid measurement value $d_{bad}$ is uniformly distributed in a certain depth range$[ D_{min},D_{max}]$, and the probability that the measured value is valid is $\alpha$. The probability distribution function is:
 %\begin{equation}
 %p(d_{n}|D,\alpha)=\alpha N(d_{n}|D,\tau_{n}^{2})+(1-\alpha)U(d_{bad}|D_{min},D_{max})
 %\end{equation}
-%我们的目标就是设法通过多个测量值$d_{n}$，逼近真实的深度$D$。每有一个新的测量值$d_{n+1}$进入，概率模型的参数就进行相应的调整。\par
+%Our goal is to approximate the true depth $D$ through multiple measurements $d_{n}$. Every time we have a new measurement $d_{n+1}$, the parameters of the probability model are adjusted accordingly. \par
 %
-%如果现在一共有N组测量值，假设每一次测量之间相互独立，通过贝叶斯公式可以得到：
+%If there are N sets of measurements, assuming that each measurement is independent of each other, it can be obtained by the Bayesian formula:
 %\begin{equation}
 %p(D,\alpha|x_{1},x_{2},...,x_{N}) \propto p(D,\alpha) \prod_{n}p(d_{n}|D,\alpha)
 %\end{equation}
 %
-%$p(D,\alpha)$是一个先验分布，假设二者相互独立，即有$p(D,\alpha)=p(D)p(\alpha)$.
+%$p(D,\alpha)$ is a prior distribution, assuming that the two are independent of each other, that is, $p(D,\alpha)=p(D)p(\alpha)$.
 %
-%现在在模型中引入二进制的隐变量$y_{n}$，$y_{n}=1$表示测量值时有效的，反之则无效。于是有：
+% Now introduce a binary latent variable $y_{n}$ into the model, $y_{n}=1$ indicates that the measured value is valid, and vice versa. So there are:
 %$$
 %p(d_{n}|D,\alpha,y_{n}=N(d_{n}|D,\tau_{n}^{2})^{y_{n}}U(x_{n})^{1-y_{n}}
 %$$
@@ -1787,26 +1787,26 @@ T=
 %p(d,y,D,\alpha)=\prod_{n=1}^{N}p(d_{n}|D,\alpha,y_{n})p(y_{n}|\alpha) p(D)p(\alpha)
 %\end{equation}
 %
-%这时候我们需要近似地去表达后验概率$p(y,D,\alpha|d)$。找一个近似的分布$q(y,D,\alpha)$，与真实的$p(y,D,\alpha|d)$KL散度最小。
+%Now, we need to approximately express the posterior probability $p(y,D,\alpha|d)$. Find an approximate distribution $q(y,D,\alpha)$, which has the smallest KL divergence with the real $p(y,D,\alpha|d)$.
 %
 %\begin{equation}
 %q(D,\alpha)=\prod_{n=1}^{N}N(d_{n}|D,\sigma^{2})^{r_{n}}\alpha^{S}(1-\alpha)^{N-S}p(D)p(\alpha)
 %\end{equation}
 %
-%$r_{n}=E_{y}[y_{n}]$为第$n$个测量值有效的期望，而$S=\sum_{n=1}^{N}r_{n}$。\par
+%$r_{n}=E_{y}[y_{n}]$ is the valid expectation of the $n$th measured value, and $S=\sum_{n=1}^{N}r_{n}$ . \par
 %
-%这个概率分布函数为一个正态分布与伯努利分布的乘积，由于正态分布的共轭先验函数还是一个正态分布，而伯努利分布的共轭先验是一个Beta函数，于是上式可以转化为：
+% This probability distribution function is the product of a normal distribution and a Bernoulli distribution. Since the conjugate prior function of the normal distribution is still a normal distribution, the conjugate prior of the Bernoulli distribution is a Beta function, so The above formula can be transformed into:
 %\begin{equation}
 %q(D,\alpha|a,b,\mu,\sigma^{2})=N(D|\mu,\sigma^{2})Beta(\alpha|a,b)
 %\end{equation}
 %
-%于是后验的更新方程即是:
+%So the posterior update equation is:
 %\begin{equation}
 %q(D,\alpha|a',b',\mu',\sigma'^{2})=p(x|D,\alpha)q(D,\alpha|a,b,\mu,\sigma^{2})
 %\end{equation}
 %
 %
-%带入前式：
+%Substitute it into the previous equation:
 %\begin{eqnarray}
 %\begin{split}
 %&(\alpha N(d|D,\tau^{2})+(1-\alpha)U(d))N(D|\mu,\sigma^{2})Beta(\alpha|a,b)\\
@@ -1815,9 +1815,9 @@ T=
 %\end{split}
 %\end{eqnarray}
 %
-%上面式子中$\frac{1}{s^{2}}=\frac{\mu}{\sigma^{2}}+\frac{d}{\tau^{2}}$,$m=s^{2}(\frac{\mu}{\sigma^{2}}+\frac{d}{\tau^{2}})$,$C_{1}=\frac{a}{a+b}N(d|\mu,\sigma^{2}+\tau^{2})$, $C_{2}=\frac{b}{a+b}U(d)$。
+%In the above equation, $\frac{1}{s^{2}}=\frac{\mu}{\sigma^{2}}+\frac{d}{\tau^{2}}$,$m=s^{2}(\frac{\mu}{\sigma^{2}}+\frac{d}{\tau^{2}})$,$C_{1}=\frac{a}{a+b}N(d|\mu,\sigma^{2}+\tau^{2})$, $C_{2}=\frac{b}{a+b}U(d)$。
 %
-%采用矩估计的方法，分别估计$D$和$\alpha$的一阶矩和二阶矩，可列入以下方程：
+%Using the method of moment estimation, estimate the first and second moments of $D$ and $\alpha$ respectively:
 %
 %\begin{eqnarray}
 %\begin{split}
@@ -1827,13 +1827,13 @@ T=
 %&\frac{a'(a'+1)}{(a'+b')(a'+b'+1)}=C_{1}\frac{(a+1)(a+2)}{(a+b+1)(a+b+2)}+C_{2}\frac{a(a+1)}{(a+b+1)(a+b+2)}
 %\end{split}
 %\end{eqnarray}
-%联立以上式子即可求解出更新后的模型参数$a',b',\sigma',\mu'$。
+% Combine the above equations to solve the updated model parameters $a',b',\sigma',\mu'$.
 %
 %\begin{figure}[!htp]
 %    \centering
 %    \includegraphics[width=0.3\linewidth]{vo1/sparse}
 %    \includegraphics[width=0.3\linewidth]{vo1/semidense}
 %    \includegraphics[width=0.3\linewidth]{vo1/dense}
-%    \caption{稀疏地图，半稠密地图及稠密地图}
+%    \caption{Sparse map, semi-dense map and dense map}
 %    \label{fig:threemethods}
 %\end{figure}
