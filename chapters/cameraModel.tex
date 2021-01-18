@@ -282,16 +282,16 @@ OpenCV \footnote {Official homepage: \url{http://opencv.org}. } provides a large
 
 Since we use a newer version of OpenCV, we must install it from the source code. First, you can adjust some compilation options to match the programming environment (for example, whether you need GPU acceleration, etc.); furthermore, from the source code installation we can use some additional functions. OpenCV currently maintains two major versions, divided into OpenCV 2.4 series and OpenCV 3 series \footnote{In 2020 we can also use version 4.0 or higher.}. This book uses the OpenCV \textbf {3} series.
 
-Because the OpenCV project is relatively large, it will not be placed under 3rdparty in this book. Readers can download it from ~ \url{http://opencv.org/downloads.html}~ and select the OpenCV for Linux version. You will get a compressed package like opencv-3.1.0.zip. Unzip it to any directory, we found that OpenCV is also a cmake project.
+Because the OpenCV project is relatively large, it will not be placed under 3rdparty in this book. Readers can download it from ~ \url{http://opencv.org/downloads.html}~ and select the OpenCV for Linux version. You will get a compressed package like opencv-3.1.0.zip. Unzip it to any directory, we found that OpenCV is also a CMake project.
 
 Before compiling, first install the dependencies of OpenCV:
 \begin{lstlisting}[language=sh, caption=Terminal input:]
 sudo apt-get install build-essential libgtk2.0-dev libvtk5-dev libjpeg-dev libtiff4-dev libjasper-dev libopenexr-dev libtbb-dev
 \end{lstlisting}
 
-In fact, OpenCV has many dependencies, and the lack of certain compilation items will affect some of its functions (but we will not use all the functions). OpenCV will check whether the dependencies will be installed during cmake and adjust its own functions. If you have a GPU on your computer and the relevant dependencies are installed, OpenCV will also enable GPU acceleration. But for this book, the above dependencies are sufficient.
+In fact, OpenCV has many dependencies, and the lack of certain compilation items will affect some of its functions (but we will not use all the functions). OpenCV will check whether the dependencies will be installed during CMake and adjust its own functions. If you have a GPU on your computer and the relevant dependencies are installed, OpenCV will also enable GPU acceleration. But for this book, the above dependencies are sufficient.
 
-Subsequent compilation and installation are the same as ordinary cmake projects. After make, please call ``sudo make install'' to install OpenCV on your machine (instead of just compiling it). Depending on the machine configuration, this compilation process may take from 20 minutes to an hour. If your CPU is powerful, you can use commands like ``make -j4'' to call multiple threads to compile (the parameter after -j is the number of threads used). After installation, OpenCV is stored in the /usr/local directory by default. You can look for the installation location of OpenCV header files and library files to see where they are. In addition, if you have installed the OpenCV 2 series before, it is recommended that you install OpenCV 3 elsewhere (think about how this should be done).
+Subsequent compilation and installation are the same as ordinary CMake projects. After make, please call ``sudo make install'' to install OpenCV on your machine (instead of just compiling it). Depending on the machine configuration, this compilation process may take from 20 minutes to an hour. If your CPU is powerful, you can use commands like ``make -j4'' to call multiple threads to compile (the parameter after -j is the number of threads used). After installation, OpenCV is stored in the /usr/local directory by default. You can look for the installation location of OpenCV header files and library files to see where they are. In addition, if you have installed the OpenCV 2 series before, it is recommended that you install OpenCV 3 elsewhere (think about how this should be done).
 
 \subsection{Basic OpenCV Images Operations}
 Now let's go through the basic image operations in OpenCV from a simple example.
@@ -370,7 +370,7 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-In this example, we demonstrated the following operations: image reading, displaying, pixel vising, copying, assignment, etc. When compiling the program, you need to add the OpenCV header file in your CMakeLists.txt, and then link the program to the OpenVC's library. At the same time, due to the use of C ++ 11 standards (such as nullptr and chrono), you also need to set up the c++ standard in compiler flag:
+In this example, we demonstrated the following operations: image reading, displaying, pixel vising, copying, assignment, etc. When compiling the program, you need to add the OpenCV header file in your ``CMakeLists.txt'', and then link the program to the OpenVC's library. At the same time, due to the use of C ++ 11 standards (such as nullptr and chrono), you also need to set up the c++ standard in compiler flag:
 
 \begin{lstlisting}[language=Python,caption=slambook/ch5/imageBasics/CMakeLists.txt]
 # use c++11 standard
@@ -397,7 +397,7 @@ If you call this program in the IDE, be sure to give it parameters at the same t
 \item In line 10 \textasciitilde to 18, use the cv::imread function to read the image, and display the image and basic information.
 \item In line 35 \textasciitilde 46, we iterate over all pixels in the image and calculates the time spent in the entire loop. Please note that the pixel visiting method is not unique, and the method given by the example is not the most efficient way. OpenCV provides an iterator of cv::Mat, you can traverse the pixels of the image through the iterator. Or, cv::Mat::data provides a raw pointer to the beginning of the image data, you can directly calculate the offset through this pointer, and then get the actual memory location of the pixel. The method used in the example is to facilitate the reader to understand the structure of the image.
 
-On the author's machine (virtual machine), it takes about 12.74ms to traverse this image. You can compare the speed on your machine. However, we are using the default debug mode of cmake, which is much slower than the release mode.
+On the author's machine (virtual machine), it takes about 12.74ms to traverse this image. You can compare the speed on your machine. However, we are using the default debug mode of CMake, which is much slower than the release mode.
 
 \item OpenCV provides many functions for manipulating images, we will not list them one by one, otherwise this book will become an OpenCV operation manual. The example shows the most common things like image reading and displaying, as well as the deep copy function in cv::Mat. During the programming process, readers will also encounter operations such as image rotation and interpolation. At this time, you should refer to the corresponding documentation of the function to understand their principles and usage.
 \end{enumerate}
@@ -519,7 +519,7 @@ This book is not going to introduce the disparity calculation algorithm of the b
 \label{sec:join-point-cloud}
 Finally, we demonstrate an example of RGB-D vision. The convenience of RGB-D cameras is that they can obtain pixel depth information through physical methods. If the internal and external parameters of the camera are known, we can calculate the position of any pixel in the world coordinate system, thereby creating a point cloud map. Now let's demonstrate how to do it.
 
-We have prepared 5 pairs of images, located in the slambook2/ch5/rgbd folder. There are 5 RGB images from 1.png to 5.png under the color/ directory, and 5 corresponding depth images under the depth/. At the same time, the pose.txt file gives the camera poses of the 5 images (in the form of $ \mathbf{T}_\mathrm{wc} $). The form of the pose record is the same as before, with the translation vector plus a rotation quaternion:
+We have prepared 5 pairs of images, located in the slambook2/ch5/rgbd folder. There are 5 RGB images from 1.png to 5.png under the color/ directory, and 5 corresponding depth images under the depth/. At the same time, the ``pose.txt'' file gives the camera poses of the 5 images (in the form of $ \mathbf{T}_\mathrm{wc} $). The form of the pose record is the same as before, with the translation vector plus a rotation quaternion:
 \[
 [x, y, z, q_x, q_y, q_z, q_w],
 \]

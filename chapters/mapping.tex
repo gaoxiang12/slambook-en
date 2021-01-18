@@ -858,7 +858,7 @@ P(n|z_{1:T}) =  \left[ 1+ \frac{1-P(n|z_T)}{P(n|z_T)} \frac{1-P(n|z_{1:T-1})}{P(
 有了对数概率，我们就可以根据RGB-D数据更新整个八叉树地图了。假设我们在RGB-D图像中观测到某个像素带有深度$d$，这说明了一件事：我们\textbf{在深度值对应的空间点上观察到了一个占据数据，并且，从相机光心出发到这个点的线段上，应该是没有物体的}（否则会被遮挡）。利用这个信息，可以很好地对八叉树地图进行更新，并且能处理运动的结构。
 
 \subsection{实践：八叉树地图}
-下面通过程序演示一下octomap的建图过程。首先，请读者安装octomap库：\url{https://github.com/OctoMap/octomap}。Octomap库主要包含octomap地图与octovis（一个可视化程序），二者都是cmake工程。其主要依赖doxygen，可通过如下命令安装：
+下面通过程序演示一下octomap的建图过程。首先，请读者安装octomap库：\url{https://github.com/OctoMap/octomap}。Octomap库主要包含octomap地图与octovis（一个可视化程序），二者都是CMake工程。其主要依赖doxygen，可通过如下命令安装：
 \begin{lstlisting}
 sudo apt-get install doxygen 
 \end{lstlisting}

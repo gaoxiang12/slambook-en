@@ -18,7 +18,7 @@
 - [ ] Grammarly verification
   - [x] \include{chapters/preface-en}
   - [x] \include{chapters/preface}
-  - [ ] \include{chapters/whatSlam}
+  - [x] \include{chapters/whatSlam}
   - [ ] \include{chapters/rigidBody}
   - [ ] \include{chapters/lieGroup}
   - [ ] \include{chapters/cameraModel}

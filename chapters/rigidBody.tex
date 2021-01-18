@@ -347,7 +347,7 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-This example demonstrates the basic operations and operations of the Eigen matrix. To compile it, you need to specify the header file directory of Eigen in CMakeLists.txt:
+This example demonstrates the basic operations and operations of the Eigen matrix. To compile it, you need to specify the header file directory of Eigen in ``CMakeLists.txt'':
 \begin{lstlisting}[caption=slambook2/ch3/useEigen/CMakeLists.txt]
 # Add header file
 include_directories( "/usr/include/eigen3" )
@@ -834,7 +834,7 @@ The various forms of expression in Eigen are summarized below. Note that each ty
 	\item Perspective transformation ( $ 4  \times  4 $ ): Eigen::Projective3d.
 \end{itemize}
 
-This program can be compiled by referring to the corresponding CMakeLists in the code. In this program, I demonstrate how to use the rotation matrix, rotation vectors (AngleAxis), Euler angles, and quaternions in Eigen. We use these rotations to rotate a vector $ \mathbf {v} $ and find that the result is the same. At the same time, it also demonstrates how to convert these expressions in the program. Readers who want to learn more about Eigen's geometry modules can refer to \url {http://eigen.tuxfamily.org/dox/group__TutorialGeometry.html}.
+This program can be compiled by referring to the corresponding ``CMakeLists.txt'' in the code. In this program, I demonstrate how to use the rotation matrix, rotation vectors (AngleAxis), Euler angles, and quaternions in Eigen. We use these rotations to rotate a vector $ \mathbf {v} $ and find that the result is the same. At the same time, it also demonstrates how to convert these expressions in the program. Readers who want to learn more about Eigen's geometry modules can refer to \url {http://eigen.tuxfamily.org/dox/group__TutorialGeometry.html}.
 
 Note that the \textbf {program code has some subtle differences from the mathematical representation}. For example, by operator overloading in C++, quaternions and three-dimensional vectors can directly be multiplied, but mathematically, the vector needs to be converted into a imaginary quaternion like we talked in the last section, and then quaternion multiplication is used for calculation. The same applies to the transformation matrix multiplying with a three-dimensional vector. In general, the usage in the program is more flexible than the mathematical formula.
 
@@ -996,7 +996,7 @@ This program demonstrates how to draw a 3D pose in Pangolin. We draw the three a
 	\label{fig:visualizeGeometry}
 \end{figure}
 
-In addition to displaying the trajectory, we can also display the pose of the camera in the 3D window. In slambook2/ch3/visualizeGeometry, we visualize various expressions of camera poses (see \autoref{fig:visualizeGeometry}). When the reader uses the mouse to move the camera, the box on the left side will display the rotation matrix, translation, Euler angle and quaternion of the camera pose in real time. You can see how the data changes. According to our experience, it is hard to infer the exact rotation from quaternions or matrices. However, although the rotation matrix or transformation matrix is not intuitive, it is not difficult to visually display them. This program uses the Pangolin library as a 3D display library. Please refer to Readme.txt to compile the program.
+In addition to displaying the trajectory, we can also display the pose of the camera in the 3D window. In slambook2/ch3/visualizeGeometry, we visualize various expressions of camera poses (see \autoref{fig:visualizeGeometry}). When the reader uses the mouse to move the camera, the box on the left side will display the rotation matrix, translation, Euler angle and quaternion of the camera pose in real time. You can see how the data changes. According to our experience, it is hard to infer the exact rotation from quaternions or matrices. However, although the rotation matrix or transformation matrix is not intuitive, it is not difficult to visually display them. This program uses the Pangolin library as a 3D display library. Please refer to ``Readme.txt'' to compile the program.
 
 \section*{Exercises}
 \begin{enumerate}
