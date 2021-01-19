@@ -1,5 +1,5 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{Visual Odometry 1}
+\chapter{Visual Odometry: Part 1}
 \label{cpt:7}
 \thispagestyle{empty}
 
@@ -759,7 +759,7 @@ In monocular vision, the normalization of $\bm{t}$ for two images is equivalent 
 In addition to normalizing $\bm{t}$, another method is to set the average depth of all the feature points during initialization to 1, or a fixed scale. Compared to set the length of $\bm{t}$ to 1, normalizing the depth of the feature points can control the scale of the scene and make the calculation more numerically stable. But there is no theoretical difference.
 
 \subsubsection{The problem of initialization caused by pure rotation}
-In the decomposition of $\bm{E}$ to get $\bm{R}, \bm{t}$, if the camera is purely rotated, causing $\bm{t}$ to be zero, then $\bm{E}$ will also be zero, which will make it impossible for us to solve $\bm{R}$. However, at this time we can rely on $\bm{H}$ to find the rotation, but when only the rotation is performed, we cannot use triangulation to estimate the spatial position of the feature points (this will be introduced later), so we can conclude that \Textbf{Monocular initialization cannot only be pure rotation, it must have a certain amount of translation}. If there is no translation, the monocular can not be initialized. In practice, if the translation is too small during initialization, it will make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating in place, it is easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in the case of monocular SLAM.
+In the decomposition of $\bm{E}$ to get $\bm{R}, \bm{t}$, if the camera is purely rotated, causing $\bm{t}$ to be zero, then $\bm{E}$ will also be zero, which will make it impossible for us to solve $\bm{R}$. However, at this time we can rely on $\bm{H}$ to find the rotation, but when only the rotation is performed, we cannot use triangulation to estimate the spatial position of the feature points (this will be introduced later), so we can conclude that \textbf{Monocular initialization cannot only be pure rotation, it must have a certain amount of translation}. If there is no translation, the monocular can not be initialized. In practice, if the translation is too small during initialization, it will make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating in place, it is easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in the case of monocular SLAM.
 
 \subsubsection{More than 8 pairs of matched points}
 When we get more than 8 pairs of matched points (for example, we found 79 pairs of matches), we can calculate a least squares solution. Recalling the linearized epipolar constraint in \eqref{Eq:eight-point}, we denote the coefficient matrix on the left as $\bm{A}$:
@@ -1039,7 +1039,7 @@ Other than the linear method, we can also construct the PnP problem as a nonline
 
 We can build a Bundle Adjustment problem in PnP to optimize the camera pose. If the camera is moving continuously (as in the majority of SLAM processes), you can also use BA directly to solve the camera pose. In this section, we will give the basic form of this problem in two views, and then discuss the larger-scale BA problem in Lecture 9.
 
-Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\bm{R}, \bm{t}$ of the camera, and its Lie group is expressed as $\bm{T}$. Suppose the coordinates of a point in space are $\bm{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$, and their projected pixel coordinates are $\bm{u}_i=[u_i,v_i]^\ mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
+Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\bm{R}, \bm{t}$ of the camera, and its Lie group is expressed as $\bm{T}$. Suppose the coordinates of a point in space are $\bm{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$, and their projected pixel coordinates are $\bm{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
 \begin{equation}
 s_i \left[ 
 \begin{array}{l}
@@ -1060,7 +1060,7 @@ This equation includes a conversion from homogeneous coordinates to non-homogene
 {\bm{T}^*} = \arg \mathop {\min }\limits_{\bm{T}}  \frac{1}{2}\sum\limits_{i = 1}^n {\left\| {{{\bm{u}}_i} - \frac{1}{s_i} \bm{K}\bm{T}{\bm{P}}_i} \right\|_2^2} .
 \end{equation}
 
-The residual term of this problem is the difference between the projection position of the 3D points and the observation positions, so it is called \textbf{reprojection error}. When using homogeneous coordinates, this error has 3 dimensions. However, since the last dimension of ${\bm{u}}$ is 1, the error of this dimension is always zero, so more often we use non-homogeneous coordinates, thus the error is only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P$\hat{p}_2$ and the actual $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
+The residual term of this problem is the difference between the projection position of the 3D points and the observation positions, so it is called \textbf{reprojection error}. When using homogeneous coordinates, this error has 3 dimensions. However, since the last dimension of ${\bm{u}}$ is 1, the error of this dimension is always zero, so more often we use non-homogeneous coordinates, thus the error is only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P \hat{p}_2$ and the actual $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
 
 \begin{figure}[!htp]
 	\centering
