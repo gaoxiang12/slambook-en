@@ -76,12 +76,12 @@ Deriving time on both sides of the equation yields (we use $\dot{\mathbf{R}}$ to
 \[
 \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} + \mathbf{R} (t) \dot{\mathbf{R}} {(t) ^\mathrm{T}} = 0.
 \]
-Move the second term to right and commute the matrices by using the transpose relation:
+Move the second term to right and commute the matrices by using the transposed relation:
 \begin{equation}
 \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} = - \left( \dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}} \right)^\mathrm{T} .
 \end{equation}
 
-It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \textbf{skew-symmetric} matrix. Recall that we introduced the $^\wedge$ symbol when we mention about the cross product in the formula~\eqref{eq:cross}, which turns a vector into a skew-symmetric matrix. Similarly, for any skew-symmetric matrix, we can also find a unique vector corresponding to it. Let this operation be represented by the symbol $^{\vee}$:
+It can be seen that $\dot{\mathbf{R}} (t) \mathbf{R} {(t)^\mathrm{T}}$ is a \textbf{skew-symmetric} matrix. Recall that we introduced the $^\wedge$ symbol when we mention the cross product in the formula~\eqref{eq:cross}, which turns a vector into a skew-symmetric matrix. Similarly, for any skew-symmetric matrix, we can also find a unique vector corresponding to it. Let this operation be represented by the symbol $^{\vee}$:
 \begin{equation}
 {\mathbf{a}^ \wedge } = \mathbf{A} = \left[ {\begin{array}{*{20}{c}}
     0&{ - {a_3}}&{{a_2}}\\
@@ -149,7 +149,7 @@ A Lie algebra consists of a set $\mathbb{V}$, a scalar field $\mathbb{F}$, and a
     \item \textbf{Reflexive} \footnote{ Reflexive means that an element operates with itself results in zero. }: $\forall \mathbf{X} \in \mathbb{V}; [\mathbf{X},\mathbf{X}] = \mathbf{0}$.
     \item \textbf{Jacobi Identity}: $\forall \mathbf{X},\mathbf{Y},\mathbf{Z} \in \mathbb{V}; [\mathbf{X}, [ \mathbf{Y},\mathbf{Z}] ] + [\mathbf{Z}, [\mathbf{X},\mathbf{Y}] ] + [\mathbf{Y}, [\mathbf{Z}, \mathbf{X}]] =\mathbf{0}$.
 \end{enumerate}
-The binary operations $[,]$ are called \textbf{Lie brackets}. On the first glance, we require a lot of properties about the operator of Lie bracket.  Compared to the simpler binary operations in the group, the Lie bracket expresses the difference between the two elements. It does not require a combination law, but requires the element and itself to be zero after the brackets. As an example, the cross product $\times$ defined on the 3D vector $\mathbb{R}^3$ is a kind of Lie bracket, so $\mathfrak{g} = (\mathbb{R}^3, \mathbb{R}, \times)$ constitutes a Lie algebra. The reader can try to substitute the cross product into the above four properties to verify the above conclusion.
+The binary operations $[,]$ are called \textbf{Lie brackets}. At first glance, we require a lot of properties about the operator of Lie bracket.  Compared to the simpler binary operations in the group, the Lie bracket expresses the difference between the two elements. It does not require a combination law, but requires the element and itself to be zero after the brackets. As an example, the cross product $\times$ defined on the 3D vector $\mathbb{R}^3$ is a kind of Lie bracket, so $\mathfrak{g} = (\mathbb{R}^3, \mathbb{R}, \times)$ constitutes a Lie algebra. The reader can try to substitute the cross product into the above four properties to verify the above conclusion.
 
 \subsection{Lie Algebra $\mathfrak{so}(3)$}
 The previously mentioned $\boldsymbol{\phi}$ is actually a kind of Lie algebra. The Lie algebra corresponding to $\mathrm{SO}(3)$ is a vector defined on $\mathbb{R}^3$, which we will denote as $\boldsymbol{\phi}$. According to the previous derivation, each $\boldsymbol{\phi}$ can generate a skew-symmetric matrix:
@@ -478,7 +478,7 @@ Substituting this into the last line, you can get the final result. So far, we h
 
 \section{Practice: Sophus}
 \subsection{Basic Usage of Sophus}
-We have introduced the basic knowledge of Lie algebra, and now it is time to consolidate what we have learned through practical exercises. Let's discuss how to manipulate Lie algebra in a program. In Lecture 3, we saw that Eigen provided geometry modules, but did not provide support for Lie algebra. A better Lie algebra library is the Sophus library maintained by Strasdat (\url{https://github.com/strasdat/Sophus})\footnote{Sophus Lie first proposed the Lie algebra. The library is named after him.}. The Sophus library supports $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, which are mainly discussed in this chapter. In addition, it also contains two-dimensional motion $\mathrm{SO}(2), \mathrm{SE} (2) $ and the similar transformation of $\mathrm{Sim}(3)$. It is developed directly on top of Eigen and we don't need to install additional dependencies. Readers can get Sophus directly from GitHub, or the Sophus source code is also available in our book's code directory ``slambook2/3rdparty''. For historical reasons, earlier versions of Sophus only provided double-precision Lie group/Lie algebra classes. Subsequent versions have been rewritten as template classes, so that different precision of Lie group/Lie algebra can be used in the Sophus from the template class, but at the same time it increases the difficulty of use. In the second edition of this book, we use the Sophus library of \textbf{with templates}. The Sophus provided in the 3rdparty of this book is the \textbf{template} version, which should have been copied to your computer when you downloaded the code for this book. Sophus itself is also a cmake project. Presumably you already know how to compile the cmake project, so I won't go into details here. The Sophus library only needs to be compiled, no need to install it.
+We have introduced the basic knowledge of Lie algebra, and now it is time to consolidate what we have learned through practical exercises. Let's discuss how to manipulate Lie algebra in a program. In Lecture 3, we saw that Eigen provided geometry modules, but did not provide support for Lie algebra. A better Lie algebra library is the Sophus library maintained by Strasdat (\url{https://github.com/strasdat/Sophus})\footnote{Sophus Lie first proposed the Lie algebra. The library is named after him.}. The Sophus library supports $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, which are mainly discussed in this chapter. In addition, it also contains two-dimensional motion $\mathrm{SO}(2), \mathrm{SE} (2) $ and the similar transformation of $\mathrm{Sim}(3)$. It is developed directly on top of Eigen and we don't need to install additional dependencies. Readers can get Sophus directly from GitHub, or the Sophus source code is also available in our book's code directory ``slambook2/3rdparty''. For historical reasons, earlier versions of Sophus only provided double-precision Lie group/Lie algebra classes. Subsequent versions have been rewritten as template classes, so that different precision of Lie group/Lie algebra can be used in the Sophus from the template class, but at the same time it increases the difficulty of use. In the second edition of this book, we use the Sophus library of \textbf{with templates}. The Sophus provided in the 3rdparty of this book is the \textbf{template} version, which should have been copied to your computer when you downloaded the code for this book. Sophus itself is also a CMake project. Presumably you already know how to compile the CMake project, so I won't go into details here. The Sophus library only needs to be compiled, no need to install it.
 
 Let's demonstrate the SO(3) and SE(3) operations in the Sophus library:
 
@@ -545,17 +545,17 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-The demo is divided into two parts. The first half introduces the operation on $\mathrm{SO}(3)$, and the second half is $\mathrm{SE}(3)$. We demonstrate how to construct $\mathrm{SO}(3), \mathrm{SE}(3)$ objects, exponentially, logarithmically map them, and update the lie group elements when we know the update amount. If the reader has a good understanding of the content of this lecture, then this program should not be difficult for you. In order to compile it, add the following lines to CMakeLists.txt:
+The demo is divided into two parts. The first half introduces the operation on $\mathrm{SO}(3)$, and the second half is $\mathrm{SE}(3)$. We demonstrate how to construct $\mathrm{SO}(3), \mathrm{SE}(3)$ objects, exponentially, logarithmically map them, and update the lie group elements when we know the update amount. If the reader has a good understanding of the content of this lecture, then this program should not be difficult for you. In order to compile it, add the following lines to ``CMakeLists.txt'':
 
 \begin{lstlisting}[caption=slambook/ch4/useSophus/CMakeLists.txt]
-# we use find_package to make cmake find sophus
+# we use find_package to make CMake find sophus
 find_package( Sophus REQUIRED )
 include_directories( ${Sophus_INCLUDE_DIRS} ) # sohpus is header only
 
 add_executable( useSophus useSophus.cpp )
 \end{lstlisting}
 
-The find\_package is a command provided by cmake to find the header and library files of a library. If cmake can find it, it will provide the variables for the directory where the header and library files are located. In the example of Sophus, it is Sophus\_INCLUDE\_DIRS. The template-based Sophus library, like Eigen, contains only header files and no source files. Based on them, we can introduce the Sophus library into our own cmake project. Readers are asked to see the output of this program on their own, which is consistent with our previous derivation.
+The \textit{find\_package} is a command provided by CMake to find the header and library files of a library. If CMake can find it, it will provide the variables for the directory where the header and library files are located. In the example of Sophus, it is Sophus\_INCLUDE\_DIRS. The template-based Sophus library, like Eigen, contains only header files and no source files. Based on them, we can introduce the Sophus library into our own CMake project. Readers are asked to see the output of this program on their own, which is consistent with our previous derivation.
 
 \subsection{Example: Evaluating the trajectory}
 In practical engineering, we often need to evaluate the difference between the estimated trajectory of an algorithm and the real trajectory to evaluate the accuracy of the algorithm. The real (or ground-truth) trajectory is often obtained by some higher precision systems, and the estimated one is calculated by the algorithm to be evaluated. In the last lecture we demonstrated how to display a trajectory stored in a file. In this section we will consider how to calculate the error of two trajectories. Consider an estimated trajectory $\mathbf{T}_{\mathrm{esti}, i}$ and the real trajectory $\mathbf{T}_{\mathrm{gt},i}$, where $i=1,\cdots, N$; then we can define some error indicators to describe the difference between them.
@@ -579,7 +579,7 @@ Similarly, you can only take the translation part:
 \mathrm{RPE}_{\mathrm{trans}} = \sqrt{ \frac{1}{N-\Delta t} \sum_{i=1}^{N-\Delta t} \| \mathrm{trans } \left( \left(\mathbf{T}_{\mathrm{gt},i}^{-1} \mathbf{T}_{\mathrm{gt},i+\Delta t} )\right)^ {-1} \left(\mathbf{T}_{\mathrm{esti},i}^{-1} \mathbf{T}_{\mathrm{esti},i+\Delta t}\right)\right ) \|_2^2}.
 \end{equation}
 
-This part of the calculation is easy to implement with the Sophus library. Below we demonstrate the calculation of the absolute trajectory error. In this example, we have two trajectories: groundtruth.txt and estimated.txt. The following code will read the two trajectories, calculate the error, and display it in a 3D window. For the sake of brevity, the code for the trajectory plotting has been omitted, as we have done similar work in the previous section.
+This part of the calculation is easy to implement with the Sophus library. Below we demonstrate the calculation of the absolute trajectory error. In this example, we have two trajectories: ``groundtruth.txt'' and ``estimated.txt''. The following code will read the two trajectories, calculate the error, and display it in a 3D window. For the sake of brevity, the code for the trajectory plotting has been omitted, as we have done similar work in the previous section.
     
 \begin{lstlisting}[language=c++,caption=slambook/ch4/example/trajectoryError.cpp]
 #include <iostream>
@@ -744,5 +744,5 @@ It should be mentioned that in addition to the Lie algebra, the rotation can als
         \end{array}} \right].
     \end{equation}
     \item Follow the derivation of the left perturbation and derives the derivatives of $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$ under the right perturbation.
-    \item Search how cmake's find\_package works. What optional parameters does it have? What are the prerequisites for cmake to find a library?
+    \item Search how CMake's \textit{find\_package} works. What optional parameters does it have? What are the prerequisites for CMake to find a library?
 \end{enumerate}
