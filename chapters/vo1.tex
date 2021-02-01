@@ -387,86 +387,86 @@ Suppose we have a pair of matched feature points from two images, as shown in \a
 	\label{fig:doubleview}
 \end{figure}
 
-Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames of image $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\bm{R}, \bm{t}$, and the centers of the two cameras as $O_{1}, O_{2}$ (Origin). Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, which are obtained through feature matching. If the matching is correct, it means that they are indeed \textbf{projection of the same point in space on two image planes}. Now we need some terms to describe the geometric relationship between them. First, the connection $\overrightarrow{O_{1}p_{1}}$ and the connection $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the three-dimensional space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called \textbf{Epipolar plane}. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$ respectively. $e_{1}, e_{2}$ is called \textbf{Epipoles}, and $O_{1}O_{2}$ is called \textbf{Baseline}. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as \textbf{Epipolar line}.
+Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames of image $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\mathbf{R}, \mathbf{t}$, and the centers of the two cameras as $O_{1}, O_{2}$ (Origin). Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, which are obtained through feature matching. If the matching is correct, it means that they are indeed \textbf{projection of the same point in space on two image planes}. Now we need some terms to describe the geometric relationship between them. First, the connection $\overrightarrow{O_{1}p_{1}}$ and the connection $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the three-dimensional space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called \textbf{Epipolar plane}. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$ respectively. $e_{1}, e_{2}$ is called \textbf{Epipoles}, and $O_{1}O_{2}$ is called \textbf{Baseline}. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as \textbf{Epipolar line}.
 
 From the first frame, the ray $\overrightarrow{O_1 p_1}$ represents \textbf{spatial locations where a pixel may appear}, since all points on the ray will be projected to the same pixel. Meanwhile, if we don’t know the location of $P$, when we look at the second image, the connection $\overrightarrow{e_2 p_2}$ (i.e. the epipolar line in the second image) is possible projected positions of the point $P$, as well as the projection of the ray $\overrightarrow{O_1 p_1}$ in the second image. Now, since we have determined the pixel location of $p_2$ through feature point matching, we can infer the spatial location of $P$ and the movement of the camera, as long as the feature matching is correct. If there is no feature matching, we can't determine where the $p_2$ is on the epipolar line. At that time, you must search on the epipolar line $l_2$ to get the correct match, which will be discussed in Lecture 12.
 
 Now, let's look at the geometric relationship algebraically. Define the spatial position of $P$ in the first frame to be
 \[
-\bm{P}=[X,Y,Z]^\mathrm{T}.
+\mathbf{P}=[X,Y,Z]^\mathrm{T}.
 \]
-According to the pinhole camera model introduced in Lecture 5, we know that the pixel positions of the two pixels $\bm{p}_1,\bm{p}_2$ are
+According to the pinhole camera model introduced in Lecture 5, we know that the pixel positions of the two pixels $\mathbf{p}_1,\mathbf{p}_2$ are
 \begin{equation}
-s_1 {\bm{p}_1} = \bm{KP},\quad s_2 \bm{p}_2 = \bm{K}\left( \bm{RP + t} \right).
+s_1 {\mathbf{p}_1} = \mathbf{KP},\quad s_2 \mathbf{p}_2 = \mathbf{K}\left( \mathbf{RP + t} \right).
 \end{equation}
 
-where $\bm{K}$ is the camera intrinsic parameters matrix, and $\bm{R}, \bm{t}$ are the camera motions between two camera frames. Specifically, they are $\bm{R}_{21}$ and $\bm{t}_{21}$, i.e. transformation from the first frame to the second. We can also write them in Lie algebra form.
+where $\mathbf{K}$ is the camera intrinsic parameters matrix, and $\mathbf{R}, \mathbf{t}$ are the camera motions between two camera frames. Specifically, they are $\mathbf{R}_{21}$ and $\mathbf{t}_{21}$, i.e. transformation from the first frame to the second. We can also write them in Lie algebra form.
 
-Sometimes, we use homogeneous coordinates to represent pixels. When using homogeneous coordinates, a vector will be equal to itself multiplied by any non-zero constant. This is usually used to express a projection relationship. For example, $s_1 \bm{p}_1$ and $\bm{p}_1$ form a projection relationship, and they are equal in the sense of homogeneous coordinates. We call this \textbf{equal up to a scale} (equal up to a scale), denoted as:
+Sometimes, we use homogeneous coordinates to represent pixels. When using homogeneous coordinates, a vector will be equal to itself multiplied by any non-zero constant. This is usually used to express a projection relationship. For example, $s_1 \mathbf{p}_1$ and $\mathbf{p}_1$ form a projection relationship, and they are equal in the sense of homogeneous coordinates. We call this \textbf{equal up to a scale} (equal up to a scale), denoted as:
 \begin{equation}
-s\bm{p} \simeq \bm{p}.
+s\mathbf{p} \simeq \mathbf{p}.
 \end{equation}
 Then, the relationship between two projections can be written as:
 \begin{equation}
- {\bm{p}_1} \simeq \bm{KP},\quad \bm{p}_2 \simeq \bm{K}\left( \bm{RP + t} \right).
+ {\mathbf{p}_1} \simeq \mathbf{KP},\quad \mathbf{p}_2 \simeq \mathbf{K}\left( \mathbf{RP + t} \right).
 \end{equation}
 
 Now, let
 \begin{equation}
-{\bm{x}_1} = {\bm{K}^{ - 1}}{\bm{p}_1}, \quad {\bm{x}_2} = {\bm{K}^{ - 1}}{\bm{p}_2}.
+{\mathbf{x}_1} = {\mathbf{K}^{ - 1}}{\mathbf{p}_1}, \quad {\mathbf{x}_2} = {\mathbf{K}^{ - 1}}{\mathbf{p}_2}.
 \end{equation}
 
-Here, $\bm{x}_1, \bm{x}_2$ are the coordinates on the normalized plane of two pixels. Substituting to the above equation, we get:
+Here, $\mathbf{x}_1, \mathbf{x}_2$ are the coordinates on the normalized plane of two pixels. Substituting to the above equation, we get:
 \begin{equation}
-{\bm{x}_2} \simeq \bm{R} {\bm{x}_1} + \bm{t}.
+{\mathbf{x}_2} \simeq \mathbf{R} {\mathbf{x}_1} + \mathbf{t}.
 \end{equation}
 
-Left multiply both sides by $\bm{t}^\wedge$. Recalling the definition of $^\wedge$, this is equivalent to the outer product of both sides with $\bm{t}$:
+Left multiply both sides by $\mathbf{t}^\wedge$. Recalling the definition of $^\wedge$, this is equivalent to the outer product of both sides with $\mathbf{t}$:
 \begin{equation}
-\bm{t}^\wedge \bm{x}_2 \simeq \bm{t}^\wedge \bm{R} \bm{x}_1.
+\mathbf{t}^\wedge \mathbf{x}_2 \simeq \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1.
 \end{equation}
 
-Then, left multiply $\bm{x}_2^\mathrm{T}$ on both sides:
+Then, left multiply $\mathbf{x}_2^\mathrm{T}$ on both sides:
 \begin{equation}
-\bm{x}_2^\mathrm{T} \bm{t}^\wedge \bm{x}_2 \simeq \bm{x}_2^\mathrm{T} \bm{t}^\wedge \bm{R} \bm{x}_1.
+\mathbf{x}_2^\mathrm{T} \mathbf{t}^\wedge \mathbf{x}_2 \simeq \mathbf{x}_2^\mathrm{T} \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1.
 \end{equation}
 
-On the left side, $\bm{t}^\wedge \bm{x}_2$ is a vector perpendicular to both $\bm{t}$ and $\bm{x}_2$. When its inner product with $\bm{x}_2$ will get 0. Since the left side of the equation is strictly zero, it is also zero after multiplying by any non-zero constant, so we can write $\simeq$ as the usual equal sign. Therefore, we have a concise equation:
+On the left side, $\mathbf{t}^\wedge \mathbf{x}_2$ is a vector perpendicular to both $\mathbf{t}$ and $\mathbf{x}_2$. When its inner product with $\mathbf{x}_2$ will get 0. Since the left side of the equation is strictly zero, it is also zero after multiplying by any non-zero constant, so we can write $\simeq$ as the usual equal sign. Therefore, we have a concise equation:
 \begin{equation}
- \bm{x}_2^\mathrm{T} \bm{t}^\wedge \bm{R} \bm{x}_1 = 0.
+ \mathbf{x}_2^\mathrm{T} \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1 = 0.
 \end{equation}
 
-Substituting $\bm{p}_1, \bm{p}_2$ again, we have:
+Substituting $\mathbf{p}_1, \mathbf{p}_2$ again, we have:
 \begin{equation}
-\bm{p}_2^\mathrm{T} \bm{K}^{-\mathrm{T}} \bm{t}^\wedge \bm{R} \bm{K}^{-1} \bm{p}_1  = 0.
+\mathbf{p}_2^\mathrm{T} \mathbf{K}^{-\mathrm{T}} \mathbf{t}^\wedge \mathbf{R} \mathbf{K}^{-1} \mathbf{p}_1  = 0.
 \end{equation}
 
-Both equations are called \textbf{antipolar constraint}, which is famous for its conciseness. Geometically, it means $O_1, P, O_2$ are coplanar. The epipolar constraint encodes both translation and rotation. We denote two matrices: Fundamental Matrix $\bm{F}$ and Essential Matrix $\bm{E}$, so the epipolar constraint can be further simplified:
+Both equations are called \textbf{antipolar constraint}, which is famous for its conciseness. Geometically, it means $O_1, P, O_2$ are coplanar. The epipolar constraint encodes both translation and rotation. We denote two matrices: Fundamental Matrix $\mathbf{F}$ and Essential Matrix $\mathbf{E}$, so the epipolar constraint can be further simplified:
 \begin{equation}
-\bm{E} = \bm{t}^ \wedge \bm{R}, \quad \bm{F} = \bm{K}^{ -\mathrm{T}} \bm{E} {\bm{K}^{ - 1}}, \quad \bm{x}_2^\mathrm{T} \bm{E} {\bm{x}_1} = \bm{p}_2^\mathrm{T} \bm{F} {\bm{p}_1} = 0.
+\mathbf{E} = \mathbf{t}^ \wedge \mathbf{R}, \quad \mathbf{F} = \mathbf{K}^{ -\mathrm{T}} \mathbf{E} {\mathbf{K}^{ - 1}}, \quad \mathbf{x}_2^\mathrm{T} \mathbf{E} {\mathbf{x}_1} = \mathbf{p}_2^\mathrm{T} \mathbf{F} {\mathbf{p}_1} = 0.
 \end{equation}
 
 The epipolar constraint gives the spatial relationship of two matching points concisely. Therefore, the camera pose estimation problem can be summarized as the following two steps:
 
 \begin{enumerate}
-	\item Find $\bm{E}$ or $\bm{F}$ based on the pixel positions of the matched points.
-	\item Find $\bm{R}, \bm{t}$ based on $\bm{E}$ or $\bm{F}$.
+	\item Find $\mathbf{E}$ or $\mathbf{F}$ based on the pixel positions of the matched points.
+	\item Find $\mathbf{R}, \mathbf{t}$ based on $\mathbf{E}$ or $\mathbf{F}$.
 \end{enumerate}
 
-Since $\bm{E}$ and $\bm{F}$ only differ from the camera internal parameters, and the internal parameters are usually known in SLAM problem \footnote{ in SfM research, it may be unknown and need to be estimated. }, so the simpler form $\bm{E}$ is often used in practice. Let's take $\bm{E}$ as an example to introduce how to solve the above two problems.
+Since $\mathbf{E}$ and $\mathbf{F}$ only differ from the camera internal parameters, and the internal parameters are usually known in SLAM problem \footnote{ in SfM research, it may be unknown and need to be estimated. }, so the simpler form $\mathbf{E}$ is often used in practice. Let's take $\mathbf{E}$ as an example to introduce how to solve the above two problems.
 
 \subsection{Essential Matrix}
-By definition, the essential matrix $\bm{E} = \bm{t}^\wedge \bm{R}$. It is a matrix of $3\times 3$ with 9 unknown variables. So, can any matrix of the size $3 \times 3$ be an essential matrix? From the structure of $\bm{E}$, there are the following points worth noting:
+By definition, the essential matrix $\mathbf{E} = \mathbf{t}^\wedge \mathbf{R}$. It is a matrix of $3\times 3$ with 9 unknown variables. So, can any matrix of the size $3 \times 3$ be an essential matrix? From the structure of $\mathbf{E}$, there are the following points worth noting:
 
 \begin{itemize}
-	\item The essential matrix is defined by the epipolar constraint. Since the epipolar constraint is the constraint of an \textbf{equal-to-zero equation}, after multiplying $\bm{E}$ by any non-zero constant, \textbf{polar constraint is still satisfied}. We call this $\bm{E}$ 's equivalence under different scales.
-	\item According to $\bm{E} = \bm{t}^ \wedge \bm{R}$, it can be proved that \textsuperscript{\cite{Hartley2003}}, the singular value of the essential matrix $\bm{E}$ must be in the form of $[\sigma, \sigma, 0]^\mathrm{T}$. This is called \textbf{intrinsic properties of essential matrix}.
-	\item On the other hand, since translation and rotation each have 3 degrees of freedom, $\bm{t}^\wedge \bm{R}$ has 6 degrees of freedom. But due to the equivalence of scales, $\bm{E}$ actually has 5 degrees of freedom.
+	\item The essential matrix is defined by the epipolar constraint. Since the epipolar constraint is the constraint of an \textbf{equal-to-zero equation}, after multiplying $\mathbf{E}$ by any non-zero constant, \textbf{polar constraint is still satisfied}. We call this $\mathbf{E}$ 's equivalence under different scales.
+	\item According to $\mathbf{E} = \mathbf{t}^ \wedge \mathbf{R}$, it can be proved that \textsuperscript{\cite{Hartley2003}}, the singular value of the essential matrix $\mathbf{E}$ must be in the form of $[\sigma, \sigma, 0]^\mathrm{T}$. This is called \textbf{intrinsic properties of essential matrix}.
+	\item On the other hand, since translation and rotation each have 3 degrees of freedom, $\mathbf{t}^\wedge \mathbf{R}$ has 6 degrees of freedom. But due to the equivalence of scales, $\mathbf{E}$ actually has 5 degrees of freedom.
 \end{itemize}
 
-The fact that $\bm{E}$ has 5 degrees of freedom indicates that we can use at least 5 pairs of points to solve $\bm{E}$. However, the intrinsic property of $\bm{E}$ is non-linear, which could cause trouble in the estimation. Therefore, it is also possible to consider only its \textbf{scale equivalence} and use 8 pairs of matched points to estimate $\bm{E}$——This is the classic \textbf{Eight-point-algorithm}\textsuperscript{\cite{Hartley1997, Longuet-Higgins1987}}. The eight-point method only uses the linear properties of $\bm{E}$, so it can be solved under the framework of linear algebra. Let's take a look at how the eight-point method works.
+The fact that $\mathbf{E}$ has 5 degrees of freedom indicates that we can use at least 5 pairs of points to solve $\mathbf{E}$. However, the intrinsic property of $\mathbf{E}$ is non-linear, which could cause trouble in the estimation. Therefore, it is also possible to consider only its \textbf{scale equivalence} and use 8 pairs of matched points to estimate $\mathbf{E}$——This is the classic \textbf{Eight-point-algorithm}\textsuperscript{\cite{Hartley1997, Longuet-Higgins1987}}. The eight-point method only uses the linear properties of $\mathbf{E}$, so it can be solved under the framework of linear algebra. Let's take a look at how the eight-point method works.
 
-Consider a pair of matched points, their normalized coordinates are $\bm{x}_{1}=[u_{1},v_{1},1]^\mathrm{T}$, $\bm{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$. According to the polar constraints, we have:
+Consider a pair of matched points, their normalized coordinates are $\mathbf{x}_{1}=[u_{1},v_{1},1]^\mathrm{T}$, $\mathbf{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$. According to the polar constraints, we have:
 \begin{equation}
 \begin{pmatrix} 
 u_{2},v_{2},1
@@ -482,13 +482,13 @@ u_{1}\\v_{1}\\1
 =0.
 \end{equation}
 
-We rewrite the matrix $\bm{E}$ in the vector form:
+We rewrite the matrix $\mathbf{E}$ in the vector form:
 \[
-\bm{e}= [e_{1},e_{2},e_{3},e_{4},e_{5},e_{6},e_{7},e_{8},e_{9}]^{\mathrm{T}},
+\mathbf{e}= [e_{1},e_{2},e_{3},e_{4},e_{5},e_{6},e_{7},e_{8},e_{9}]^{\mathrm{T}},
 \]
-Then the epipolar constraint can be written in a linear form related to $\bm{e}$:
+Then the epipolar constraint can be written in a linear form related to $\mathbf{e}$:
 \begin{equation}
-[u_{2}u_{1},u_{2}v_{1},u_{2},v_{2}u_{1},v_{2}v_{1},v_{2},u_{1},v_{1},1] \cdot  \bm{e}=0.
+[u_{2}u_{1},u_{2}v_{1},u_{2},v_{2}u_{1},v_{2}v_{1},v_{2},u_{1},v_{1},1] \cdot  \mathbf{e}=0.
 \end{equation}
 
 Analogously, we stack all the points into one equation and obtain a linear equation system (where $u^i, v^i$ represent the $i$th feature point): 
@@ -506,21 +506,21 @@ e_{1}\\ e_{2}\\ e_{3}\\  e_{4}\\ e_{5}\\ e_{6}\\ e_{7}\\ e_{8}\\ e_{9}
 =0.
 \end{equation}
 
-These 8 equations form a linear equation system. Its coefficient matrix is composed of 2D feature point positions, and its size is $8 \times 9$. $\bm{e}$ is located in the null space of this matrix. If the coefficient matrix is of full rank (i.e. 8), then its null space dimension is 1, meaning that $\bm{e}$ forms a line. This is consistent with the scale equivalence of $\bm{e}$. If the matrix composed of 8 pairs of matching points meets the condition of rank 8, then the elements of $\bm{E}$ can be solved uniquely by the above equation.
+These 8 equations form a linear equation system. Its coefficient matrix is composed of 2D feature point positions, and its size is $8 \times 9$. $\mathbf{e}$ is located in the null space of this matrix. If the coefficient matrix is of full rank (i.e. 8), then its null space dimension is 1, meaning that $\mathbf{e}$ forms a line. This is consistent with the scale equivalence of $\mathbf{e}$. If the matrix composed of 8 pairs of matching points meets the condition of rank 8, then the elements of $\mathbf{E}$ can be solved uniquely by the above equation.
 
-The next question is how to recover the movement of the camera $\bm{R}, \bm{t}$ according to the estimated essential matrix $\bm{E}$. This process is obtained by singular value decomposition (SVD). Let the SVD decomposition of $\bm{E}$ be
+The next question is how to recover the movement of the camera $\mathbf{R}, \mathbf{t}$ according to the estimated essential matrix $\mathbf{E}$. This process is obtained by singular value decomposition (SVD). Let the SVD decomposition of $\mathbf{E}$ be
 \begin{equation}
-\bm{E} = \bm{U} \bm{\Sigma} \bm{V}^\mathrm{T},
+\mathbf{E} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^\mathrm{T},
 \end{equation}
-where $\bm{U}, \bm{V}$ are orthogonal matrices, and $\bm{\Sigma}$ are singular value matrices. According to the intrinsic properties of $\bm{E}$, we know that $\bm{\Sigma} = \mathrm{diag}( \sigma, \sigma, 0 )$. In SVD decomposition, for any $\bm{E}$, there are two possible $\bm{t}, \bm{R}$:
+where $\mathbf{U}, \mathbf{V}$ are orthogonal matrices, and $\mathbf{\Sigma}$ are singular value matrices. According to the intrinsic properties of $\mathbf{E}$, we know that $\mathbf{\Sigma} = \mathrm{diag}( \sigma, \sigma, 0 )$. In SVD decomposition, for any $\mathbf{E}$, there are two possible $\mathbf{t}, \mathbf{R}$:
 \begin{equation}
 \begin{array}{l}
-\bm{t}_1^ \wedge  = \bm{U}{\bm{R}_Z}(\frac{\pi }{2}) \bm{\Sigma} {\bm{U}^\mathrm{T}}, \quad {\bm{R}_1} = \bm{U} \bm{R}_Z^\mathrm{T}(\frac{\pi }{2}){ \bm{V}^\mathrm{T}}\\
-\bm{t}_2^ \wedge  = \bm{U}{\bm{R}_Z}( - \frac{\pi }{2})\bm{\Sigma} {\bm{U}^\mathrm{T}}, \quad  {\bm{R}_2} = \bm{U} \bm{R}_Z^\mathrm{T}( - \frac{\pi }{2}){\bm{V}^\mathrm{T}}.
+\mathbf{t}_1^ \wedge  = \mathbf{U}{\mathbf{R}_Z}(\frac{\pi }{2}) \mathbf{\Sigma} {\mathbf{U}^\mathrm{T}}, \quad {\mathbf{R}_1} = \mathbf{U} \mathbf{R}_Z^\mathrm{T}(\frac{\pi }{2}){ \mathbf{V}^\mathrm{T}}\\
+\mathbf{t}_2^ \wedge  = \mathbf{U}{\mathbf{R}_Z}( - \frac{\pi }{2})\mathbf{\Sigma} {\mathbf{U}^\mathrm{T}}, \quad  {\mathbf{R}_2} = \mathbf{U} \mathbf{R}_Z^\mathrm{T}( - \frac{\pi }{2}){\mathbf{V}^\mathrm{T}}.
 \end{array}
 \end{equation}
 
-Among them, $\bm{R}_Z\left(\frac{\pi }{2}\right)$ represents the rotation matrix obtained by rotating $90^\circ$ along the $Z$ axis. Since $-\bm{E}$ is equivalent to $\bm{E}$, taking the minus sign for any $\bm{t}$ will also get the same result. Therefore, when decomposing from $\bm{E}$ to $\bm{t}, \bm{R}$, there are a total of \textbf{4} possible solutions.
+Among them, $\mathbf{R}_Z\left(\frac{\pi }{2}\right)$ represents the rotation matrix obtained by rotating $90^\circ$ along the $Z$ axis. Since $-\mathbf{E}$ is equivalent to $\mathbf{E}$, taking the minus sign for any $\mathbf{t}$ will also get the same result. Therefore, when decomposing from $\mathbf{E}$ to $\mathbf{t}, \mathbf{R}$, there are a total of \textbf{4} possible solutions.
 
 \autoref{fig:epipolar-solution}~ shows the 4 solutions obtained by decomposing the essential matrix. We know the projection (red point) of the space point on the camera (blue line), and want to solve the camera's motion. In the case of keeping the red point unchanged, 4 possible situations can be drawn. Fortunately, only in the first solution, $P$ has positive depths in both cameras. Therefore, we can substitute any points into the four solutions and check the depth of the point under two cameras, to determine which solution is correct.
 
@@ -531,40 +531,40 @@ Among them, $\bm{R}_Z\left(\frac{\pi }{2}\right)$ represents the rotation matrix
 	\label{fig:epipolar-solution}
 \end{figure}
 
-If you use the intrinsic properties of $\bm{E}$, then it has only 5 degrees of freedom. So at least 5 pairs of matched points can be used to solve the camera motion \textsuperscript{\cite{Li2006, Nister2004a}}. However, this approach is more complicated. For engineering realization, since there are usually dozens or even hundreds of matching points, it is often not helpful to reduce from 8 pairs to 5 pairs. To keep it simple, we only introduce the basic eight-point method here.
+If you use the intrinsic properties of $\mathbf{E}$, then it has only 5 degrees of freedom. So at least 5 pairs of matched points can be used to solve the camera motion \textsuperscript{\cite{Li2006, Nister2004a}}. However, this approach is more complicated. For engineering realization, since there are usually dozens or even hundreds of matching points, it is often not helpful to reduce from 8 pairs to 5 pairs. To keep it simple, we only introduce the basic eight-point method here.
 
-There is one remaining problem: $\bm{E}$ solved according to linear equations may not satisfy the intrinsic properties of $\bm{E}$, i.e. its singular value is not necessarily in the form of ${\sigma}, {\sigma}, 0$. At this time, we will deliberately adjust the $\bm{\Sigma}$ matrix to look like the above. The usual procedure is to perform SVD decomposition on the $\bm{E}$ obtained by the eight-point method, and the singular value matrix $\bm{\Sigma} = \mathrm{diag} (\sigma_1, \sigma_2, \ sigma_3)$, might as well set $\sigma_1 \geqslant \sigma_2 \geqslant \sigma_3$. take:
+There is one remaining problem: $\mathbf{E}$ solved according to linear equations may not satisfy the intrinsic properties of $\mathbf{E}$, i.e. its singular value is not necessarily in the form of ${\sigma}, {\sigma}, 0$. At this time, we will deliberately adjust the $\mathbf{\Sigma}$ matrix to look like the above. The usual procedure is to perform SVD decomposition on the $\mathbf{E}$ obtained by the eight-point method, and the singular value matrix $\mathbf{\Sigma} = \mathrm{diag} (\sigma_1, \sigma_2, \ sigma_3)$, might as well set $\sigma_1 \geqslant \sigma_2 \geqslant \sigma_3$. take:
 \begin{equation}
-\bm{E} = \bm{U} \mathrm{diag} (\frac{\sigma_1+\sigma_2}{2}, \frac{\sigma_1+\sigma_2}{2}, 0) \bm{V}^\mathrm{T}.
+\mathbf{E} = \mathbf{U} \mathrm{diag} (\frac{\sigma_1+\sigma_2}{2}, \frac{\sigma_1+\sigma_2}{2}, 0) \mathbf{V}^\mathrm{T}.
 \end{equation}
-This is equivalent to projecting the calculated essential matrix onto the manifold where $\bm{E}$ is located. A simpler approach is to take the singular value matrix as $\mathrm{diag} (1,1,0)$, due to $\bm{E}$'s scale equivalence, so it is also reasonable.
+This is equivalent to projecting the calculated essential matrix onto the manifold where $\mathbf{E}$ is located. A simpler approach is to take the singular value matrix as $\mathrm{diag} (1,1,0)$, due to $\mathbf{E}$'s scale equivalence, so it is also reasonable.
 
 \subsection{Homography}
-In addition to the fundamental matrix and the essential matrix, there is another common matrix in two-view geometry: the homography matrix $\bm{H}$, which describes the mapping relationship between two planes. If the feature points in the scene all fall on the same plane (such as walls, ground, etc.), motion can be estimated through homography. This situation is more common in top-view cameras carried by drones or sweepers. 
+In addition to the fundamental matrix and the essential matrix, there is another common matrix in two-view geometry: the homography matrix $\mathbf{H}$, which describes the mapping relationship between two planes. If the feature points in the scene all fall on the same plane (such as walls, ground, etc.), motion can be estimated through homography. This situation is more common in top-view cameras carried by drones or sweepers. 
 
 The homography matrix usually describes the transformation between some points on a common plane between two images. Consider that there is a pair of matched feature points $p_{1}$ and $p_{2}$ in the images $I_{1}$ and $I_{2}$. These feature points fall on the plane $P$. Let this plane satisfy the equation:
 \begin{equation}
-\bm{n}^\mathrm{T} \bm{P} + d = 0.
+\mathbf{n}^\mathrm{T} \mathbf{P} + d = 0.
 \end{equation}
 Rearrange it:
 \begin{equation}
-- \frac{\bm{n}^\mathrm{T} \bm{P} }{d} = 1.
+- \frac{\mathbf{n}^\mathrm{T} \mathbf{P} }{d} = 1.
 \end{equation}
 
 然后，回顾本节开头的式(7.1)，得：
 \begin{align*}
-\bm{p}_2 &\simeq \bm{K} ( \bm{R} \bm{P} + \bm{t} ) \\ 
-&\simeq \bm{K} \left( \bm{R} \bm{P} + \bm{t} \cdot (- \frac{\bm{n}^\mathrm{T} \bm{P} }{d}) \right) \\
-&\simeq \bm{K} \left( \bm{R} - \frac{\bm{t} \bm{n}^\mathrm{T} }{d} \right) \bm{P} \\ 
-&\simeq \bm{K} \left( \bm{R} - \frac{\bm{t} \bm{n}^\mathrm{T} }{d} \right) \bm{K}^{-1} \bm{p}_1.
+\mathbf{p}_2 &\simeq \mathbf{K} ( \mathbf{R} \mathbf{P} + \mathbf{t} ) \\ 
+&\simeq \mathbf{K} \left( \mathbf{R} \mathbf{P} + \mathbf{t} \cdot (- \frac{\mathbf{n}^\mathrm{T} \mathbf{P} }{d}) \right) \\
+&\simeq \mathbf{K} \left( \mathbf{R} - \frac{\mathbf{t} \mathbf{n}^\mathrm{T} }{d} \right) \mathbf{P} \\ 
+&\simeq \mathbf{K} \left( \mathbf{R} - \frac{\mathbf{t} \mathbf{n}^\mathrm{T} }{d} \right) \mathbf{K}^{-1} \mathbf{p}_1.
 \end{align*}
 
-So, we got a direct description of the transformation between $\bm{p}_1$ and $\bm{p}_2$, denoting the middle part as $\bm{H}$, so:
+So, we got a direct description of the transformation between $\mathbf{p}_1$ and $\mathbf{p}_2$, denoting the middle part as $\mathbf{H}$, so:
 \begin{equation}
-\bm{p}_2 \simeq \bm{H} \bm{p}_1.
+\mathbf{p}_2 \simeq \mathbf{H} \mathbf{p}_1.
 \end{equation}
 
-Its definition is related to the parameters of rotation, translation and the plane. Similar to the fundamental matrix $\bm{F}$, the homography matrix $\bm{H}$ is also a matrix of $3 \times 3$. Solving this is similar to that of $\bm{F}$. Calculate $\bm{H}$ based on the matching points, and then decompose it to find rotation and translation. Expand the above formula, get:
+Its definition is related to the parameters of rotation, translation and the plane. Similar to the fundamental matrix $\mathbf{F}$, the homography matrix $\mathbf{H}$ is also a matrix of $3 \times 3$. Solving this is similar to that of $\mathbf{F}$. Calculate $\mathbf{H}$ based on the matching points, and then decompose it to find rotation and translation. Expand the above formula, get:
 \begin{equation}
 \begin{pmatrix} 
 u_{2}\\v_{2}\\1
@@ -580,7 +580,7 @@ u_{1}\\v_{1}\\1
 \end{pmatrix}.
 \end{equation}
 
-Note that the equal sign here is still $\simeq$, not the ordinary equal sign, so the $\bm{H}$ matrix can also be multiplied by any non-zero constant. We can make $h_9 = 1$ in practice (when it takes a non-zero value). Then according to the third row, remove this non-zero factor. So we have:
+Note that the equal sign here is still $\simeq$, not the ordinary equal sign, so the $\mathbf{H}$ matrix can also be multiplied by any non-zero constant. We can make $h_9 = 1$ in practice (when it takes a non-zero value). Then according to the third row, remove this non-zero factor. So we have:
 \[
 \begin{aligned}
 u_{2}&=\frac{h_{1}u_{1}+h_{2}v_{1}+h_{3}}{h_{7}u_{1}+h_{8}v_{1}+h_{9}}\\
@@ -616,12 +616,12 @@ u_{2}^{1}\\ v_{2}^{1}\\ u_{2}^{2}\\ v_{2}^{2}\\u_{2}^{3}\\ v_{2}^{3}\\u_{2}^{4}\
 \end{pmatrix}.
 \end{equation}
 
-This approach regards the $\bm{H}$ matrix as a vector, and estimates the $\bm{H}$ by solving the linear equation of the vector, also known as the Direct Linear Transform. Similar to the essential matrix, the homography matrix needs to be decomposed after obtaining the homography matrix to get the corresponding rotation matrix $\bm{R}$ and translation vector $\bm{t}$. The decomposition method includes numerical method \textsuperscript{\cite{faugeras1988motion, Zhang1996}} and analytical method \textsuperscript{\cite{malis2007deeper}}. Similar to the decomposition of the essential matrix, the decomposition of the homography matrix will also return 4 sets of rotation matrices and translation vectors, and meanwhile the normal vectors of the planes where the corresponding scene points located. If the depths of the projected map points are all positive (that is, in front of the camera), then two sets of solutions can be excluded. In the end, only two sets of solutions are left, and more prior information is needed to make a final decision. Usually we can solve it by assuming the normal vector of the known scene plane. If the scene plane is parallel to the camera plane, then the theoretical value of the normal vector $\bm{n}$ is $\bm{1}^\mathrm{T}$ .
+This approach regards the $\mathbf{H}$ matrix as a vector, and estimates the $\mathbf{H}$ by solving the linear equation of the vector, also known as the Direct Linear Transform. Similar to the essential matrix, the homography matrix needs to be decomposed after obtaining the homography matrix to get the corresponding rotation matrix $\mathbf{R}$ and translation vector $\mathbf{t}$. The decomposition method includes numerical method \textsuperscript{\cite{faugeras1988motion, Zhang1996}} and analytical method \textsuperscript{\cite{malis2007deeper}}. Similar to the decomposition of the essential matrix, the decomposition of the homography matrix will also return 4 sets of rotation matrices and translation vectors, and meanwhile the normal vectors of the planes where the corresponding scene points located. If the depths of the projected map points are all positive (that is, in front of the camera), then two sets of solutions can be excluded. In the end, only two sets of solutions are left, and more prior information is needed to make a final decision. Usually we can solve it by assuming the normal vector of the known scene plane. If the scene plane is parallel to the camera plane, then the theoretical value of the normal vector $\mathbf{n}$ is $\mathbf{1}^\mathrm{T}$ .
 
-Homography is of great significance in SLAM. When the feature points are coplanar or the camera experiences purely rotation, the degree of freedom of the fundamental matrix decreases, which causes the degeneration. The actual data is always noisy. If you stick to the eight-point method to solve the fundamental matrix, the redundant freedom of the fundamental matrix will be mainly determined by the noise. In order to avoid the effects of degradation, we usually estimate the fundamental matrix $\bm{F}$ and the homography matrix $\bm{H}$ at the same time, and choose the one with the smaller reprojection error to estimate the motion.
+Homography is of great significance in SLAM. When the feature points are coplanar or the camera experiences purely rotation, the degree of freedom of the fundamental matrix decreases, which causes the degeneration. The actual data is always noisy. If you stick to the eight-point method to solve the fundamental matrix, the redundant freedom of the fundamental matrix will be mainly determined by the noise. In order to avoid the effects of degradation, we usually estimate the fundamental matrix $\mathbf{F}$ and the homography matrix $\mathbf{H}$ at the same time, and choose the one with the smaller reprojection error to estimate the motion.
 
 \section{Practice: Solving camera motion with epipolar constraints}
-In the following, let's solve the camera motion through the essential matrix. The program in the practice part of the previous section provides feature matching, and here we use the matching feature points to calculate $\bm{E}, \bm{F}$ and $\bm{H}$, and then decompose $ \bm{E}$ to get $\bm{R} and \bm{t}$. The whole program is solved using the algorithm provided by OpenCV. We encapsulate the feature extraction in the previous section into functions for later use. This section only shows the code for the pose estimation.
+In the following, let's solve the camera motion through the essential matrix. The program in the practice part of the previous section provides feature matching, and here we use the matching feature points to calculate $\mathbf{E}, \mathbf{F}$ and $\mathbf{H}$, and then decompose $ \mathbf{E}$ to get $\mathbf{R} and \mathbf{t}$. The whole program is solved using the algorithm provided by OpenCV. We encapsulate the feature extraction in the previous section into functions for later use. This section only shows the code for the pose estimation.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp （片段）]
 void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
@@ -707,7 +707,7 @@ int main( int argc, char** argv ){
 }
 \end{lstlisting}
 
-We get the values of $\bm{E}, \bm{F}$ and $\bm{H}$ in the function, and then verify whether the epipolar constraint is satisfied, and $\bm{t}^ \wedge \bm{R}$ and $\bm{E}$ are equivalent to non-zero numbers. Now, execute this program to see the output result:
+We get the values of $\mathbf{E}, \mathbf{F}$ and $\mathbf{H}$ in the function, and then verify whether the epipolar constraint is satisfied, and $\mathbf{t}^ \wedge \mathbf{R}$ and $\mathbf{E}$ are equivalent to non-zero numbers. Now, execute this program to see the output result:
 \begin{lstlisting}[language=sh,caption=Terminal Input：]
 % build/pose_estimation_2d2d 1.png 2.png
 -- Max dist : 95.000000 
@@ -744,35 +744,35 @@ epipolar constraint = [-0.0008009088410884102]
 ......
 \end{lstlisting}
 
-It can be seen from the output of the program that the accuracy of meeting the epipolar constraints is around the order of $10 ^{-3}$. According to the previous discussion, there are 4 possibilities for $\bm{R}, \bm{t}$ obtained by decomposition. In this program, OpenCV will use triangulation to detect whether the depth of the detected point is positive to select the correct solution.
+It can be seen from the output of the program that the accuracy of meeting the epipolar constraints is around the order of $10 ^{-3}$. According to the previous discussion, there are 4 possibilities for $\mathbf{R}, \mathbf{t}$ obtained by decomposition. In this program, OpenCV will use triangulation to detect whether the depth of the detected point is positive to select the correct solution.
 
 \subsection*{Discussion}
-From demo program that the resulted $\bm{E}$ and $\bm{F}$ are different by a camera internal parameter matrix. Although it is not numerically intuitive, their mathematical relationship can be verified. Motion can be decomposed from $\bm{E}, \bm{F}$ and $\bm{H}$, but $\bm{H}$ needs to assume that the feature points are on the same plane. For the data of this experiment, this assumption is not true, so we mainly use $\bm{E}$ to find the motion.
+From demo program that the resulted $\mathbf{E}$ and $\mathbf{F}$ are different by a camera internal parameter matrix. Although it is not numerically intuitive, their mathematical relationship can be verified. Motion can be decomposed from $\mathbf{E}, \mathbf{F}$ and $\mathbf{H}$, but $\mathbf{H}$ needs to assume that the feature points are on the same plane. For the data of this experiment, this assumption is not true, so we mainly use $\mathbf{E}$ to find the motion.
 
-It is worth mentioning that since $\bm{E}$ itself has scale equivalence, the $\bm{t}, \bm{R}$ also have scale equivalence. And $\bm{R} \in \mathrm{SO}(3)$ has its own constraints, so we think that $\bm{t}$ has a \textbf{scale}. In other words, in the decomposition process, if $\bm{t}$ is multiplied by any non-zero constant, the decomposition is still valid. Therefore, we usually \textbf{normalize} $\bm{t}$ to make its length equal to 1.
+It is worth mentioning that since $\mathbf{E}$ itself has scale equivalence, the $\mathbf{t}, \mathbf{R}$ also have scale equivalence. And $\mathbf{R} \in \mathrm{SO}(3)$ has its own constraints, so we think that $\mathbf{t}$ has a \textbf{scale}. In other words, in the decomposition process, if $\mathbf{t}$ is multiplied by any non-zero constant, the decomposition is still valid. Therefore, we usually \textbf{normalize} $\mathbf{t}$ to make its length equal to 1.
 
 \subsubsection{Scale Ambiguity}
-The normalization of $\bm{t}$ directly leads to \textbf{Scale Ambiguity of monocular vision}. For example, the first dimension of $\bm{t}$ output in the program is about 0.822. We are unsure that it refers to 0.822 meters or 0.822 centimeters. Because after multiplying $\bm{t}$ by any constant, the epipolar constraint is still valid. In other words, in monocular SLAM, the trajectory and map are simultaneously zoomed at any multiple, and the image we get is still the same. This has already been introduced in the Chapter 2.
+The normalization of $\mathbf{t}$ directly leads to \textbf{Scale Ambiguity of monocular vision}. For example, the first dimension of $\mathbf{t}$ output in the program is about 0.822. We are unsure that it refers to 0.822 meters or 0.822 centimeters. Because after multiplying $\mathbf{t}$ by any constant, the epipolar constraint is still valid. In other words, in monocular SLAM, the trajectory and map are simultaneously zoomed at any multiple, and the image we get is still the same. This has already been introduced in the Chapter 2.
 
-In monocular vision, the normalization of $\bm{t}$ for two images is equivalent to \textbf{fixing scale}. Although we don't know its actual length, we use $\bm{t}$ as the unit 1 to calculate the camera motion and the 3D position of the feature points. This is called \textbf{initialization} of monocular SLAM. After initialization, 3D-2D can be used to calculate camera motion. The unit of the trajectory and map after initialization is the scale fixed during initialization. Therefore, monocular SLAM has an inevitable \textbf{initialization} step. The two initialized images must have a certain amount of translation, and then the unit of trajectory and map will be determined by this translation.
+In monocular vision, the normalization of $\mathbf{t}$ for two images is equivalent to \textbf{fixing scale}. Although we don't know its actual length, we use $\mathbf{t}$ as the unit 1 to calculate the camera motion and the 3D position of the feature points. This is called \textbf{initialization} of monocular SLAM. After initialization, 3D-2D can be used to calculate camera motion. The unit of the trajectory and map after initialization is the scale fixed during initialization. Therefore, monocular SLAM has an inevitable \textbf{initialization} step. The two initialized images must have a certain amount of translation, and then the unit of trajectory and map will be determined by this translation.
 
-In addition to normalizing $\bm{t}$, another method is to set the average depth of all the feature points during initialization to 1, or a fixed scale. Compared to set the length of $\bm{t}$ to 1, normalizing the depth of the feature points can control the scale of the scene and make the calculation more numerically stable. But there is no theoretical difference.
+In addition to normalizing $\mathbf{t}$, another method is to set the average depth of all the feature points during initialization to 1, or a fixed scale. Compared to set the length of $\mathbf{t}$ to 1, normalizing the depth of the feature points can control the scale of the scene and make the calculation more numerically stable. But there is no theoretical difference.
 
 \subsubsection{The problem of initialization caused by pure rotation}
-In the decomposition of $\bm{E}$ to get $\bm{R}, \bm{t}$, if the camera is purely rotated, causing $\bm{t}$ to be zero, then $\bm{E}$ will also be zero, which will make it impossible for us to solve $\bm{R}$. However, at this time we can rely on $\bm{H}$ to find the rotation, but when only the rotation is performed, we cannot use triangulation to estimate the spatial position of the feature points (this will be introduced later), so we can conclude that \textbf{Monocular initialization cannot only be pure rotation, it must have a certain amount of translation}. If there is no translation, the monocular can not be initialized. In practice, if the translation is too small during initialization, it will make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating in place, it is easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in the case of monocular SLAM.
+In the decomposition of $\mathbf{E}$ to get $\mathbf{R}, \mathbf{t}$, if the camera is purely rotated, causing $\mathbf{t}$ to be zero, then $\mathbf{E}$ will also be zero, which will make it impossible for us to solve $\mathbf{R}$. However, at this time we can rely on $\mathbf{H}$ to find the rotation, but when only the rotation is performed, we cannot use triangulation to estimate the spatial position of the feature points (this will be introduced later), so we can conclude that \textbf{Monocular initialization cannot only be pure rotation, it must have a certain amount of translation}. If there is no translation, the monocular can not be initialized. In practice, if the translation is too small during initialization, it will make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating in place, it is easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in the case of monocular SLAM.
 
 \subsubsection{More than 8 pairs of matched points}
-When we get more than 8 pairs of matched points (for example, we found 79 pairs of matches), we can calculate a least squares solution. Recalling the linearized epipolar constraint in \eqref{Eq:eight-point}, we denote the coefficient matrix on the left as $\bm{A}$:
+When we get more than 8 pairs of matched points (for example, we found 79 pairs of matches), we can calculate a least squares solution. Recalling the linearized epipolar constraint in \eqref{Eq:eight-point}, we denote the coefficient matrix on the left as $\mathbf{A}$:
 \begin{equation}
-\bm{A} \bm{e} = \bm{0} .
+\mathbf{A} \mathbf{e} = \mathbf{0} .
 \end{equation}
 
-For the eight-point method, the size of $\bm{A}$ is $8 \times 9$. If the given matching points are more than $8$, the equation constitutes an overdetermined equation, that is, $\bm{e}$ does not necessarily exist to make the above formula true. Therefore, it can be solved by minimizing in a quadratic form:
+For the eight-point method, the size of $\mathbf{A}$ is $8 \times 9$. If the given matching points are more than $8$, the equation constitutes an overdetermined equation, that is, $\mathbf{e}$ does not necessarily exist to make the above formula true. Therefore, it can be solved by minimizing in a quadratic form:
 \begin{equation}
-\mathop {\min }\limits_{\bm{e}} \left\| \bm{Ae} \right\|_2^2 = \mathop {\min }\limits_{\bm{e}} { \bm{e}^\mathrm{T}} {\bm{A}^\mathrm{T}} \bm{Ae}.
+\mathop {\min }\limits_{\mathbf{e}} \left\| \mathbf{Ae} \right\|_2^2 = \mathop {\min }\limits_{\mathbf{e}} { \mathbf{e}^\mathrm{T}} {\mathbf{A}^\mathrm{T}} \mathbf{Ae}.
 \end{equation}
 
-So the $\bm{E}$ matrix in the sense of least squares is obtained. However, due to potential mismatches, we prefer to use \textbf{Random Sample Concensus (RANSAC)} instead of least squares to solve the above problem. RANSAC is general, applicable to many cases with incorrect data, and can handle data with incorrect matching.
+So the $\mathbf{E}$ matrix in the sense of least squares is obtained. However, due to potential mismatches, we prefer to use \textbf{Random Sample Concensus (RANSAC)} instead of least squares to solve the above problem. RANSAC is general, applicable to many cases with incorrect data, and can handle data with incorrect matching.
 
 \section{Triangulation}
 In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of \textbf{Triangulation}, shown in \autoref{fig: triangluar}.
@@ -786,20 +786,20 @@ In the previous two sections, we introduced using the epipolar constraint to est
 
 Triangulation refers to observing the same landmark point at different locations and determining the distance of the landmark point from the observed locations. Triangulation was first proposed by Gauss and used in metrology. It can be also applied to astronomy and geography. For example, we can estimate the distance to us from the angle of the star observed in different seasons. In SLAM, we mainly use triangulation to estimate the distance of pixels.
 
-Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference, and the transformation matrix to the right image is $\bm{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. There is a feature point $p_{1}$ in $I_{1}$, which corresponds to a feature point $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the map point corresponding to the two feature points in the 3D scene. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least square.
+Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference, and the transformation matrix to the right image is $\mathbf{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. There is a feature point $p_{1}$ in $I_{1}$, which corresponds to a feature point $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the map point corresponding to the two feature points in the 3D scene. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least square.
 
-According to the definition in epipolar geometry, let $\bm{x}_1, \bm{x}_2$ be the normalized coordinates of two feature points, then they satisfy:
+According to the definition in epipolar geometry, let $\mathbf{x}_1, \mathbf{x}_2$ be the normalized coordinates of two feature points, then they satisfy:
 \begin{equation}
-s_2 \bm{x}_2 = s_1  \bm{R} \bm{x}_1 + \bm{t}.  
+s_2 \mathbf{x}_2 = s_1  \mathbf{R} \mathbf{x}_1 + \mathbf{t}.  
 \end{equation}
 
-Now we know $\bm{R}$ and $\bm{t}$, we want to find the depth $s_1$ and $s_2$ of two feature points. Geometically, you can find a 3D point on the ray $O_1 p_1$ to make its projection close to $\bm{p}_2$. Similarly, you can also find it on $O_2 p_2$, or in the middle of two lines . Different strategies correspond to different calculation methods, but they return similar results. For example, if we want to calculate $s_1$, we first multiply both sides of the above formula by $\bm{x}_2^\wedge$ to get:
+Now we know $\mathbf{R}$ and $\mathbf{t}$, we want to find the depth $s_1$ and $s_2$ of two feature points. Geometically, you can find a 3D point on the ray $O_1 p_1$ to make its projection close to $\mathbf{p}_2$. Similarly, you can also find it on $O_2 p_2$, or in the middle of two lines . Different strategies correspond to different calculation methods, but they return similar results. For example, if we want to calculate $s_1$, we first multiply both sides of the above formula by $\mathbf{x}_2^\wedge$ to get:
 \begin{equation}
 \label{eq:x1tox2}
-s_2 \bm{x}_2^\wedge \bm{x}_2 = 0 = s_1 \bm{x}_2^\wedge \bm{R} \bm{x}_1 + \bm{x}_2^\wedge \bm{t}. 
+s_2 \mathbf{x}_2^\wedge \mathbf{x}_2 = 0 = s_1 \mathbf{x}_2^\wedge \mathbf{R} \mathbf{x}_1 + \mathbf{x}_2^\wedge \mathbf{t}. 
 \end{equation}
 
-The left side of this equation is zero, and the right side can be regarded as an equation of $s_1$, and $s_1$ can be obtained directly from it. With $s_1$, $s_2$ is also very easy to calculate. Thus, we get the depth of the points under the two frames and determine their spatial coordinates. Definitely, due to the existence of noise, our estimated $\bm{R}, \bm{t}$ may not exactly make the equation \eqref{eq:x1tox2} zero, so a more common approach is to find the least square solution rather than a direct solution.
+The left side of this equation is zero, and the right side can be regarded as an equation of $s_1$, and $s_1$ can be obtained directly from it. With $s_1$, $s_2$ is also very easy to calculate. Thus, we get the depth of the points under the two frames and determine their spatial coordinates. Definitely, due to the existence of noise, our estimated $\mathbf{R}, \mathbf{t}$ may not exactly make the equation \eqref{eq:x1tox2} zero, so a more common approach is to find the least square solution rather than a direct solution.
 
 \section{Practice: Triangulation}
 \subsection{Triangulation Program}
@@ -854,7 +854,7 @@ Regarding triangulation, there is one more thing that must be noted.
 
 Triangulation is caused by \textbf{translation}. Only when there is enough amount of translation, triangles in the epipolar geometry can be formed, and only then can triangulation be implemented. Therefore, triangulation cannot be used for pure rotation, because the epipolar constraint will always be satisfied. Definitely, the actual data is often not completely equal to zero. In the presence of translation, we should also concern about the uncertainty of triangulation, which will lead to a \textbf{triangulation contradiction}.
 
-As shown in \autoref{fig:triangulation-discuss}~, when the translation is small, the uncertainty on the pixel will result in a larger depth uncertainty. That is to say, if the feature point moves by one pixel $\delta x$, so that the line of sight angle changes by an angle $\delta \theta$, then the measured depth will experience a change of $\delta d$. It can be seen from the geometric relationship that when $\bm{t}$ is larger, $\delta d$ will be significantly smaller, meaning that when the translation is larger, the triangulation measurement will be more accurate at the same camera resolution. The quantitative analysis of the process can be proceeded by using the law of sine.
+As shown in \autoref{fig:triangulation-discuss}~, when the translation is small, the uncertainty on the pixel will result in a larger depth uncertainty. That is to say, if the feature point moves by one pixel $\delta x$, so that the line of sight angle changes by an angle $\delta \theta$, then the measured depth will experience a change of $\delta d$. It can be seen from the geometric relationship that when $\mathbf{t}$ is larger, $\delta d$ will be significantly smaller, meaning that when the translation is larger, the triangulation measurement will be more accurate at the same camera resolution. The quantitative analysis of the process can be proceeded by using the law of sine.
 
 Therefore, to improve the accuracy of triangulation, one is to improve the accuracy of feature points extraction, that means to increase the image resolution, but this will cause the image to become larger and increase the computational cost. Another way is to increase the amount of translation. However, this will cause obvious changes in the \textbf{appearance} of the image, for example, the side of the box that was originally blocked can be exposed, or the lighting of the object changes, etc. Changes in appearance will make feature extraction and matching more difficult. In a nutshell, increasing the translation may lead to failure of matching; and if the translation is too small, the accuracy of the triangulation is insufficient. This is the contradiction of triangulation. We call this problem "parallax".
 
@@ -877,7 +877,7 @@ There are many ways to solve PnP problems, for example, P3P\textsuperscript{\cit
 \subsection{Direct Linear Transformation}
 Consider such a problem: the positions of a set of 3D points and their projection positions in a certain camera are known, find the pose of the camera. This problem can also be used to solve the problem of camera pose when a given map and image are given. If the 3D point is regarded as a point in another camera coordinate system, it can also be used to solve the relative motion problem of two cameras. We will start from simple questions.
 
-Consider a 3D spatial point $P$, its homogeneous coordinates are ${\bm{P}}=(X,Y,Z,1)^{\mathrm{T}}$. In the image $I_{1}$, it is projected to the feature point ${\bm{x}}_{1}=(u_{1},v_{1},1)^{\mathrm{T}}$(expressed in the normalized plane homogeneous coordinates). At this time, the pose of the camera $\bm{R}, \bm{t}$ is unknown. Similar to the solution of the homography matrix, we define the $3\times 4$ augmented matrix $[\bm{R}|\bm{t}]$, encoding rotation and translation information \footnote{this is different from the transformation matrix $\bm{T}$ in $\mathrm{SE}(3)$. }. We will write its expanded form as follows:
+Consider a 3D spatial point $P$, its homogeneous coordinates are ${\mathbf{P}}=(X,Y,Z,1)^{\mathrm{T}}$. In the image $I_{1}$, it is projected to the feature point ${\mathbf{x}}_{1}=(u_{1},v_{1},1)^{\mathrm{T}}$(expressed in the normalized plane homogeneous coordinates). At this time, the pose of the camera $\mathbf{R}, \mathbf{t}$ is unknown. Similar to the solution of the homography matrix, we define the $3\times 4$ augmented matrix $[\mathbf{R}|\mathbf{t}]$, encoding rotation and translation information \footnote{this is different from the transformation matrix $\mathbf{T}$ in $\mathrm{SE}(3)$. }. We will write its expanded form as follows:
 \begin{equation}
 s
 \begin{pmatrix}
@@ -900,45 +900,45 @@ u_{1}=\frac{t_{1}X+t_{2}Y+t_{3}Z+t_{4}}{t_{9}X+t_{10}Y+t_{11}Z+t_{12}},\quad
 v_{1}=\frac{t_{5}X+t_{6}Y+t_{7}Z+t_{8}}{t_{9}X+t_{10}Y+t_{11}Z+t_{12}}.
 \]
 
-To simplify the representation, define $\bm{T}$ as a row vector:
+To simplify the representation, define $\mathbf{T}$ as a row vector:
 \[
-\bm{t}_{1}=(t_{1},t_{2},t_{3},t_{4})^\mathrm{T},
-\bm{t}_{2}=(t_{5},t_{6},t_{7},t_{8})^\mathrm{T},
-\bm{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^\mathrm{T},
+\mathbf{t}_{1}=(t_{1},t_{2},t_{3},t_{4})^\mathrm{T},
+\mathbf{t}_{2}=(t_{5},t_{6},t_{7},t_{8})^\mathrm{T},
+\mathbf{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^\mathrm{T},
 \]
 Now we have:
 \[
-\bm{t}_1^\mathrm{T}\bm{P}-\bm{t}_3^\mathrm{T}\bm{P} u_1=0,
+\mathbf{t}_1^\mathrm{T}\mathbf{P}-\mathbf{t}_3^\mathrm{T}\mathbf{P} u_1=0,
 \]
 and
 \[
-\bm{t}_2^\mathrm{T}\bm{P}-\bm{t}_3^\mathrm{T}\bm{P} v_1=0.
+\mathbf{t}_2^\mathrm{T}\mathbf{P}-\mathbf{t}_3^\mathrm{T}\mathbf{P} v_1=0.
 \]
 
-Please note that $\bm{t}$ is the variable to be found. As you can see, each feature point provides two linear constraints on $\bm{t}$. Assuming there are a total of $N$ feature points, the following linear equations can be constructed:
+Please note that $\mathbf{t}$ is the variable to be found. As you can see, each feature point provides two linear constraints on $\mathbf{t}$. Assuming there are a total of $N$ feature points, the following linear equations can be constructed:
 \begin{equation}
 \begin{pmatrix}
-\bm{P}_{1}^{\mathrm{T}} & 0 & -u_{1}\bm{P}_{1}^{\mathrm{T}}	\\
-0 & \bm{P}_{1}^{\mathrm{T}} & -v_{1}\bm{P}_{1}^{\mathrm{T}}	\\
+\mathbf{P}_{1}^{\mathrm{T}} & 0 & -u_{1}\mathbf{P}_{1}^{\mathrm{T}}	\\
+0 & \mathbf{P}_{1}^{\mathrm{T}} & -v_{1}\mathbf{P}_{1}^{\mathrm{T}}	\\
 \vdots & \vdots & \vdots			\\
-\bm{P}_{N}^{\mathrm{T}} & 0 & -u_{N}\bm{P}_{N}^{\mathrm{T}} \\
-0 & \bm{P}_{N}^{\mathrm{T}} & -v_{N}\bm{P}_{N}^{\mathrm{T}}
+\mathbf{P}_{N}^{\mathrm{T}} & 0 & -u_{N}\mathbf{P}_{N}^{\mathrm{T}} \\
+0 & \mathbf{P}_{N}^{\mathrm{T}} & -v_{N}\mathbf{P}_{N}^{\mathrm{T}}
 \end{pmatrix}
 \begin{pmatrix}
-\bm{t}_{1} \\ \bm{t}_{2} \\ \bm{t}_{3}
+\mathbf{t}_{1} \\ \mathbf{t}_{2} \\ \mathbf{t}_{3}
 \end{pmatrix}
 =0.
 \end{equation}
 
-Since $\bm{t}$ has a total dimension of 12, the linear solution of matrix $\bm{T}$ can be achieved by at least 6 pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least square solution of the overdetermined equation.
+Since $\mathbf{t}$ has a total dimension of 12, the linear solution of matrix $\mathbf{T}$ can be achieved by at least 6 pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least square solution of the overdetermined equation.
 
-In the DLT solution, we directly regard the $\bm{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\bm{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the constraint, it is a general matrix. The translation vector is easier to handle, it belongs to the vector space. For the rotation matrix $\bm{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\bm{T}$ estimated by DLT. This can be done by QR decomposition \textsuperscript{\cite{Hartley2003, Chen1994}}, or it can be calculated like this \textsuperscript{\cite{Barfoot2016,Green1952}}:
+In the DLT solution, we directly regard the $\mathbf{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\mathbf{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the constraint, it is a general matrix. The translation vector is easier to handle, it belongs to the vector space. For the rotation matrix $\mathbf{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\mathbf{T}$ estimated by DLT. This can be done by QR decomposition \textsuperscript{\cite{Hartley2003, Chen1994}}, or it can be calculated like this \textsuperscript{\cite{Barfoot2016,Green1952}}:
 \begin{equation}
-\bm{R} \leftarrow {\left( {\bm{R}{\bm{R}^\mathrm{T}}} \right)^{ - \frac{1}{2}}} \bm{R}.
+\mathbf{R} \leftarrow {\left( {\mathbf{R}{\mathbf{R}^\mathrm{T}}} \right)^{ - \frac{1}{2}}} \mathbf{R}.
 \end{equation}
 This can be seen as reprojecting the result from the matrix space onto the $\mathrm{SE}(3)$ manifold and converting it into two parts: rotation and translation.
 
-What needs to be mentioned is that our $\bm{x}_1$ here uses normalized plane coordinates and neglects the influence of the intrinsic parameter matrix $\bm{K}$, this is because the intrinsic parameter $\bm{K}$ is usually assumed to be known in SLAM. Even if the intrinsic parameters are unknown, PnP can be used to estimate the three quantities $\bm{K}, \bm{R}, \bm{t}$. However, due to the increase in the number of unknown variables, the quantity of the result may be worse.
+What needs to be mentioned is that our $\mathbf{x}_1$ here uses normalized plane coordinates and neglects the influence of the intrinsic parameter matrix $\mathbf{K}$, this is because the intrinsic parameter $\mathbf{K}$ is usually assumed to be known in SLAM. Even if the intrinsic parameters are unknown, PnP can be used to estimate the three quantities $\mathbf{K}, \mathbf{R}, \mathbf{t}$. However, due to the increase in the number of unknown variables, the quantity of the result may be worse.
 
 \subsection{P3P}
 P3P is another way to solve PnP. It only uses 3 pairs of matching points and requires less data (this part refers to the literature \cite{web:p3p}).
@@ -997,7 +997,7 @@ Move $v$ in the first equation to the right side, and combine it with the other 
 \end{array}
 \end{equation}
 
-Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=BC^2/AB^2, w=AC^2/AB^2$ can be calculated by the coordinates of $A, B, C$ in the world frame, transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the system of equations is a quadratic equation (polynomial equation) about two unknowns $x, y$. Solving the equations analytically is complicated and requires Wu's elimination method. It will not be introduced here, interested readers could refer to the literature \cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\bm{E}$, this equation may get 4 solutions at most, but we can use the verification points to select the most probable solution, and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\bm{R}, \bm{t}$ can be calculated, which will be introduced in section 7.9.
+Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=BC^2/AB^2, w=AC^2/AB^2$ can be calculated by the coordinates of $A, B, C$ in the world frame, transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the system of equations is a quadratic equation (polynomial equation) about two unknowns $x, y$. Solving the equations analytically is complicated and requires Wu's elimination method. It will not be introduced here, interested readers could refer to the literature \cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\mathbf{E}$, this equation may get 4 solutions at most, but we can use the verification points to select the most probable solution, and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\mathbf{R}, \mathbf{t}$ can be calculated, which will be introduced in section 7.9.
 
 From the principle of P3P to solve PnP, we use the similarity of triangles to solve the 3D coordinates of the projection points $a, b, c$ in the camera frame, and finally convert the problem into a 3D to 3D pose estimation problem. As we will see later, it is easy to solve the 3D-3D pose with matching information, so this idea is very effective. Some other methods, such as EPnP, also adopted this idea. However, P3P also has some deficiencies:
 
@@ -1039,28 +1039,28 @@ Other than the linear method, we can also construct the PnP problem as a nonline
 
 We can build a Bundle Adjustment problem in PnP to optimize the camera pose. If the camera is moving continuously (as in the majority of SLAM processes), you can also use BA directly to solve the camera pose. In this section, we will give the basic form of this problem in two views, and then discuss the larger-scale BA problem in Lecture 9.
 
-Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\bm{R}, \bm{t}$ of the camera, and its Lie group is expressed as $\bm{T}$. Suppose the coordinates of a point in space are $\bm{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$, and their projected pixel coordinates are $\bm{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
+Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\mathbf{R}, \mathbf{t}$ of the camera, and its Lie group is expressed as $\mathbf{T}$. Suppose the coordinates of a point in space are $\mathbf{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$, and their projected pixel coordinates are $\mathbf{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
 \begin{equation}
 s_i \left[ 
 \begin{array}{l}
 u_i \\ v_i \\ 1
 \end{array}
-\right] = \bm{K} \bm{T} \left[ 
+\right] = \mathbf{K} \mathbf{T} \left[ 
 \begin{array}{l}
 X_i \\ Y_i \\ Z_i \\ 1
 \end{array} \right]  .
 \end{equation}
 In matrix form, it is:
 \[
-{{s_i {\bm{u}}_i} = \bm{K} \bm{T} \bm{P}}_i.
+{{s_i {\mathbf{u}}_i} = \mathbf{K} \mathbf{T} \mathbf{P}}_i.
 \]
 
-This equation includes a conversion from homogeneous coordinates to non-homogeneous coordinates implicitly. Otherwise, according to the matrix multiplication, the dimension is wrong \footnote{The result of $ \bm{T} {\bm{P}_i}$ is $4 \times 1$, and the $\bm{K}$ on the left is $3 \times 3$, so the first three dimensions of $\bm{T}\bm{P}_i$ must be taken out and changed into three dimension non-homogeneous coordinates. Or, using $\bm{R}\bm{P}+\bm{t}$}. Now, due to the unknown camera pose and the noise of the observation points, there is a residual in the equation. Therefore, we sum up the residuals, construct a least-square problem, and then minimize it to find the most reliable camera pose:
+This equation includes a conversion from homogeneous coordinates to non-homogeneous coordinates implicitly. Otherwise, according to the matrix multiplication, the dimension is wrong \footnote{The result of $ \mathbf{T} {\mathbf{P}_i}$ is $4 \times 1$, and the $\mathbf{K}$ on the left is $3 \times 3$, so the first three dimensions of $\mathbf{T}\mathbf{P}_i$ must be taken out and changed into three dimension non-homogeneous coordinates. Or, using $\mathbf{R}\mathbf{P}+\mathbf{t}$}. Now, due to the unknown camera pose and the noise of the observation points, there is a residual in the equation. Therefore, we sum up the residuals, construct a least-square problem, and then minimize it to find the most reliable camera pose:
 \begin{equation}
-{\bm{T}^*} = \arg \mathop {\min }\limits_{\bm{T}}  \frac{1}{2}\sum\limits_{i = 1}^n {\left\| {{{\bm{u}}_i} - \frac{1}{s_i} \bm{K}\bm{T}{\bm{P}}_i} \right\|_2^2} .
+{\mathbf{T}^*} = \arg \mathop {\min }\limits_{\mathbf{T}}  \frac{1}{2}\sum\limits_{i = 1}^n {\left\| {{{\mathbf{u}}_i} - \frac{1}{s_i} \mathbf{K}\mathbf{T}{\mathbf{P}}_i} \right\|_2^2} .
 \end{equation}
 
-The residual term of this problem is the difference between the projection position of the 3D points and the observation positions, so it is called \textbf{reprojection error}. When using homogeneous coordinates, this error has 3 dimensions. However, since the last dimension of ${\bm{u}}$ is 1, the error of this dimension is always zero, so more often we use non-homogeneous coordinates, thus the error is only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P \hat{p}_2$ and the actual $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
+The residual term of this problem is the difference between the projection position of the 3D points and the observation positions, so it is called \textbf{reprojection error}. When using homogeneous coordinates, this error has 3 dimensions. However, since the last dimension of ${\mathbf{u}}$ is 1, the error of this dimension is always zero, so more often we use non-homogeneous coordinates, thus the error is only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P \hat{p}_2$ and the actual $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
 
 \begin{figure}[!htp]
 	\centering
@@ -1071,19 +1071,19 @@ The residual term of this problem is the difference between the projection posit
 
 We have already discussed the least-square optimization problem in the Chapter \ref{cpt:6}. Using Lie algebra, unconstrained optimization problems can be constructed, which can be easily solved by optimization algorithms such as Gauss Newton method and Levenberg-Marquardt method. However, before using the Gauss-Newton method and Levenberg-Marquardt method, we need to find the derivative of each error term with respect to the optimization variable, which is \textbf{linearization}:
 \begin{equation}
-\bm{e}( \bm{x} + \Delta \bm{x} ) \approx \bm{e}(\bm{x}) + \bm{J} ^\mathrm{T}\Delta \bm{x}.
+\mathbf{e}( \mathbf{x} + \Delta \mathbf{x} ) \approx \mathbf{e}(\mathbf{x}) + \mathbf{J} ^\mathrm{T}\Delta \mathbf{x}.
 \end{equation}
 
-The form of $\bm{J}^\mathrm{T}$ is worth discussing, and it can even be said to be the key. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer to analytical derivatives. Now, $\bm{e}$ is the pixel coordinate error (2-dimensional) and $\bm{x}$ is the camera pose (6-dimensional), $\bm{J}^\mathrm{T}$ is a matrix of $2 \times 6$. Let's derive the form of $\bm{J}^\mathrm{T}$.
+The form of $\mathbf{J}^\mathrm{T}$ is worth discussing, and it can even be said to be the key. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer to analytical derivatives. Now, $\mathbf{e}$ is the pixel coordinate error (2-dimensional) and $\mathbf{x}$ is the camera pose (6-dimensional), $\mathbf{J}^\mathrm{T}$ is a matrix of $2 \times 6$. Let's derive the form of $\mathbf{J}^\mathrm{T}$.
 
-We have introduced how to use the perturbation model to find the derivative of Lie algebra. First, define the coordinates of the space point in the camera frame as $\bm{P}'$, and take out the first 3 dimensions:
+We have introduced how to use the perturbation model to find the derivative of Lie algebra. First, define the coordinates of the space point in the camera frame as $\mathbf{P}'$, and take out the first 3 dimensions:
 \begin{equation}
-\bm{P}' = \left( \bm{T}{\bm{P}} \right)_{1:3}= [X', Y', Z']^\mathrm{T}.
+\mathbf{P}' = \left( \mathbf{T}{\mathbf{P}} \right)_{1:3}= [X', Y', Z']^\mathrm{T}.
 \end{equation}
 
-Then, the camera projection model with respect to $\bm{P}'$ is:
+Then, the camera projection model with respect to $\mathbf{P}'$ is:
 \begin{equation}
-s {\bm{u}} = \bm{K} \bm{P}'.
+s {\mathbf{u}} = \mathbf{K} \mathbf{P}'.
 \end{equation}
 
 Expand:
@@ -1103,20 +1103,20 @@ Z'
 \end{array} \right].
 \end{equation}
 
-Use the third row to eliminate $s$ (actually it is the distance of $\bm{P}'$), we get:
+Use the third row to eliminate $s$ (actually it is the distance of $\mathbf{P}'$), we get:
 \begin{equation}
 \label{eq:uv2xyz}
 u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 \end{equation}
 
-This is consistent with the camera model described in \ref{cpt:5}. When we find the error, we can compare the $u, v$ here with the actual measured value to find the difference. After defining the intermediate variables, we left multiply $\bm{T}$ by a disturbance quantity $\delta \boldsymbol{\xi}$, and then consider the derivative of the change of $\bm{e}$ with respect to the disturbance quantity. Using the chain rule, it is:
+This is consistent with the camera model described in \ref{cpt:5}. When we find the error, we can compare the $u, v$ here with the actual measured value to find the difference. After defining the intermediate variables, we left multiply $\mathbf{T}$ by a disturbance quantity $\delta \boldsymbol{\xi}$, and then consider the derivative of the change of $\mathbf{e}$ with respect to the disturbance quantity. Using the chain rule, it is:
 \begin{equation}
-\frac{{\partial \bm{e}}}{{\partial \delta \boldsymbol{\xi} }} = \mathop {\lim }\limits_{\delta \boldsymbol{\xi}  \to 0} \frac{{\bm{e}\left( {\delta \boldsymbol{\xi}  \oplus \boldsymbol{\xi} } \right)-\bm{e}(\boldsymbol{\xi})}}{{\delta \boldsymbol{\xi} }}  = \frac{{\partial \bm{e}}}{{\partial \bm{P}'}}\frac{{\partial \bm{P}'}}{{\partial \delta \boldsymbol{\xi} }}.
+\frac{{\partial \mathbf{e}}}{{\partial \delta \boldsymbol{\xi} }} = \mathop {\lim }\limits_{\delta \boldsymbol{\xi}  \to 0} \frac{{\mathbf{e}\left( {\delta \boldsymbol{\xi}  \oplus \boldsymbol{\xi} } \right)-\mathbf{e}(\boldsymbol{\xi})}}{{\delta \boldsymbol{\xi} }}  = \frac{{\partial \mathbf{e}}}{{\partial \mathbf{P}'}}\frac{{\partial \mathbf{P}'}}{{\partial \delta \boldsymbol{\xi} }}.
 \end{equation}
 
 Here $\oplus$ refers to the disturbance left multiplication in Lie algebra. The first item is the derivative of the error with respect to the projection point. The relationship between the variables is in the equation \eqref{eq:uv2xyz}, and it is easy to get:
 \begin{equation}
-\frac{{\partial \bm{e}}}{{\partial \bm{P}'}} = -\left[ 
+\frac{{\partial \mathbf{e}}}{{\partial \mathbf{P}'}} = -\left[ 
 {\begin{array}{*{20}{c}}
 	{\frac{{\partial u}}{{\partial X'}}}&{\frac{{\partial u}}{{\partial Y'}}}&{\frac{{\partial u}}{{\partial Z'}}}\\
 	{\frac{{\partial v}}{{\partial X'}}}&{\frac{{\partial v}}{{\partial Y'}}}&{\frac{{\partial v}}{{\partial Z'}}}
@@ -1129,23 +1129,23 @@ Here $\oplus$ refers to the disturbance left multiplication in Lie algebra. The 
 
 The second term is the derivative of the transformed point with respect to the Lie algebra. According to the section \ref{sec:se3-diff}, we get:
 \begin{equation}
-\frac{{\partial \left( \bm{TP} \right)}}{{\partial \delta \boldsymbol{\xi} }} = {\left( \bm{TP} \right)^ \odot } = \left[ 
+\frac{{\partial \left( \mathbf{TP} \right)}}{{\partial \delta \boldsymbol{\xi} }} = {\left( \mathbf{TP} \right)^ \odot } = \left[ 
 \begin{array}{*{20}{cc}}
-\bm{I} &- \bm{P}'^ \wedge \\
-\bm{0}^\mathrm{T} &\bm{0}^\mathrm{T} 
+\mathbf{I} &- \mathbf{P}'^ \wedge \\
+\mathbf{0}^\mathrm{T} &\mathbf{0}^\mathrm{T} 
 \end{array}
 \right].
 \end{equation}
 
-In the definition of $\bm{P}'$, we took out the first 3 dimensions, so we get:
+In the definition of $\mathbf{P}'$, we took out the first 3 dimensions, so we get:
 \begin{equation}
-\frac{{\partial \bm{P}'}}{{\partial \delta \boldsymbol{\xi} }} = \left[ { \bm{I}, - {\bm{P}'^ \wedge }} \right].
+\frac{{\partial \mathbf{P}'}}{{\partial \delta \boldsymbol{\xi} }} = \left[ { \mathbf{I}, - {\mathbf{P}'^ \wedge }} \right].
 \end{equation}
 
 Multiply these two items together, we get the $2 \times 6$ Jacobian matrix:
 \begin{equation}
 \label{eq:jacob-uv2xi}
-\frac{{\partial \bm{e}}}{{\partial \delta \boldsymbol{\xi} }} = - \left[ {\begin{array}{*{20}{c}}
+\frac{{\partial \mathbf{e}}}{{\partial \delta \boldsymbol{\xi} }} = - \left[ {\begin{array}{*{20}{c}}
 	{\frac{{{f_x}}}{Z'}}&0&{ - \frac{{{f_x}X'}}{{{Z'^2}}}}&{ - \frac{{{f_x}X'Y'}}{{{Z'^2}}}}&{{f_x} + \frac{{{f_x}{X'^2}}}{{{Z'^2}}}}&{ - \frac{{{f_x}Y'}}{Z'}}\\
 	0&{\frac{{{f_y}}}{Z'}}&{ - \frac{{{f_y}Y'}}{{{Z'^2}}}}&{ - {f_y} - \frac{{{f_y}{Y'^2}}}{{{Z'^2}}}}&{\frac{{{f_y}X'Y'}}{{{Z'^2}}}}&{\frac{{{f_y}X'}}{Z'}}
 	\end{array}} \right].
@@ -1153,23 +1153,23 @@ Multiply these two items together, we get the $2 \times 6$ Jacobian matrix:
 
 This Jacobian matrix describes the first-order derivative of the reprojection error with respect to the Lie algebra of the camera pose. We keep the negative sign in front of it because the error is defined by \textbf{observed value minus predicted value}. It can also be reversed and defined in the form of "predicted value minus observed value". In that case, just remove the negative sign in front. In addition, if the definition of $\mathfrak{se}(3)$ is rotation followed by translation, just swap the first 3 columns and the last 3 columns of this Jacobian matrix.
 
-On top of optimizing the pose, we want to optimize the spatial position of the feature points. Therefore, we also need to discuss the derivative of $\bm{e}$ with respect to the space point $\bm{P}$. Fortunately, this derivative matrix is relatively easy. Still using the chain rule, there are:
+On top of optimizing the pose, we want to optimize the spatial position of the feature points. Therefore, we also need to discuss the derivative of $\mathbf{e}$ with respect to the space point $\mathbf{P}$. Fortunately, this derivative matrix is relatively easy. Still using the chain rule, there are:
 \begin{equation}
-\frac{{\partial \bm{e}}}{{\partial \bm{P} }} = \frac{{\partial \bm{e}}}{{\partial \bm{P}'}}\frac{{\partial \bm{P}'}}{{\partial \bm{P} }}.
+\frac{{\partial \mathbf{e}}}{{\partial \mathbf{P} }} = \frac{{\partial \mathbf{e}}}{{\partial \mathbf{P}'}}\frac{{\partial \mathbf{P}'}}{{\partial \mathbf{P} }}.
 \end{equation}
 
 The first item has been deduced before, and the second item is defined as:
 \[
-\bm{P}'= (\bm{T} \bm{P})_{1:3} = \bm{R} \bm{P} + \bm{t},
+\mathbf{P}'= (\mathbf{T} \mathbf{P})_{1:3} = \mathbf{R} \mathbf{P} + \mathbf{t},
 \]
-We find that after $\bm{P}'$ differentiates $\bm{P}$, only $\bm{R}$ is left. then:
+We find that after $\mathbf{P}'$ differentiates $\mathbf{P}$, only $\mathbf{R}$ is left. then:
 \begin{equation}
 \label{eq:jacob-uv2P}
-\frac{{\partial \bm{e}}}{{\partial \bm{P} }} = -\left[ 
+\frac{{\partial \mathbf{e}}}{{\partial \mathbf{P} }} = -\left[ 
 \begin{array}{*{20}{c}}
 	\frac{f_x}{Z'} & 0 &- \frac{f_x X'}{Z'^2} \\
 	0 & \frac{f_y}{Z'} & - \frac{f_y Y'}{Z'^2}
-\end{array} \right] \bm{R}.
+\end{array} \right] \mathbf{R}.
 \end{equation}
 
 Now, we derived the two Jacobian matrices of the observation camera equation with respect to the camera pose and feature points. They are \textbf{very important} to provide gradient directions in the optimization and guide the iteration of optimization.
@@ -1207,7 +1207,7 @@ t=
 0.06138584177157709]
 \end{lstlisting}
 
-Readers can compare $\bm{R},\bm{t}$ solved in the previous 2D-2D case to see the difference. It can be seen that when 3D information is involved, the estimated $\bm{R}$ is almost the same, while the $\bm{t}$ is quite different. This is due to the inclusion of depth information. However, since the depth map collected by Kinect has some noise, the 3D points here are not accurate. In a larger-scale BA, we would like to optimize the pose and all three-dimensional feature points at the same time.
+Readers can compare $\mathbf{R},\mathbf{t}$ solved in the previous 2D-2D case to see the difference. It can be seen that when 3D information is involved, the estimated $\mathbf{R}$ is almost the same, while the $\mathbf{t}$ is quite different. This is due to the inclusion of depth information. However, since the depth map collected by Kinect has some noise, the 3D points here are not accurate. In a larger-scale BA, we would like to optimize the pose and all three-dimensional feature points at the same time.
 
 
 \subsection{Handwriting pose estimation}
@@ -1300,10 +1300,10 @@ After handwriting the optimization process, let's look at how to achieve the sam
 
 In this graph optimization, the nodes and edges are defined as follows:
 \begin{enumerate}
-	\item \textbf{Node}: The pose of the second camera $\bm{T} \in \mathrm{SE}(3)$.
+	\item \textbf{Node}: The pose of the second camera $\mathbf{T} \in \mathrm{SE}(3)$.
 	\item \textbf{Edge}: The projection of each 3D point in the second camera, described by the observation equation:
 	\[
-	\bm{z}_j = h(\bm{T}, \bm{P}_{j}).
+	\mathbf{z}_j = h(\mathbf{T}, \mathbf{P}_{j}).
 	\]
 \end{enumerate}
 
@@ -1482,11 +1482,11 @@ Bundle Adjustment is common. It may not be limited to two images. We can put the
 \section{3D−3D：Iterative Closest Point (ICP)}
 In the end, we will introduce the 3D-3D pose estimation problem. Suppose we have a set of matched 3D points (for example, we matched two RGB-D images):
 \[
-\bm{P} = \{ \bm{p}_1, \cdots, \bm{p}_n \}, \quad \bm{P}' = \{ \bm{p}_1', \cdots, \bm{p}_n'\},
+\mathbf{P} = \{ \mathbf{p}_1, \cdots, \mathbf{p}_n \}, \quad \mathbf{P}' = \{ \mathbf{p}_1', \cdots, \mathbf{p}_n'\},
 \]
-Now, we want to find an Euclidean transformation $\bm{R}, \bm{t}$, which makes \footnote{slightly different from the symbols in the previous two chapters. You can consider $\bm{p}_i$ as the data in the second image, and $\bm{p}_i'$ as the data in the first image, and consistently geting $ \bm{R},\bm{t}$.}:
+Now, we want to find an Euclidean transformation $\mathbf{R}, \mathbf{t}$, which makes \footnote{slightly different from the symbols in the previous two chapters. You can consider $\mathbf{p}_i$ as the data in the second image, and $\mathbf{p}_i'$ as the data in the first image, and consistently geting $ \mathbf{R},\mathbf{t}$.}:
 \[
-\forall i, \bm{p}_i = \bm{R} \bm{p}_i' + \bm{t}.
+\forall i, \mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}.
 \]
 
 This problem can be solved by Iterative Closest Point (ICP). The camera model does not appear in the 3D−3D pose estimation, meaning that when only the transformation between two sets of 3D points is considered, it has nothing to do with the camera. Therefore, ICP is also feasible in laser SLAM, but since the features in laser data are not rich enough, it is hard to know the \textbf{matching relationship} between the two point sets, and we can only consider the two closest points to be the same. So this method is called iterative closest point. In vision, the feature points provide us with a better matching relationship, so the whole problem becomes simpler. In RGB-D SLAM, the camera pose can be estimated in this way. In the following, we use ICP to refer to the motion estimation problem between the two sets of \textbf{matched} points.
@@ -1496,90 +1496,90 @@ Similar to PnP, the solution to ICP can be divided into two ways: using linear a
 \subsection{Using linear algebra (SVD)}
 First look at SVD, on behalf of the algebraic method. According to the ICP problem described above, we first define the error term for the point $i$ as:
 \begin{equation}
-\bm{e}_i = \bm{p}_i - (\bm{R} \bm{p}_i' + \bm{t} ) .
+\mathbf{e}_i = \mathbf{p}_i - (\mathbf{R} \mathbf{p}_i' + \mathbf{t} ) .
 \end{equation}
 
-Then, construct a least-square problem to find the $\bm{R}, \bm{t}$ by minimization of sum of the squared errors:
+Then, construct a least-square problem to find the $\mathbf{R}, \mathbf{t}$ by minimization of sum of the squared errors:
 \begin{equation}
-\mathop {\min }\limits_{\bm{R}, \bm{t}} \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{\bm{p}_i} - \left( {\bm{R}{\bm{p}_i}' + \bm{t}} \right)} \right)} \|^2_2.
+\mathop {\min }\limits_{\mathbf{R}, \mathbf{t}} \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{\mathbf{p}_i} - \left( {\mathbf{R}{\mathbf{p}_i}' + \mathbf{t}} \right)} \right)} \|^2_2.
 \end{equation}
 
 First, define the centroids of the two sets of points as:
 \begin{equation}
-\bm{p} = \frac{1}{n}\sum_{i=1}^n ( \bm{p}_i ), \quad \bm{p}' = \frac{1}{n} \sum_{i=1}^n ( \bm{p}_i' ). 
+\mathbf{p} = \frac{1}{n}\sum_{i=1}^n ( \mathbf{p}_i ), \quad \mathbf{p}' = \frac{1}{n} \sum_{i=1}^n ( \mathbf{p}_i' ). 
 \end{equation}
 
 Note that the centroid is not subscripted. Then, in the error function:
 \begin{align*}
 \begin{array}{ll}
-\frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\bm{p}_i} - \left( {\bm{R}{ \bm{p}_i}' + \bm{t}} \right)} \right\|}^2}}  & = \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\bm{p}_i} - \bm{R}{\bm{p}_i}' - \bm{t} - \bm{p} + \bm{Rp}' + \bm{p} - \bm{Rp}'} \right\|}^2}} \\
- & = \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {\left( {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right) + \left( {\bm{p} - \bm{Rp}' - \bm{t}} \right)} \right\|}^2}} \\
-& = \frac{1}{2}\sum\limits_{i = 1}^n ( {{\left\| {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right\|}^2} + {{\left\| {\bm{p} - \bm{Rp}' - \bm{t}} \right\|}^2} +\\
- & \quad \quad 2{{\left( {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right)}^T}\left( {\bm{p} - \bm{Rp}' - \bm{t}} \right)). 
+\frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\mathbf{p}_i} - \left( {\mathbf{R}{ \mathbf{p}_i}' + \mathbf{t}} \right)} \right\|}^2}}  & = \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\mathbf{p}_i} - \mathbf{R}{\mathbf{p}_i}' - \mathbf{t} - \mathbf{p} + \mathbf{Rp}' + \mathbf{p} - \mathbf{Rp}'} \right\|}^2}} \\
+ & = \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {\left( {{\mathbf{p}_i} - \mathbf{p} - \mathbf{R}\left( {{\mathbf{p}_i}' - \mathbf{p}'} \right)} \right) + \left( {\mathbf{p} - \mathbf{Rp}' - \mathbf{t}} \right)} \right\|}^2}} \\
+& = \frac{1}{2}\sum\limits_{i = 1}^n ( {{\left\| {{\mathbf{p}_i} - \mathbf{p} - \mathbf{R}\left( {{\mathbf{p}_i}' - \mathbf{p}'} \right)} \right\|}^2} + {{\left\| {\mathbf{p} - \mathbf{Rp}' - \mathbf{t}} \right\|}^2} +\\
+ & \quad \quad 2{{\left( {{\mathbf{p}_i} - \mathbf{p} - \mathbf{R}\left( {{\mathbf{p}_i}' - \mathbf{p}'} \right)} \right)}^T}\left( {\mathbf{p} - \mathbf{Rp}' - \mathbf{t}} \right)). 
 \end{array}
 \end{align*}
 
-Since $\left( {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right)$ is zero after the summation, so the optimization objective function can be simplified to
+Since $\left( {{\mathbf{p}_i} - \mathbf{p} - \mathbf{R}\left( {{\mathbf{p}_i}' - \mathbf{p}'} \right)} \right)$ is zero after the summation, so the optimization objective function can be simplified to
 \begin{equation}
-\mathop {\min }\limits_{\bm{R}, \bm{t}} J = \frac{1}{2}\sum\limits_{i = 1}^n {{\left\| {{\bm{p}_i} - \bm{p} - \bm{R}\left( {{\bm{p}_i}' - \bm{p}'} \right)} \right\|}^2} + {{\left\| {\bm{p} - \bm{Rp}' - \bm{t}} \right\|}^2} .
+\mathop {\min }\limits_{\mathbf{R}, \mathbf{t}} J = \frac{1}{2}\sum\limits_{i = 1}^n {{\left\| {{\mathbf{p}_i} - \mathbf{p} - \mathbf{R}\left( {{\mathbf{p}_i}' - \mathbf{p}'} \right)} \right\|}^2} + {{\left\| {\mathbf{p} - \mathbf{Rp}' - \mathbf{t}} \right\|}^2} .
 \end{equation}
 
-Carefully observe those two terms, we find that the first term is only related to the rotation matrix $\bm{R}$, while the second has both $\bm{R}$ and $\bm{t}$, but only related to the centroid. As long as we get $\bm{R}$, we can get $\bm{t}$ by making the second term zero. Therefore, ICP can be solved in the following three steps:
+Carefully observe those two terms, we find that the first term is only related to the rotation matrix $\mathbf{R}$, while the second has both $\mathbf{R}$ and $\mathbf{t}$, but only related to the centroid. As long as we get $\mathbf{R}$, we can get $\mathbf{t}$ by making the second term zero. Therefore, ICP can be solved in the following three steps:
 
 \begin{mdframed}
 \begin{enumerate}
-	\item Calculate the centroid positions of the two groups of points $\bm{p}, \bm{p}'$, and then calculate the \textbf{de-centroid coordinates} of each point:
+	\item Calculate the centroid positions of the two groups of points $\mathbf{p}, \mathbf{p}'$, and then calculate the \textbf{de-centroid coordinates} of each point:
 	\[
-	\bm{q}_i = \bm{p}_i - \bm{p}, \quad \bm{q}_i' = \bm{p}_i' - \bm{p}'.
+	\mathbf{q}_i = \mathbf{p}_i - \mathbf{p}, \quad \mathbf{q}_i' = \mathbf{p}_i' - \mathbf{p}'.
 	\]
 	\item The rotation matrix is calculated according to the following optimization problem:
 	\begin{equation}
-		\bm{R}^* = \arg \mathop {\min }\limits_{\bm{R}} \frac{1}{2}\sum\limits_{i = 1}^n {{\left\| {{\bm{q}_i} - \bm{R} \bm{q}_i' } \right\|}^2}.
+		\mathbf{R}^* = \arg \mathop {\min }\limits_{\mathbf{R}} \frac{1}{2}\sum\limits_{i = 1}^n {{\left\| {{\mathbf{q}_i} - \mathbf{R} \mathbf{q}_i' } \right\|}^2}.
 	\end{equation}
-	\item Calculate $\bm{t}$ according to $\bm{R}$ in step 2:
+	\item Calculate $\mathbf{t}$ according to $\mathbf{R}$ in step 2:
 	\begin{equation}
 	\label{eq:pnp-solve-t}
-	\bm{t}^* = \bm{p} - \bm{R} \bm{p}'.
+	\mathbf{t}^* = \mathbf{p} - \mathbf{R} \mathbf{p}'.
 	\end{equation}
 \end{enumerate}
 \end{mdframed}
 
-We find that once the rotation between the two sets of points is found, and the translation is easy to obtain. So we focus on the calculation of $\bm{R}$. Expand the error term about $\bm{R}$, get:
+We find that once the rotation between the two sets of points is found, and the translation is easy to obtain. So we focus on the calculation of $\mathbf{R}$. Expand the error term about $\mathbf{R}$, get:
 \begin{equation}
- \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\bm{q}_i} - \bm{R} \bm{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \bm{q}_i^\mathrm{T} \bm{q}_i + \bm{q}_i^{ \prime \mathrm{T}}  \bm{R}^\mathrm{T} \bm{R} \bm{q}^\prime_i - 2\bm{q}_i^\mathrm{T} \bm{R} \bm{q}^\prime_i.
+ \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\mathbf{q}_i} - \mathbf{R} \mathbf{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \mathbf{q}_i^\mathrm{T} \mathbf{q}_i + \mathbf{q}_i^{ \prime \mathrm{T}}  \mathbf{R}^\mathrm{T} \mathbf{R} \mathbf{q}^\prime_i - 2\mathbf{q}_i^\mathrm{T} \mathbf{R} \mathbf{q}^\prime_i.
 \end{equation}
 
-The first item is not relevant to $\bm{R}$. The second item can also be ignored since $\bm{R}^\mathrm{T}\bm{R}=\bm{I}$. Therefore, the actual optimization objective function becomes the simplest form of
+The first item is not relevant to $\mathbf{R}$. The second item can also be ignored since $\mathbf{R}^\mathrm{T}\mathbf{R}=\mathbf{I}$. Therefore, the actual optimization objective function becomes the simplest form of
 \begin{equation}
-\sum\limits_{i = 1}^n - \bm{q}_i^\mathrm{T} \bm{R} \bm{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \bm{R} \bm{q}_i^{\prime} \bm{q}^{\mathrm{T}}_i \right) = - \mathrm{tr} \left( \bm{R} \sum\limits_{i = 1}^n \bm{q}_i^{\prime} \bm{q}^{\mathrm{T}}_i \ \right).
+\sum\limits_{i = 1}^n - \mathbf{q}_i^\mathrm{T} \mathbf{R} \mathbf{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \mathbf{R} \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \right) = - \mathrm{tr} \left( \mathbf{R} \sum\limits_{i = 1}^n \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \ \right).
 \end{equation}
 
-Next, we introduce how to solve the optimal $\bm{R}$ in the above problem through SVD. The proof of optimality is more complicated, and interested readers can refer to the literature \cite{Arun1987, PomerleauColasSiegwart2015}. To find $\bm{R}$, first define the matrix:
+Next, we introduce how to solve the optimal $\mathbf{R}$ in the above problem through SVD. The proof of optimality is more complicated, and interested readers can refer to the literature \cite{Arun1987, PomerleauColasSiegwart2015}. To find $\mathbf{R}$, first define the matrix:
 \begin{equation}
-\bm{W} =  \sum\limits_{i = 1}^n \bm{q}_i \bm{q}^{\prime \mathrm{T}}_i.
+\mathbf{W} =  \sum\limits_{i = 1}^n \mathbf{q}_i \mathbf{q}^{\prime \mathrm{T}}_i.
 \end{equation}
 
-$\bm{W}$ is a $3 \times 3$ matrix. Performing SVD decomposition on $\bm{W}$, we get:
+$\mathbf{W}$ is a $3 \times 3$ matrix. Performing SVD decomposition on $\mathbf{W}$, we get:
 \begin{equation}
-\bm{W} = \bm{U \Sigma V}^\mathrm{T}.
+\mathbf{W} = \mathbf{U \Sigma V}^\mathrm{T}.
 \end{equation}
 
-$\bm{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\bm{U}$ and $\bm{V}$ are diagonal matrices. When $\bm{W}$ is of full rank, $\bm{R}$ is
+$\mathbf{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\mathbf{U}$ and $\mathbf{V}$ are diagonal matrices. When $\mathbf{W}$ is of full rank, $\mathbf{R}$ is
 \begin{equation}
-\bm{R} = \bm{U} \bm{V}^\mathrm{T}.
+\mathbf{R} = \mathbf{U} \mathbf{V}^\mathrm{T}.
 \end{equation}
 
-Once solving $\bm{R}$, use the equation \eqref{eq:pnp-solve-t} to solve $\bm{t}$. If the determinant of $\bm{R}$ is negative, then $-\bm{R}$ is taken as the optimal value.
+Once solving $\mathbf{R}$, use the equation \eqref{eq:pnp-solve-t} to solve $\mathbf{t}$. If the determinant of $\mathbf{R}$ is negative, then $-\mathbf{R}$ is taken as the optimal value.
 
 \subsection{Using non-linear optimization}
 Another way to solve ICP is to use non-linear optimization to find the optimal value iteratively. This method is similar to the PnP we described earlier. When expressing the poses in Lie algebra, the objective function can be written as
 \begin{equation}
-\mathop {\min }\limits_{\boldsymbol{\xi}} = \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{{\bm{p}}_i} - \exp \left( \boldsymbol{\xi}^\wedge \right) {\bm{p}}'_i} \right)} \|^2_2.
+\mathop {\min }\limits_{\boldsymbol{\xi}} = \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{{\mathbf{p}}_i} - \exp \left( \boldsymbol{\xi}^\wedge \right) {\mathbf{p}}'_i} \right)} \|^2_2.
 \end{equation}
 
 The derivative of a single error term with respect to the pose has been derived above, using the Lie algebra perturbation model:
 \begin{equation}
-\frac{{\partial \bm{e}}}{{\partial \delta \boldsymbol{\xi} }} =  - {\left( {\exp \left( {{ \boldsymbol{\xi} ^ \wedge }} \right){{\bm{p}}_i}'} \right)^ \odot }.
+\frac{{\partial \mathbf{e}}}{{\partial \delta \boldsymbol{\xi} }} =  - {\left( {\exp \left( {{ \boldsymbol{\xi} ^ \wedge }} \right){{\mathbf{p}}_i}'} \right)^ \odot }.
 \end{equation}
 
 Therefore, in nonlinear optimization, it only needs to iterate continuously to find the minimum value. Moreover, it can be proved that \textsuperscript{\cite{Barfoot2016}}, the ICP problem has a unique solution or an infinite number of solutions. In the case of a unique solution, as long as the minimum value solution can be found, then \textbf{this minimum value is the global optimal value}. So the local minimum is always the global minimum. This also means that the initial value of the ICP solution can be arbitrarily selected. This is a big advantage of solving ICP when the points have been matched already.
@@ -1639,7 +1639,7 @@ Mat &R, Mat &t) {
 }
 \end{lstlisting}
 
-The implementation of ICP is consistent with the previous theoritical part. We call Eigen for SVD, and then calculate the $\bm{R}, \bm{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\bm{p}_i = \bm{R} \bm{p}_i' + \bm{t}$, here is $\bm{R}, \bm{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
+The implementation of ICP is consistent with the previous theoritical part. We call Eigen for SVD, and then calculate the $\mathbf{R}, \mathbf{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}$, here is $\mathbf{R}, \mathbf{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
 
 \begin{lstlisting}[language=sh,caption=终端输入：]
 ./build/pose_estimation_3d3d 1.png 2.png 1_depth.png 2_depth.png
@@ -1743,7 +1743,7 @@ This chapter introduces several important issues in visual odometry based on fea
 
 This chapter is complicated in content and combines the basic knowledge of the previous lectures. If readers find it difficult to understand, they can go back to review the previous knowledge. It is best to do the practice yourself to entirely understand the content of the motion estimation.
 
-What needs to be mentioned here is we have omitted a lot of discussion about some special situations. For example, what happens if the given feature points are coplanar during the solution of the epipolar geometry (this is mentioned in the homography matrix $\bm{H}$)? What happens to collinear? Given such a solution in PnP and ICP, what will happen? Can the solution algorithm recognize these special cases and report that the resulting solution may be unreliable? Can you give the estimated uncertainty of $\bm{T}$? Although they are all worthy of research and exploration, the discussion on them is more suitable in specific papers. The goal of this book is extensive knowledge coverage and basic knowledge. We will not expand on these issues for now. At the same time, these situations rarely occur in engineering. If you care about these rare situations, you can read papers such as \cite{Hartley2003}.
+What needs to be mentioned here is we have omitted a lot of discussion about some special situations. For example, what happens if the given feature points are coplanar during the solution of the epipolar geometry (this is mentioned in the homography matrix $\mathbf{H}$)? What happens to collinear? Given such a solution in PnP and ICP, what will happen? Can the solution algorithm recognize these special cases and report that the resulting solution may be unreliable? Can you give the estimated uncertainty of $\mathbf{T}$? Although they are all worthy of research and exploration, the discussion on them is more suitable in specific papers. The goal of this book is extensive knowledge coverage and basic knowledge. We will not expand on these issues for now. At the same time, these situations rarely occur in engineering. If you care about these rare situations, you can read papers such as \cite{Hartley2003}.
 
 \section*{Exercises}
 \begin{enumerate}
