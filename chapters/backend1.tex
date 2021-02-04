@@ -448,4 +448,560 @@ where $\mathbf{H}_{11}$ is only related to camera poses and $\mathbf{H}_{22}$ on
 This shows the sparse structure of $\mathbf{H}$. We will take advantage tof the sparsity in following section to solve the incremental equations. 
 
 \subsection{Minimal Example of BA}
+Let us give an example to illustrate the situation intuitively. Suppose there are two camera poses ($C_1, C_2$) and six landmarks ($P_1, P_2, P_3, P_4, P_5, P_6$) in the scene. The variables corresponding to these cameras and point clouds are $\mathbf{T}_i, i = 1,2$ and $\mathbf{p}_j, j = 1,\cdots, 6$. The camera $C_1$ observes the landmarks $P_1, P_2, P_3, P_4$, and the camera $C_2$ observes $P_3, P_4, P_5, P_6$. We draw this process as a schematic \autoref{fig:simplegraph}~. Cameras and landmarks are represented by circular nodes. If the $i$-th camera can observe the $j$-th point, we will connect an edge at their corresponding node.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=0.8\textwidth]{backend1/simplegraph.pdf}
+	\caption{A minimal example of bundle adjustment. }
+	\label{fig:simplegraph}
+\end{figure}
+
+We can easily write out the overall cost function as: 
+\begin{equation}
+	\frac{1}{2}\left( \left\Vert \mathbf{e}_{11} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{12} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{13} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{14} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{23} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{24} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{25} \right\Vert^2 + 
+	\left\Vert \mathbf{e}_{26} \right\Vert^2 
+	\right).
+\end{equation}
+
+Here, the $\mathbf{e}_{ij}$ follows the previous definition of \eqref{eq:BAcostfunction}. Take $\mathbf{e}_{11}$ as an example. It describes observation of $P_1$ in $C_1$, which has nothing to do with other camera poses and landmarks. Let $\mathbf{J}_{11}$ be the Jacobian matrix corresponding to $\mathbf{e}_{11}$, and it is not difficult to see that the partial derivatives of $\mathbf{\xi}_2$ and landmarks $\mathbf{p}_2, \cdots, \mathbf{p}_6$ are all zero. We rearrange the variables in the order of $\mathbf{x} = \left( \mathbf{\xi}_1, \mathbf{\xi}_2, \mathbf{p}_1, \cdots, \mathbf{p}_2 \right)^T$,  then we have: 
+\begin{equation}
+	\mathbf{J}_{11} = \frac{\partial \mathbf{e}_{11}}{\partial \mathbf{x}}
+	= \left(
+	\frac{\partial \mathbf{e}_{11}}{\partial \mathbf{\xi}_1},
+	\mathbf{0}_{2\times 6},
+	\frac{\partial \mathbf{e}_{11}}{\partial \mathbf{p}_1},
+	\mathbf{0}_{2\times 3},
+	\mathbf{0}_{2\times 3},
+	\mathbf{0}_{2\times 3},
+	\mathbf{0}_{2\times 3},
+	\mathbf{0}_{2\times 3}
+	\right).
+\end{equation}
+
+In order to show the sparsity, we use a colored square to indicate that the matrix has a non-zero value in the square, and the remaining areas without color indicate that the matrix has a value of 0 at that place. Then the above $\mathbf{J}_{11}$ can be expressed as the pattern shown in \autoref{fig:jaobianrow}~. Similarly, other Jacobian matrices will have similar sparse patterns.
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.8\textwidth]{backend1/Jacobianrow.pdf}
+	\caption{The distribution of non-zero blocks of the $\mathbf{J}_{11}$ matrix. The upper mark indicates the variable corresponding to that column of the matrix. Since the pose dimension is larger than the landmark dimension, the matrix block corresponding to $C_1$ is wider than the matrix block corresponding to $P_1$.}
+	\label{fig:jaobianrow}
+\end{figure}
+In order to obtain the Jacobian matrix corresponding to the objective function, we can list these $\mathbf{J}_{ij}$ as vectors in a certain order, then the overall Jacobian matrix and the corresponding $\mathbf{H}$ matrix The sparse situation is as shown in \autoref{fig:simplematrix}~.
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=1\textwidth]{backend1/simplematrix.pdf}
+	\caption{The sparsity of the Jacobian matrix (left) and the sparsity of the $\mathbf{H}$ matrix (right). The colored squares indicate that the matrix has a non-zero value in the corresponding matrix block, and the rest of the uncolored parts indicate that the value of is always 0.}
+	\label{fig:simplematrix}
+\end{figure}
+
+You may have noticed that the Hessian matrix in the \autoref{fig:simplegraph}~ has the same structure with the corresponding \textbf{adjacency matrix} of the graph \footnote{The adjacency matrix is such a matrix that, its $i,j$ element describes whether there is a connected edge at nodes $i$ and $j$. If this edge exists, we set this element to 1, otherwise set to 0.} The above $\mathbf{H}$ matrix has a total of $8 \times 8$ matrix blocks. For the non-diagonal matrix block in the $\mathbf{H}$ matrix, if the matrix block is non-zero, then There will be an edge in the graph between the variables corresponding to their positions. We can clearly see this from \autoref{fig:matrixandgraph}~. Therefore, the non-zero matrix block in the non-diagonal part of the $\mathbf{H}$ matrix can be understood as a connection between its corresponding two variables, or it can be called a constraint. Therefore, we found that the graph optimization structure is obviously related to the sparsity of the incremental equation.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=1\textwidth]{backend1/matrixandgraph.pdf}
+	\caption{The corresponding relationship between the non-zero matrix blocks in the $\mathbf{H}$ matrix and the edges in the graph. For example, the red matrix block on the right in the $\mathbf{H}$ matrix in the left picture indicates that there is an edge between the corresponding variables $C_2$ and $P_6$ in the right picture $\mathbf{e}_{26} $.}
+	\label{fig:matrixandgraph}
+\end{figure}
+
+Now consider the more general situation, suppose we have $m$ camera poses and $n$ landmarks. Since there are usually far more landmarks than cameras, we have $n \gg m$. From the above reasoning, the actual $\mathbf{H}$ matrix will be something like in \autoref{fig:BigHmatrix}~. Its upper left corner block appears to be very small, while the lower right corner diagonal block takes up a lot of space. In addition, the non-diagonal part is distributed with scattered observation data. Because its shape is very similar to an arrow, it is also called an arrow-like matrix {\cite{Barfoot2016}}. At the same time, it is also very similar to a pickaxe in Minecraft, so I also call it a pickaxe matrix \footnote{This is just a joke, please do not write it like this in formal academic papers. }.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{backend1/BigHmatrix.pdf}
+	\caption{$\mathbf{H}$ matrix in general cases.}
+	\label{fig:BigHmatrix}
+\end{figure}
+
+\subsection{Schur Trick}
+For $\mathbf{H}$ with this sparse structure, what is the difference in the solution of the linear equation $\mathbf{H} \Delta \mathbf{x}= \mathbf{g}$? In fact, there are several ways to use the sparsity of $\mathbf{H}$ to accelerate the calculations. This section introduces one of the most commonly used methods in visual SLAM: Schur elimination, also known as \textbf{marginalization} in SLAM research.
+
+Take a closer look at \autoref{fig:BigHmatrix}, we can easily find that this matrix can be divided into 4 blocks, which is consistent with \eqref{eq:H-blocks}. The upper left corner is a block-diagonal matrix, and the dimension of each block is the same as the dimension of the camera pose. The bottom-right corner is also a diagonal block matrix, and the dimension of each diagonal block is same as the dimension of the landmark. The structure of the off-diagonal block is related to the specific observation data. We first divide this matrix into regions as shown in \autoref{fig:MatrixSegmentation}. Readers can easily find that these 4 regions correspond to the 4 matrix blocks in the formula \eqref{eq:HessianMatrix}. For the convenience of subsequent analysis, we note these 4 blocks as $\mathbf{B}, \mathbf{E}, \mathbf{E}^\mathrm{T}, \mathbf{C}$.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.5\textwidth]{backend1/MatrixSegmentation.pdf}
+	\caption{Blocks in $\mathbf{H}$ matrix.}
+	\label{fig:MatrixSegmentation}
+\end{figure}
+
+The linear equations $\mathbf{H\Delta x} = \mathbf{g}$ can be rewritten as: 
+\begin{equation}
+	\label{eq:linearequations}
+	\left[ \begin{matrix}
+		\mathbf{B}   &   \mathbf{E} \\
+		\mathbf{E^\mathrm{T}} &   \mathbf{C}
+	\end{matrix}\right] 
+	\left[ \begin{array}{l}
+		\Delta \mathbf{x}_c \\
+		\Delta \mathbf{x}_p 
+	\end{array} \right] = 
+	\left[ \begin{array}{l}
+		\mathbf{v} \\
+		\mathbf{w} 
+	\end{array} \right],
+\end{equation}
+where $\mathbf{B}$ is a block-diagonal matrix. The dimension of each diagonal block is the same as the dimension of the camera poses. The number of diagonal blocks is the number of camera variables. Since the number of landmarks will be much larger than the number of camera variables, $\mathbf{C}$ is often much larger than $\mathbf{B}$. Since we use 3D landmarks, the $\mathbf{C}$ matrix is a diagonal block matrix wich each block beging a $3 \times 3$ matrix. The difficulty of inverting a diagonal block matrix is much less than that of a general matrix, because we only need to invert those diagonal blocks separately. Taking this feature into account, we perform Gaussian elimination on the linear equations. The goal is to eliminate the non-diagonal part $\mathbf{E}$ in the upper right corner, so we multiply a coefficient matrix on the left side: 
+\begin{equation}\label{eq:guasselimination}
+	\left[ \begin{matrix}
+		\mathbf{I}   &    -\mathbf{EC^{-1}} \\
+		\mathbf{0}	 &	  \mathbf{I}
+	\end{matrix}\right]
+	\left[ \begin{matrix}
+		\mathbf{B}   &   \mathbf{E} \\
+		\mathbf{E^\mathrm{T}} &   \mathbf{C}
+	\end{matrix}\right] 
+	\left[ \begin{array}{l}
+		\Delta \mathbf{x}_c \\
+		\Delta \mathbf{x}_p 
+	\end{array} \right] = 
+	\left[ \begin{matrix}
+		\mathbf{I}   &    -\mathbf{EC^{-1}}  \\
+		\mathbf{0}	 &	  \mathbf{I}
+	\end{matrix}
+	\right]
+	\left[ \begin{array}{l}
+		\mathbf{v} \\
+		\mathbf{w} 
+	\end{array} \right]  .
+\end{equation}
+
+Rearrange it: 
+\begin{equation}
+	\left[ \begin{matrix}
+		\mathbf{B} - \mathbf{E}\mathbf{C}^{-1}\mathbf{E}^\mathrm{T}	& 	\mathbf{0} \\
+		\mathbf{E}^\mathrm{T}							& 	\mathbf{C}
+	\end{matrix} \right]
+	\left[ \begin{array}{l}
+		\Delta \mathbf{x}_c \\
+		\Delta \mathbf{x}_p 
+	\end{array} \right] = 
+	\left[\begin{array}{l}
+		\mathbf{v} - \mathbf{E}\mathbf{C}^{-1}\mathbf{w}  \\
+		\mathbf{w}
+	\end{array}\right].
+\end{equation}
+
+After the elimination, the first line of the equations becomes a term that has nothing to do with $\Delta \mathbf{x}_p$. Take it out separately and get the incremental equation about the pose part:
+\begin{equation}\label{eq:marginalization}
+	\left[ 
+	\mathbf{B} - \mathbf{E}\mathbf{C}^{-1}\mathbf{E}^\mathrm{T}
+	\right]
+	\Delta \mathbf{x}_c  = 
+	\mathbf{v} - \mathbf{E}\mathbf{C}^{-1}\mathbf{w} .
+\end{equation}
+
+The dimension of this linear equation is the same as the $\mathbf{B}$ matrix, and is much smaller than the overall equations. The Schur trick is to solve this equation first, then substitute the solved $\Delta \mathbf{x}_c$ into the original equation, and then solve $\Delta \mathbf{x}_p$. This process is called \textbf{marginalization} {\cite{Sibley2010}}, or \textbf{Schur elimination} (Schur trick). Compared with the method of directly solving linear equations, it have several obvious advantages:
+
+\begin{enumerate}
+	\item Since $\mathbf{C}$ is a block diagonal matrix, $\mathbf{C}^{-1}$ is easy to solve.
+	\item After solving $\Delta \mathbf{x}_c$, the incremental equation of the landmark part is given by $\Delta \mathbf{x}_p = \mathbf{C}^{-1} (\mathbf{w}-\mathbf {E}^\mathrm{T} \Delta \mathbf{x}_c)$. This still uses the easy-to-solve feature of $\mathbf{C}^{-1}$.
+\end{enumerate}
+
+Therefore, the main amount of calculation for marginalization is to solve the equation \eqref{eq:marginalization}. There is not much we can say about this equation. It is just an ordinary linear equation, no special structure can be used. Let us denote the coefficient of this equation as $\mathbf{S}$. How about its sparsity? \autoref{fig:marginalization} shows an instance of $\mathbf{S}$ after Schur elimination. It can be seen that its sparsity is somehow irregular.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.5\textwidth]{backend1/marginalization.pdf}
+	\caption{The sparse structure of the $\mathbf{S}$ matrix after Schur elimination. It looks like a QR code. Don't scan it.}
+	\label{fig:marginalization}
+\end{figure}
+
+As mentioned earlier, the non-zero elements at the non-diagonal blocks of the $\mathbf{H}$ matrix correspond to the association between the camera and the landmark. Then, do the sparsity of $\mathbf{S}$ have physical meaning after Schur elimination? The answer is yes. Here we say without proof that the non-zero matrix block on the off-diagonal line of the $\mathbf{S}$ matrix indicates that there is a co-observation between the two camera variables. It is called \textbf{co-visibility}. Conversely, if the block is zero, it means that the two cameras do not share any observation. For example, in the sparse matrix shown in \autoref{fig:marginalizationanalysis}~, the first $4 \times 4$ matrix blocks in the upper left corner can indicate that there are common observations between the corresponding camera variables $C_1, C_2, C_3$, and $C_4$.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=0.8\textwidth]{backend1/marginalizationanalysis.pdf}
+	\caption{Take the first $4 \times 4$ matrix blocks in the $\mathbf{S}$ matrix as an example, the matrix blocks in this area $\mathbf{S}_{14}, \mathbf{S}_{24}$ are not zero, meaning that there is at least one common observation between the camera $C_4$ and the cameras $C_1$ and $C_2$. Meanwhile, $S_{34}$ is zero means that there is no common observation between $C_3$ and $C_4$.}
+	\label{fig:marginalizationanalysis}
+\end{figure}
+
+Therefore, the sparsity structure of the $\mathbf{S}$ matrix depends on the actual observation results, which we cannot predict in advance. In practice, for example, in the local mapping module of ORB-SLAM {\cite{Mur-Artal2015}}, we may deliberately select those frames with co-observations as keyframes, in this case the resulting $\mathbf{S}$ is a dense matrix. However, since this module is not executed in real time (normally runs in a separate thread in the backend), this approach is also acceptable. But in other methods, such as DSO\textsuperscript{\cite{Engel2016}}, OKVIS\textsuperscript{\cite{Leutenegger2015}}, etc., they use the sliding window method. Such methods will use the previous $\mathbf{S}$ matrix as a prior constraint in the following BA steps, so they must use some techniques to maintain the sparsity of the $\mathbf{S}$ matrix by discarding some observations. Readers who want to go deeper into this area can refer to their papers. I won't talk about these detailed things here.
+
+From a probabilistic persepctive, we call this step as \textbf{marginalization} because we actually converted the problem of seeking $(\Delta \mathbf{x}_c, \Delta \mathbf{x}_p)$ into fixing  $\Delta \mathbf{x}_p$ first, and finding $\Delta \mathbf{x}_c$, and then finding $\Delta \mathbf{x}_p$. This step is equivalent to the conditional probability expansion:
+\begin{equation}
+	\underbrace{P( \mathbf{x}_c, \mathbf{x}_p )}_{\text{joint}} = \underbrace{P(\mathbf{x}_c | \mathbf{x}_p )}_{\text{conditional}} \underbrace{P( \mathbf{x}_p )}_{\text{marginal}} ,
+\end{equation}
+
+The result is to convert a joint distribution to a multiplication of a conditional distribution and marginal distribution. In the previous sparse BA process, we actually marginalized all the landmarks. But we can also choose which part to marginalization according to the actual situation. Please also note that Schur elimination is only one way to achieve marginalization, and Cholesky decomposition can also be used for marginalization.
+
+Readers may continue to ask, after the Schur elimination, we still need to solve the linear equations \eqref{eq:marginalization}. Are there any techniques for solving it? Unfortunately, this part belongs to the traditional numerical matrix solution, which is usually calculated by matrix decomposition. No matter which solution method is adopted, we recommend using the sparsity of $\mathbf{H}$ to perform Schur elimination first. This is not only because this can increase the speed, but also because the condition number of the $\mathbf{S}$ matrix after elimination is often smaller than the previous $\mathbf{H}$ matrix. Note that Schur elimination does not only mean to eliminate the landmarks. Eliminating camera variables is also a common method used in SLAM.
+
+\subsection{Robust Kernels}
+In the previous BA problem, we minimize the $\mathcal{L}_2$ norm of the error term in the objective function. Although this approach is intuitive, there is a serious problem: what happens if the data given by a certain error term is wrong for reasons such as mismatch? We added an edge that shouldn't have been added to the graph. However, the optimization algorithm does not know that this is wrong data. It will treat all data as noisy observations. From the point of view of the algorithm, this is equivalent to that we find an observation almost impossible to happen. At this time, there will be an edge with large error in graph optimization, and its gradient is also large, which means that adjusting the variables related to it will make the objective function drop more. Therefore, the algorithm will try to adjust the estimated value of the nodes connected by this edge first to make them comply with the unreasonable requirements of this edge. Since the error of this edge is really large, it tends to eliminate out the influence of other correct edges, making the optimization algorithm focus on adjusting a wrong value. This is obviously not what we want to see.
+
+The reason for this problem is that when the error is large, the $\mathcal{L}_2$ norm grows too fast. So people propose something called kernel functions. The kernel function guarantees that the error of each edge will not be too big to cover up the other edges. The specific method is to replace the original  $\mathcal{L}_2$ norm metric of error with a function that does not grow that fast, while ensuring its own smoothness (otherwise we cannot compute derivatives). Because they make the overall optimization result more robust, they are also called robust kernel.
+
+There are many kinds of robust kernel functions, such as the most commonly used Huber kernel:
+\begin{equation}
+	H\left( e \right) = 
+	\left\{ 
+	\begin{array}{ll}
+		\frac{1}{2}{e^2} &\quad \text{when} |e| \leqslant \delta, \\
+		\delta \left( {\left| e \right| - \frac{1}{2}\delta } \right) &\quad \text{otherwise}
+	\end{array} \right.
+\end{equation}
+
+We see that when the error of $e$ is greater than a certain threshold $\delta$, the function growth changes from a quadratic form to a linear form, which is equivalent to limiting the maximum value of the gradient. At the same time, the Huber kernel function is smooth and can be easily derived. \autoref{fig:huber}~ shows the comparison between Huber's kernel function and the quadratic function. It can be seen that the growth of Huber's kernel function is significantly lower than that of the quadratic function when the error is large.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{backend1/huberloss}
+	\caption{The Huber kernel.}
+	\label{fig:huber}
+\end{figure}
+
+In addition to Huber kernels, there are also Cauchy kernels, Tukey kernels, and so on. Please check which kernel functions are supported in g2o and Ceres.
+
+\subsection{Summary}
+In this section, we focus on the sparsity problem in BA. However, in practice, most libraries have implemented the detailed operations for us, and what we need to do is mainly to construct the Bundle Adjustment problem, set the marginalized part, and then call the dense or sparse matrix solver to optimize the variables. If readers want to have a deeper understanding of BA, please refer to the \cite{Triggs2000} or other related papers. 
+
+In the following two sections, we will use the Ceres and g2o libraries to do Bundle Adjustment. In order to show the difference between them, we will use a public data set BAL {\cite{bundleadjustmentinlarge}}, and use the common read and write code.
+
+\section{Practice: BA with Ceres}
+\subsection{BAL Dataset}
+We use the BAL data set to demonstrate the BA experiments. The BAL data set provides several scenes. The camera and landmark information in each scene are given by a text file. We use the file problem-16-22106-pre.txt as an example. This file stores the BA problem information in a line-by-line manner. For the detailed format, see \url{https://grail.cs.washington.edu/projects/bal}. We use the BALProblem class defined in common.h to read in the content of the file, and then use Ceres and g2o to solve them.
+
+It should be noted that the BAL data set has some special features:
+\begin{enumerate}
+	\item  The camera intrinsic model of BAL is given by the focal length $f$ and the distortion parameters $k_1,k_2$, where $f$ is same as the $f_x$ and $f_y$ mentioned before. Since the pixels of the photo are basically square, in many practical situations, $f_x$ is very close to $f_y$, so it is possible to use the same value. In addition, there is no $c_x, c_y$ in this model, because these two values have been removed from the stored data.
+	\item BAL data assumes that the projection plane is behind the optical center of the camera when projecting, so if we calculate according to the model we used before, we need to multiply $-1$ after projection. However, most data sets still use the projection plane in front of the optical center. We should read the format description carefully before using the data set.
+\end{enumerate}
+
+After reading the data with the BALProblem class, we can call the Normalize function to normalize the original data, or add noise to the data through the Perturb function. Normalization means setting zero to the centers of all landmarks, and then scaling them to an appropriate scale. This will make the value in the optimization process more stable and prevent BA to get very large values in extreme cases.
+
+Please read the other interfaces of the BALProblem class by yourself. Since these codes are only responsible for IO functions, in order to save space, we will not print them in the text. After solving the BA, we can also use this type of function to write the result into a ply file (a point cloud file format), and then use the meshlab software to view it. Meshlab can be installed via apt-get, and the installation method is not described here.
+
+\subsection{Solving BA in Ceres}
+In the bundle\_adjustment\_ceres.cpp file, we implemented the process of solving BA in Ceres. The key to using Ceres is to define the projection error model. This part of the code is given in SnavelyReprojectionError.h:
+
+\begin{lstlisting}[language=c++, caption=slambook2/ch9/SnavelyReprojectionError.cpp (part)]
+class SnavelyReprojectionError {
+public:
+	SnavelyReprojectionError(double observation_x, double observation_y) : observed_x(observation_x), observed_y(observation_y) {}
+	
+	template<typename T>
+	bool operator()(const T *const camera,
+		const T *const point,
+		T *residuals) const {
+		// camera[0,1,2] are the angle-axis rotation
+		T predictions[2];
+		CamProjectionWithDistortion(camera, point, predictions);
+		residuals[0] = predictions[0] - T(observed_x);
+		residuals[1] = predictions[1] - T(observed_y);
+		
+		return true;
+	}
+	
+	// camera : 9 dims array
+	// [0-2] : angle-axis rotation
+	// [3-5] : translation
+	// [6-8] : camera parameter, [6] focal length, [7-8] second and forth order radial distortion
+	// point : 3D location.
+	// predictions : 2D predictions with center of the image plane.
+	template<typename T>
+	static inline bool CamProjectionWithDistortion(const T *camera, const T *point, T *predictions) {
+		// Rodrigues' formula
+		T p[3];
+		AngleAxisRotatePoint(camera, point, p);
+		// camera[3,4,5] are the translation
+		p[0] += camera[3];
+		p[1] += camera[4];
+		p[2] += camera[5];
+		
+		// Compute the center fo distortion
+		T xp = -p[0] / p[2];
+		T yp = -p[1] / p[2];
+		
+		// Apply second and fourth order radial distortion
+		const T &l1 = camera[7];
+		const T &l2 = camera[8];
+		
+		T r2 = xp * xp + yp * yp;
+		T distortion = T(1.0) + r2 * (l1 + l2 * r2);
+		
+		const T &focal = camera[6];
+		predictions[0] = focal * distortion * xp;
+		predictions[1] = focal * distortion * yp;
+		
+		return true;
+	}
+	
+	static ceres::CostFunction *Create(const double observed_x, const double observed_y) {
+		return (new ceres::AutoDiffCostFunction<SnavelyReprojectionError, 2, 9, 3>(
+			new SnavelyReprojectionError(observed_x, observed_y)));
+	}
+	
+private:
+	double observed_x;
+	double observed_y;
+};
+\end{lstlisting}
+This overloaded bracket operator in this class implements the error calculation, whose main body is in the  CamProjectionWithDistortion function. Note that in Ceres, we must store optimized variables in the form of a double array. Now each camera has a total of 6-dimensional pose, 1-dimensional focal length, and 2-dimensional distortion parameters, which are described by a total of 9-dimensional parameters. We must also store them in this order in actual storage. The stati cCreate function of this class acts as an external interface that directly returns a Ceres cost function that can be automatically derived. We only need to call the Create function and put the cost function into ceres::Problem.
+
+Next we realize the part of building and solving BA:
+\begin{lstlisting}[language=c++, caption=slambook2/ch9/SnavelyReprojectionError.cpp (part)]
+void SolveBA(BALProblem &bal_problem) {
+	const int point_block_size = bal_problem.point_block_size();
+	const int camera_block_size = bal_problem.camera_block_size();
+	double *points = bal_problem.mutable_points();
+	double *cameras = bal_problem.mutable_cameras();
+	
+	// Observations is 2 * num_observations long array observations
+	// [u_1, u_2, ... u_n], where each u_i is two dimensional, the x
+	// and y position of the observation.
+	const double *observations = bal_problem.observations();
+	ceres::Problem problem;
+	
+	for (int i = 0; i < bal_problem.num_observations(); ++i) {
+		ceres::CostFunction *cost_function;
+		
+		// Each Residual block takes a point and a camera as input
+		// and outputs a 2 dimensional Residual
+		cost_function = 
+		SnavelyReprojectionError::Create(observations[2 * i + 0], observations[2 * i + 1]);
+		
+		// If enabled use Huber's loss function.
+		ceres::LossFunction *loss_function = new ceres::HuberLoss(1.0);
+		
+		// Each observation corresponds to a pair of a camera and a point
+		// which are identified by camera_index()[i] and point_index()[i]
+		// respectively.
+		double *camera = cameras + camera_block_size * bal_problem.camera_index()[i];
+		double *point = points + point_block_size * bal_problem.point_index()[i];
+		
+		problem.AddResidualBlock(cost_function, loss_function, camera, point);
+	}
+	
+	std::cout << "Solving ceres BA ... " << endl;
+	ceres::Solver::Options options;
+	options.linear_solver_type = ceres::LinearSolverType::SPARSE_SCHUR;
+	options.minimizer_progress_to_stdout = true;
+	ceres::Solver::Summary summary;
+	ceres::Solve(options, &problem, &summary);
+	std::cout << summary.FullReport() << "\n";
+}
+\end{lstlisting} 
+
+It can be seen that the problem building part is quite simple. If you want to add other cost functions, the entire process will not change much. Finally, in ceres::Solver::Options, we can set the solution method. Using SPARSE\_SCHUR will make the actual solution process of Ceres same as we described earlier, that is, first perform Schur marginalization on the landmarks to solve this problem in an accelerated manner. However, in Ceres we cannot control which part of the variables are marginalized, which is automatically searched and calculated by the Ceres solver.
+
+The output of Ceres BA is like:
+\begin{lstlisting}[language=sh,caption=Terminal output]
+./build/bundle_adjustment_ceres  problem-16-22106-pre.txt                
+Header: 16 22106 83718bal problem file loaded...
+bal problem have 16 cameras and 22106 points. 
+Forming 83718 observations. 
+Solving ceres BA ... 
+iter      cost      cost_change  |gradient|   |step|    tr_ratio  tr_radius  ls_iter  iter_time  total_time
+0  1.842900e+07    0.00e+00    2.04e+06   0.00e+00   0.00e+00  1.00e+04        0    6.10e-02    2.24e-01
+1  1.449093e+06    1.70e+07    1.75e+06   2.16e+03   1.84e+00  3.00e+04        1    1.79e-01    4.03e-01
+2  5.848543e+04    1.39e+06    1.30e+06   1.55e+03   1.87e+00  9.00e+04        1    1.56e-01    5.59e-01
+3  1.581483e+04    4.27e+04    4.98e+05   4.98e+02   1.29e+00  2.70e+05        1    1.51e-01    7.10e-01
+......
+\end{lstlisting}
+
+The overall error should continue to decrease as the number of iterations increases. Finally, we output the point clouds before and after optimization as initial.ply and final.ply, which can be opened directly with meshlab. The result graph is shown in \autoref{fig:g2o-BA}.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{backend1/g2o-ba}
+	\caption{Visualized point cloud before and after optimization. Left side: the initial value before optimization; Right side: the optimized value.}
+	\label{fig:g2o-BA}
+\end{figure}
+
+\section{Practice: BA with g2o}
+Let's consider how to use g2o to solve this BA problem. As mentioned before, g2o uses a graph model to describe the problem's structure, so we need to use nodes to represent cameras and landmarks and then use edges to represent observations between them. We still use custom defined vertices and edges instead of built-in edges. For cameras and landmarks, we can define the following structure and use the override keyword to indicate the virtual functions:
+
+\begin{lstlisting}[language=c++,caption=slambook2/ch9/bundle_adjustment_g2o.cpp (part)]
+struct PoseAndIntrinsics {
+	PoseAndIntrinsics() {}
+	
+	/// set from given data address
+	explicit PoseAndIntrinsics(double *data_addr) {
+		rotation = SO3d::exp(Vector3d(data_addr[0], data_addr[1], data_addr[2]));
+		translation = Vector3d(data_addr[3], data_addr[4], data_addr[5]);
+		focal = data_addr[6];
+		k1 = data_addr[7];
+		k2 = data_addr[8];
+	}
+	
+	/// set to double array
+	void set_to(double *data_addr) {
+		auto r = rotation.log();
+		for (int i = 0; i < 3; ++i) data_addr[i] = r[i];
+		for (int i = 0; i < 3; ++i) data_addr[i + 3] = translation[i];
+		data_addr[6] = focal;
+		data_addr[7] = k1;
+		data_addr[8] = k2;
+	}
+	
+	SO3d rotation;
+	Vector3d translation = Vector3d::Zero();
+	double focal = 0;
+	double k1 = 0, k2 = 0;
+};
+
+/// pose and f, k1, k2
+class VertexPoseAndIntrinsics : public g2o::BaseVertex<9, PoseAndIntrinsics> {
+	public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+	
+	VertexPoseAndIntrinsics() {}
+	
+	virtual void setToOriginImpl() override {
+		_estimate = PoseAndIntrinsics();
+	}
+	
+	virtual void oplusImpl(const double *update) override {
+		_estimate.rotation = SO3d::exp(Vector3d(update[0], update[1], update[2])) * _estimate.rotation;
+		_estimate.translation += Vector3d(update[3], update[4], update[5]);
+		_estimate.focal += update[6];
+		_estimate.k1 += update[7];
+		_estimate.k2 += update[8];
+	}
+	
+	Vector2d project(const Vector3d &point) {
+		Vector3d pc = _estimate.rotation * point + _estimate.translation;
+		pc = -pc / pc[2];
+		double r2 = pc.squaredNorm();
+		double distortion = 1.0 + r2 * (_estimate.k1 + _estimate.k2 * r2);
+		return Vector2d(_estimate.focal * distortion * pc[0],
+		_estimate.focal * distortion * pc[1]);
+	}
+	
+	virtual bool read(istream &in) {}
+	virtual bool write(ostream &out) const {}
+};
+
+class VertexPoint : public g2o::BaseVertex<3, Vector3d> {
+	public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+	
+	VertexPoint() {}
+	
+	virtual void setToOriginImpl() override {
+		_estimate = Vector3d(0, 0, 0);
+	}
+	
+	virtual void oplusImpl(const double *update) override {
+		_estimate += Vector3d(update[0], update[1], update[2]);
+	}
+	
+	virtual bool read(istream &in) {}
+	
+	virtual bool write(ostream &out) const {}
+};
+
+class EdgeProjection :
+public g2o::BaseBinaryEdge<2, Vector2d, VertexPoseAndIntrinsics, VertexPoint> {
+	public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+	
+	virtual void computeError() override {
+		auto v0 = (VertexPoseAndIntrinsics *) _vertices[0];
+		auto v1 = (VertexPoint *) _vertices[1];
+		auto proj = v0->project(v1->estimate());
+		_error = proj - _measurement;
+	}
+	
+	// use numeric derivatives in g2o
+	virtual bool read(istream &in) {}
+	virtual bool write(ostream &out) const {}
+};
+\end{lstlisting}
+
+We define the rotation, translation, focal length, and distortion parameters in the same camera vertex and then define the camera's observation edge and the landmark. Here we do not implement the Jacobian calculation function of the edge \footnote{You can implement it by yourself if interested. Here we just want to make a fair comparison since we do not provide Jacobians in Ceres version.}, so g2o will automatically provide a numerical calculation of Jacobian. Finally, according to the data in BAL, we can set up the optimization problem of g2o:
+\begin{lstlisting}[language=c++,caption=slambook2/ch9/bundle_adjustment_g2o.cpp (part)]
+void SolveBA(BALProblem &bal_problem) {
+	const int point_block_size = bal_problem.point_block_size();
+	const int camera_block_size = bal_problem.camera_block_size();
+	double *points = bal_problem.mutable_points();
+	double *cameras = bal_problem.mutable_cameras();
+	
+	// pose dimension 9, landmark is 3
+	typedef g2o::BlockSolver<g2o::BlockSolverTraits<9, 3>> BlockSolverType;
+	typedef g2o::LinearSolverCSparse<BlockSolverType::PoseMatrixType> LinearSolverType;
+	// use LM
+	auto solver = new g2o::OptimizationAlgorithmLevenberg(
+	g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+	g2o::SparseOptimizer optimizer;
+	optimizer.setAlgorithm(solver);
+	optimizer.setVerbose(true);
+	
+	/// build g2o problem
+	const double *observations = bal_problem.observations();
+	// vertex
+	vector<VertexPoseAndIntrinsics *> vertex_pose_intrinsics;
+	vector<VertexPoint *> vertex_points;
+	for (int i = 0; i < bal_problem.num_cameras(); ++i) {
+		VertexPoseAndIntrinsics *v = new VertexPoseAndIntrinsics();
+		double *camera = cameras + camera_block_size * i;
+		v->setId(i);
+		v->setEstimate(PoseAndIntrinsics(camera));
+		optimizer.addVertex(v);
+		vertex_pose_intrinsics.push_back(v);
+	}
+	for (int i = 0; i < bal_problem.num_points(); ++i) {
+		VertexPoint *v = new VertexPoint();
+		double *point = points + point_block_size * i;
+		v->setId(i + bal_problem.num_cameras());
+		v->setEstimate(Vector3d(point[0], point[1], point[2]));
+		// in g2o we should manually set the marginalized part 
+		v->setMarginalized(true);
+		optimizer.addVertex(v);
+		vertex_points.push_back(v);
+	}
+	
+	// edge
+	for (int i = 0; i < bal_problem.num_observations(); ++i) {
+		EdgeProjection *edge = new EdgeProjection;
+		edge->setVertex(0, vertex_pose_intrinsics[bal_problem.camera_index()[i]]);
+		edge->setVertex(1, vertex_points[bal_problem.point_index()[i]]);
+		edge->setMeasurement(Vector2d(observations[2 * i + 0], observations[2 * i + 1]));
+		edge->setInformation(Matrix2d::Identity());
+		edge->setRobustKernel(new g2o::RobustKernelHuber());
+		optimizer.addEdge(edge);
+	}
+	
+	optimizer.initializeOptimization();
+	optimizer.optimize(40);
+	
+	// set to bal problem
+	for (int i = 0; i < bal_problem.num_cameras(); ++i) {
+		double *camera = cameras + camera_block_size * i;
+		auto vertex = vertex_pose_intrinsics[i];
+		auto estimate = vertex->estimate();
+		estimate.set_to(camera);
+	}
+	for (int i = 0; i < bal_problem.num_points(); ++i) {
+		double *point = points + point_block_size * i;
+		auto vertex = vertex_points[i];
+		for (int k = 0; k < 3; ++k) point[k] = vertex->estimate()[k];
+	}
+}
+\end{lstlisting}
+
+The above defines the nodes and edges used in this problem. Next, we need to generate some nodes and edges based on the actual data in the BALProblem class and hand them to g2o for optimization. It is worth noting that to take full advantage of sparse BA, we must set the setMarginalized function in the landmarks here. The big difference between g2o and Ceres is that when using sparse optimization, g2o must manually set which vertices are marginalized; otherwise, it will report a runtime error (readers can try to comment out the v->setMarginalized(true) line). The rest is similar to the Ceres version, so that we won't introduce more. The g2o experiment will also output point clouds before and after optimization for comparison and review.
+
+\section{Summary}
+This lecture discusses the state estimation problem and the solution of graph optimization in depth. We see that SLAM can be regarded as a state estimation problem in the classic model. If we assume Markov property and only consider the current state, we get a filter model represented by EKF. If not, we can also choose to consider all motions and observations, which constitute a least-squares problem. In the case of only observation equations, this problem is called BA and can be solved by nonlinear optimization methods. We carefully discussed the sparsity problem in the solution process and pointed out the connection between the problem and graph optimization. Finally, we demonstrated how to use the g2o and Ceres libraries to solve the same optimization problem so that readers have an intuitive understanding of BA.
+
+\section*{Exercises}
+\begin{enumerate}
+	\item Derive \eqref{eq:kalman-K-another} using Sherman-Morrison-Woodbury identities \cite{Sherman1950, Barfoot2016}.
+	\item 
+	Compare the final cost of g2o and Ceres after optimization. Discuss why they are siminlar in Meshlab by have different numerical values. 
+	\item 
+	Search for methods that can provide partial Schur elimination in Ceres, and show the difference. 
+	\item Show that the $\mathbf{S}$ matrix is semi-definite. 
+	\item Read \cite{Kummerle2011} and discuss the difference between the kernel functions in g2o and the loss function in Ceres. 
+	\item[\optional] In the practice part, we optimize the pose and intrinsics parametrized with $f, k_1, k_2$. Please use the full intrinsic and distortion model in lecture 5 and modify the programs to complete the optimization. 
+\end{enumerate}
 
