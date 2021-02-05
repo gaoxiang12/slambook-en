@@ -1,552 +1,107 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{回环检测}
+\chapter{Loop Closure}
 \begin{mdframed}  
-	\textbf{主要目标}
+	\textbf{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item 理解回环检测的必要性。
-		\item 掌握基于词袋的外观式回环检测。
-		\item 通过DBoW3的实验，学习词袋模型的实际用途。
+		\item Understand why loop closure is needed in SLAM.
+		\item Understand the principles of bag-of-words model. 
+		\item Use DBoW3 to detect similar images. 
 	\end{enumerate}
 \end{mdframed}
 
-本讲中，我们来介绍SLAM中另一个主要模块：回环检测。我们知道SLAM主体（前端、后端）主要的目的在于估计相机运动，而回环检测模块，无论是目标上还是方法上，都与前面讲的内容相差较大，所以通常被认为是一个独立的模块。我们将介绍主流视觉SLAM中检测回环的方式：词袋模型，并通过DBoW库上的程序实验，使读者得到更加直观的理解。
-
+In this lecture, we will introduce another main module in SLAM: loopback detection. We know that the primary purpose of SLAM (front-end, back-end) is to estimate camera movement. However, the loop closure module is quite different from the previous content, so it is usually considered as an independent module. We will introduce the loop detection method in visual SLAM: the bag of words model, and carry out an experiment on the DBoW library so that readers can get a more intuitive understanding.
 \newpage
 \includepdf{resources/other/ch12.pdf}
 
-\newpage 
+\newpage
+\section{Loop Closure and Detection}
+\subsection{Why Loop Closure is Needed}
+We have already introduced the front-end and the back-end: the front-end provides short-time trajectory/landmarks estimation and the map's initial value. The back-end is responsible for optimizing all these data. However, if we only consider the adjacent keyframes like VO, then the errors will inevitably accumulate with time so that the entire SLAM will suffer from the accumulative error. The result of long-term estimation will not be reliable. In other words, we cannot construct \textbf{globally consistent} trajectories and maps.
 
-\section{回环检测概述}
-\subsection{回环检测的意义}
-我们已然介绍了前端和后端：前端提供特征点的提取和轨迹、地图的初值，而后端负责对所有这些数据进行优化。然而，如果像VO那样仅考虑相邻时间上的关键帧，那么，之前产生的误差将不可避免地累积到下一个时刻，使得整个SLAM会出现\textbf{累积误差}，长期估计的结果将不可靠，或者说，我们无法构建\textbf{全局一致}的轨迹和地图。
-
-举个简单的例子：在自动驾驶的建图阶段，我们通常会指定采集车在某个给定区域绕若干圈以覆盖所有采集范围。假设我们在前端提取了特征，然后忽略掉特征点，在后端使用Pose Graph优化整个轨迹，如\autoref{fig:drift}(a)~所示。由于前端给出的只是局部的位姿间约束，比如，可能是$\bm{x}_1 - \bm{x}_2, \bm{x}_2-\bm{x}_3$，等等。但是，由于$\bm{x}_1$的估计存在误差，而$\bm{x}_2$是根据$\bm{x}_1$决定的，$\bm{x}_3$又是由$\bm{x}_2$决定的。以此类推，误差就会被累积起来，使得后端优化的结果如\autoref{fig:drift}~(b)所示，慢慢地趋向不准确。在这种应用场景下，我们应该用回环信息确定每次经过同一个地点时应该采集到相同的数据。
+Let's take an example. In the map-building stage of autonomous driving, we usually designate the collection vehicle to circle several times in a given area to cover all the collection areas. Suppose we extract the features at the front end, then ignore the feature points, and use a pose graph to optimize the entire trajectory at the back end, as shown in \autoref{fig:drift}(a)~. Since the frontend gives only partial pose constraints, for example, it may be $\bm{x}_1-\bm{x}_2, \bm{x}_2-\bm{x}_3$, etc. However, due to the error in the estimation of $\bm{x}_1$, $\bm{x}_2$ is determined according to $\bm{x}_1$, $\bm{x}_3$ is again determined by $ \bm{x}_2$. By analogy, errors will be accumulated, making the result of back-end optimization look like what is shown in \autoref{fig:drift}~(b), which gradually tends to be inaccurate. In this application scenario, we should use the loop closure information to determine that the vehicle reaches the same place when we pass the same road.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.8\textwidth]{loopclosure/illustrate-loop.pdf}
-	\caption{漂移示意图。（a）真实轨迹；（b）由于前端只给出相邻帧间的估计，优化后的Pose Graph出现漂移；（c）添加回环检测后的Pose Graph可以消除累积误差。}
+	\caption{Accumulated drift. (a) Real trajectory. (b) Accumulated error if we only consider adjacent keyframes. (c) Add loop closure to reduce the accumulated drift. }
 	\label{fig:drift}
 \end{figure}
 
-虽然后端能够估计最大后验误差，但所谓“好模型架不住烂数据”，只有相邻关键帧数据时，我们能做的事情并不很多，也无从消除累积误差。但是，回环检测模块能够给出除了相邻帧之外的一些\textbf{时隔更加久远}的约束：例如$\bm{x}_1-\bm{x}_{100}$之间的位姿变换。为什么它们之间会有约束呢？这是因为我们察觉到相机\textbf{经过了同一个地方}，\textbf{采集到了相似的数据}。而回环检测的关键，就是如何有效地检测出\textbf{相机经过同一个地方}这件事。如果我们能够成功地检测到这件事，就可以为后端的Pose Graph提供更多的有效数据，使之得到更好的估计，特别是得到一个\textbf{全局一致}的估计。由于Pose Graph可以看成一个质点——弹簧系统，所以回环检测相当于在图像中加入了额外的弹簧，提高了系统稳定性。读者亦可直观地想象成回环边把带有累积误差的边“拉”到了正确的位置——如果回环本身正确的话。
+Although the backend can estimate the maximum posterior error, it depends on the structure of the BA or the pose graph. If there are only adjacent keyframe constraints, we cannot do much, nor can we eliminate the accumulated error. However, the loop closure detection module can give some constraints on \textbf{longer time} other than adjacent frames: for example, the pose constraint between $\bm{x}_1-\bm{x}_{100}$. Why are there constraints between them? Because we noticed that the camera returns to a previously visited scene, and it acquires similar data ln history. The key to loop detection is how to detect this fact effectively. If we can successfully detect this, we can provide more valid constraints for the backend pose graph to get a better estimate, especially a globally consistent estimate. Since the pose graph can be regarded as a point-spring system, loop detection is equivalent to adding additional springs to the graph, which improves the system's stability. The reader can also intuitively imagine that the loop edge "pulls" the edge with accumulated error back to the correct position-if the loop itself is correct.
 
-回环检测对于SLAM系统意义重大。它关系到我们估计的轨迹和地图在\textbf{长时间下}的正确性。另一方面，由于回环检测提供了当前数据与所有历史数据的关联，我们还可以利用回环检测进行\textbf{重定位}。重定位的用处就更多一些。例如，如果我们事先对某个场景录制了一条轨迹并建立了地图，那么之后在该场景中就可以一直跟随这条轨迹进行导航，而重定位可以帮助我们确定自身在这条轨迹上的位置。因此，回环检测对整个SLAM系统精度与稳健性的提升是非常明显的。甚至在某些时候，我们把仅有前端和局部后端的系统称为VO，而把带有回环检测和全局后端的系统称为SLAM。
+Loop detection is of great significance to SLAM systems. It is related to the correctness of our estimated trajectory and map in \textbf{long time}. On the other hand, since loop detection provides the correlation between current data and historical data, we can also use loop detection for \textbf{relocation}. Relocation is also beneficial in most applications. For example, if we record a track for a scene in advance and build a map, then we can let the robot follow this track for navigation, and relocation can help us determine our position on this track. Therefore, the loop detection improves the accuracy and robustness of the entire SLAM system. In some cases, we call a system with only a front-end and a local backend as \textbf{VO} and call a system with loop closing and a global backend as \textbf{SLAM}.
 
-\subsection{方法}
-下面我们来考虑回环检测如何实现的问题。事实上存在若干种不同的思路来看待这个问题，包括理论上的和工程上的。
+\subsection{How to Close the Loops}
+Let's consider how to implement loop detection. There are several different ways of thinking about this problem, including theoretical and engineering.
 
-最简单的方式就是对任意两幅图像都做一遍特征匹配，根据正确匹配的数量确定哪两幅图像存在关联——这确实是一种朴素且有效的思想。缺点在于，我们盲目地假设了“任意两幅图像都可能存在回环”，使得要检测的数量实在太大：对于$N$个可能的回环，我们要检测$C_N^2$那么多次，这是$O(N^2)$的复杂度，随着轨迹变长增长太快，在大多数实时系统当中是不实用的。另一种朴素的方式是，随机抽取历史数据并进行回环检测，比如说在$n$帧当中随机抽5帧与当前帧比较。这种做法能够维持常数时间的运算量，但是这种盲目试探方法在帧数$N$增长时，抽到回环的几率又大幅下降，使得检测效率不高。
+The simplest way is to perform feature matching on any image pairs and determine which of them are related according to the number of correct matches. This is indeed a simple and effective idea. The disadvantage is that we blindly assume that "any two images may have loops," which makes the number of detection too large: for $N$ possible loops, we have to detect $C_N^2$ times. It has the complexity of $O(N^2)$, which grows too fast as the trajectory becomes longer and is not practical in most real-time systems. Another simple way is to extract historical data and perform loop detection randomly. For example, randomly select five frames among $n$ frames and compare them with the current frame. This approach can maintain a constant time calculation, but when the number of frames $N$ increases, the probability of drawing a loop is significantly reduced, making the detection efficiency low.
 
-上面说的朴素思路都过于粗糙。尽管随机检测在有些实现中确实有用\textsuperscript{\cite{Endres2014}}，但我们至少希望有一个“\textbf{哪处可能出现回环}”的预计，才好不那么盲目地去检测。这样的方式大体分为两种思路：基于里程计的几何关系（Odometry based），或基于外观（Appearance based）。基于几何关系是说，当我们发现当前相机运动到了之前的某个位置附近时，检测它们有没有回环关系\textsuperscript{\cite{Hahnel2003}}——这自然是一种直观的想法，但是由于累积误差的存在，我们往往没法正确地发现“运动到了之前的某个位置附近”这件事实，回环检测也无从谈起。因此，这种做法在逻辑上存在一点问题，因为回环检测的目标在于发现“相机回到之前位置”的事实，从而消除累积误差。而基于几何关系的做法假设了“相机回到之前位置附近”，这样才能检测回环。这是有倒果为因的嫌疑的，因而也无法在累积误差较大时工作\textsuperscript{\cite{Beeson2010}}。
+The simple ideas mentioned above are too coarse. Although random detection is indeed useful in some implementations like {\cite{Endres2014}}, we at least hope that there is a prediction of "there may be a loop somewhere" so that the detection is not so blind. Such approaches can be roughly divided into two ideas: odometry-based or appearance-based. Based on the geometric relationship, when we find that the current camera moves close to a certain position before, we detect whether they have a loop relationship \cite{Hahnel2003}. This is naturally an intuitive idea, but it is hard to estimate the accumulated drift amount unless we have global position measurements like GPS. Therefore, this approach has a logical problem because the goal of loop detection is to eliminate accumulated errors. But the odometry-based approach assumes that "the accumulated error is small so that the loop can be detected." If the assumption does not hold, such methods cannot work when the cumulative error is large \cite{Beeson2010}.
 
-另一种方法是基于外观的。它和前端、后端的估计都无关，仅根据两幅图像的相似性确定回环检测关系。这种做法摆脱了累积误差，使回环检测模块成为SLAM系统中一个相对独立的模块（当然前端可以为它提供特征点）。自21世纪初被提出以来，基于外观的回环检测方式能够有效地在不同场景下工作，成为了视觉SLAM中主流的做法，并被应用于实际的系统中去\textsuperscript{\cite{Ulrich2000, Latif2013, Mur-Artal2015}}。
+The other method is based on appearance. It has nothing to do with the estimation of the frontend or the backend and only determines the loop detection relationship based on the two images' similarity. This approach eliminates accumulated errors and makes the loop detection module a relatively independent module in the SLAM system (of course, the frontend can provide the extracted feature points). Since it was proposed in the early 21st century, the appearance-based loop detection method can effectively work in different scenarios and has become the mainstream method in visual SLAM and applied to the actual system {\cite{Ulrich2000, Latif2013, Mur-Artal2015}}.
 
-除此之外，从工程角度我们也能提出一些解决回环检测的办法。例如，室外的无人车通常会配备GPS，可以提供全局的位置信息。利用GPS信息可以很轻松地判断汽车是否回到某个经过的点，但这类方法在室内就不怎么好用。
+In the appearance-based loop detection algorithm, the core problem is how to calculate the similarity between images. For example, for image $\bm{A}$ and image $\bm{B}$, we need to design a method to calculate the similarity score between them: $s(\bm{A}, \bm{B })$. Of course, this score will take a value in a certain interval, and when it is greater than a certain amount, we think that there is a loop. Readers may have questions: Is it difficult to calculate the similarity between two images? For example, intuitively, an image can be expressed as a matrix, so how about subtracting two images directly and then taking a certain norm?
 
-在基于外观的回环检测算法中，核心问题是\textbf{如何计算图像间的相似性}。比如，对于图像$\bm{A}$和图像$\bm{B}$，我们要设计一种方法，计算它们之间的相似性评分：$s(\bm{A}, \bm{B})$。当然这个评分会在某个区间内取值，当它大于一定量后我们认为出现了一个回环。读者可能会有疑问：计算两幅图像之间的相似性很困难吗？例如直观上看，图像能够表示成矩阵，那么直接让两幅图像相减，然后取某种范数行不行呢？
-\clearpage
 \begin{equation}
-s(\bm{A}, \bm{B}) = \| \bm{A}-\bm{B} \|.
+	s(\bm{A}, \bm{B}) = \| \bm{A}-\bm{B} \|.
 \end{equation}
 
-为什么我们不这样做？
+Why don't we do this?
 
 \begin{enumerate}
-	\item 首先，前面也说过，像素灰度是一种不稳定的测量值，它严重地受环境光照和相机曝光的影响。假设相机未动，我们打开了一支电灯，那么图像会整体变亮一些。这样，即使对于同样的数据，我们都会得到一个很大的差异值。
-	\item 另一方面，当相机视角发生少量变化时，即使每个物体的光度不变，它们的像素也会在图像中发生位移，造成一个很大的差异值。
+	\item As mentioned earlier, the pixel grayscale is an unstable measurement value, which is severely affected by the ambient light and camera exposure. Assuming that the camera is not moving and we turn on an electric light, the image will be brighter overall. In this way, even for the same data, we will get a significant difference value.
+	\item On the other hand, when the camera's viewing angle changes a little, even if each object's luminosity does not change, their pixels will be transformed in the image, resulting in a large difference in value.
 \end{enumerate}
 
-由于这两种情况的存在，实际当中，即使对于非常相似的图像，$\bm{A}-\bm{B}$也会经常得到一个（不符合实际的）很大的值。所以我们说，这个函数\textbf{不能很好地反映图像间的相似关系}。这里牵涉到一个“好”和“不好”的定义问题。我们要问，怎样的函数能够更好地反映相似关系，而怎样的函数不够好呢？从这里可以引出\textbf{感知偏差}（Perceptual Aliasing）和\textbf{感知变异}（Perceptual Variability）两个概念。现在我们来更详细地讨论一下。
+Due to the existence of these two situations, in practice, even for very similar images, $\bm{A}-\bm{B}$ will often get an (unrealistic) enormous value. So we say that this function {cannot reflect the similar relationship between images}. It involves a definition of ``good'' and ``bad.'' We have to ask, what kind of function can better reflect the similar relationship, and what kind of function is not good enough? From here, two concepts can be drawn: \textbf{perceptual aliasing} and \textbf{perceptual variability}. Let's discuss it in more detail now.
 
-\subsection{准确率和召回率}
-从人类的角度看，（至少我们自认为）我们能够以很高的精确度，感觉到“两幅图像是否相似”或“这两张照片是从同一个地方拍摄的”这一事实，但由于目前尚未掌握人脑的工作原理，我们无法清楚地描述自己是如何完成这件事的。从程序角度看，我们希望程序算法能够得出和人类，或者和事实一致的判断。当我们觉得，或者事实上就是，两幅图像从同一个地方拍摄，那么回环检测算法也应该给出“这是回环”的结果。反之，如果我们觉得，或事实上是，两幅图像是从不同地方拍摄的，那么程序也应该给出“这不是回环”的判断。\footnote{有机器学习背景的读者，应该能感受出这段话与机器学习是何等相似。你是不是已经在想如何训练网络了呢？}当然，程序的判断并不总是与我们人类的想法一致，所以可能出现\autoref{table:loopclosure}~中的4种情况：
+\subsection{Precision and Recall}
+From a human point of view (at least we think), we can feel the fact that "the two images are similar" or "the two photos were taken from the same place" with high accuracy. But since we have not yet grasped the human brain's working principle, we cannot clearly describe how we accomplish this. From a program point of view, we hope that algorithms can reach judgments consistent with humans or facts. When we feel that the two images were taken from the same place, we expect the loop detection algorithm to give the same result as "this is a loop." Conversely, if we think that the two images were taken from different places, then the program should also give a judgment that "this is not a loop." Readers with a machine learning background should feel how similar this passage is to machine learning.  Of course, the judgment of the algorithm is not always consistent with our human thinking, so there may be four situations in \autoref{table:loopclosure}~:
+
 
 \begin{table}[!htp]
-\centering
-\caption{回环检测的结果分类}
-\label{table:loopclosure}
-\begin{tabu}{c|c|c}
-	\toprule
-	算法 $\backslash$ 事实 & 是回环 & 不是回环 \\ 
-	\midrule
-	是回环 & 真阳性（True Positive） & 假阳性 （False Positive） \\ 
-	不是回环 & 假阴性（False Negative） & 真阴性（True Negative） \\ 
-	\bottomrule
-\end{tabu} 
+	\centering
+	\caption{Classification of the loop detection results}
+	\label{table:loopclosure}
+	\begin{tabu}{c|c|c}
+		\toprule
+		Algorithm $\backslash$ Fact & Is loop & Not loop\\ 
+		\midrule
+		Is loop & True Positive & False Positive \\ 
+		Not loop & False Negative & True Negative\\ 
+		\bottomrule
+	\end{tabu} 
 \end{table}
 
-这里阴性/阳性的说法是借用了医学上的说法。假阳性（False  Positive）又称为感知偏差，而假阴性（False Negative）称为感知变异（见\autoref{fig:FPandFN}）。为方便书写，用缩写TP代表True Positive，其余类推。由于我们希望算法和人类的判断一致，所以希望TP和TN要尽量高，而FP和FN要尽可能低。所以，对于某种特定算法，我们可以统计它在某个数据集上的TP、TN、FP、FN的出现次数，并计算两个统计量：\textbf{准确率}和\textbf{召回率}（Precision \& Recall）。
+The term negative/positive come from medical terms. False-positive is also called perceptual bias, and false negative is called perceptual variation (see \autoref{fig:FPandFN}). For the convenience of writing, we use the abbreviation TP for true-positive, and FN for false-negative, etc. Since we want the algorithm to be consistent with human judgment, we hope that TP and TN should be as high as possible, and FP and FN should be as low as possible. Therefore, for a particular algorithm, we can count the number of occurrences of TP, TN, FP, and FN on a certain data set, and calculate two statistics: \textbf{accuracy rate} and \textbf{recall rate} (precision \& recall)
 \begin{equation}
-\mathrm{Precision} = \mathrm{TP}/(\mathrm{TP}+\mathrm{FP}), \quad \mathrm{Recall} = \mathrm{TP}/(\mathrm{TP}+\mathrm{FN}).
+	\mathrm{Precision} = \mathrm{TP}/(\mathrm{TP}+\mathrm{FP}), \quad \mathrm{Recall} = \mathrm{TP}/(\mathrm{TP}+\mathrm{FN}).
 \end{equation}
 
-\vspace{-\medskipamount}
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.9\textwidth]{loopclosure/FPandFN}
-	\caption{假阳性与假阴性的例子。左侧为假阳性，两幅图像看起来很像，但并非同一走廊；右侧为假阴性，由于光照变化，同一地点不同时刻的照片看起来很不一样。}
+	\caption{Example of false-positive and false-negative scenes. Left: the images look same but actually taken from different space. Right: the images are from the same place but the appearance is different.}
 	\label{fig:FPandFN}
 \end{figure}
 
-从公式字面意义上来看，准确率描述的是，算法提取的所有回环中确实是真实回环的概率。而召回率则是说，在所有真实回环中被正确检测出来的概率。为什么取这两个统计量呢？因为它们有一定的代表性，并且通常来说是一对\textbf{矛盾}。
+Literally, the accuracy rate describes the probability that all the loops extracted by the algorithm are indeed true loops. The recall rate refers to the probability of loops being detected from all real loops. Why shall we take these two statistics? Because they are representative and usually a pair of \textbf{contradiction}.
 
-一个算法往往有许多的设置参数。比如说，当提高某个阈值时，算法可能变得更加“严格”——它检出更少的回环，使准确率得以提高。但同时，由于检出的数量变少了，许多原本是回环的地方就可能被漏掉了，导致召回率下降。反之，如果我们选择更加宽松的配置，那么检出的回环数量将增加，得到更高的召回率，但其中可能混杂一些不是回环的情况，于是准确率下降。
+An algorithm often has many setting parameters. For example, when a certain threshold is raised, the algorithm may become more ``strict''. It detects fewer loops and improves accuracy. But at the same time, because the number of detection has decreased, many real loops may be missed, resulting in a decline in the recall rate. Conversely, if we choose a more relaxed configuration, the number of detected loops will increase, resulting in a higher recall rate. But there may be incorrectly detected loops so that the accuracy rate will decrease.
 
-为了评价算法的好坏，我们会测试它在各种配置下的$P$和$R$值，然后作Precision-Recall曲线（见\autoref{fig:PRCurve}）。当用召回率为横轴，用准确率为纵轴时，我们会关心整条曲线偏向右上方的程度、100\%准确率下的召回率或者50\%召回率时的准确率，作为评价算法的指标。不过请注意，除去一些“天壤之别”的算法，我们通常不能一概而论地说算法A就是优于算法B的。我们可能会说A在准确率较高时还有很好的召回率，而B在70\%召回率的情况下还能保证较好的准确率，诸如此类。
+In order to evaluate the quality of the algorithm, we will test its $P$ and $R$ values under various configurations and then make a precision-recall curve (see \autoref{fig:PRCurve}). When using the recall rate on the horizontal axis and the accuracy rate on the vertical axis, we will care about the degree to which the entire curve deviates to the upper right, the recall rate at 100\% accuracy or the accuracy at 50\% recall rate, as evaluation indicators. However, please note that we usually cannot say that algorithm A is better than algorithm B in general. We may say that A has a good recall rate when the accuracy rate is high, while B can guarantee a good accuracy rate when the recall rate is 70\%, and so on.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.66\textwidth]{loopclosure/prcurve}
-	\caption{准确率−召回率曲线的例子\textsuperscript{\cite{Gao2015a}}。随着召回率的上升，检测条件变得宽松，准确率随之下降。好的算法在较高召回率情况下仍能保证较好的准确率。}
+	\caption{Example of the precision-recall curve {\cite{Gao2015a}}. As the recall rate increases, the detection conditions become looser and the accuracy rate decreases. A good algorithm can still guarantee a better accuracy rate in high recall rate.}
 	\label{fig:PRCurve}
 \end{figure}
 
-值得一提的是，在SLAM中，我们对准确率要求更高，而对召回率则相对宽容一些。由于假阳性的（检测结果是而实际不是的）回环将在后端的Pose  Graph中添加根本错误的边，有些时候会导致优化算法给出完全错误的结果。想象一下，如果SLAM程序错误地将所有的办公桌当成了同一张，那建出来的图会怎么样呢？你可能会看到走廊不直了，墙壁被交错在一起了，最后整个地图都失效了。而相比之下，召回率低一些，则顶多有部分的回环没有被检测到，地图可能受一些累积误差的影响——然而仅需一两次回环就可以完全消除它们了。所以说在选择回环检测算法时，我们更倾向于把参数设置得更严格一些，或者在检测之后再加上\textbf{回环验证}的步骤。
+It is worth mentioning that in SLAM, we have higher requirements for accuracy while being relatively tolerant to the recall. The false-positive loops will add fundamentally wrong edges to the backend pose graph, sometimes causing the optimization algorithm to give completely wrong results. Imagine if the SLAM mistakenly treats all the desks as the same one. What will happen to the created map? You may see that the corridor is not straight, the walls are staggered, and finally, the entire map is invalid. In contrast, if the recall rate is lower, some loops are probably not detected, and the map may be affected by some accumulated errors, but the other loops may eliminate them. Therefore, when choosing the loop detection algorithm, we are more inclined to set the parameters more strictly or add the step of \textbf{loop verification} after the detection.
 
-那么，回到之前的问题，为什么不用$\bm{A}-\bm{B}$来计算相似性呢？我们会发现它的准确率和召回率都很差，可能出现大量的False Positive或False Negative的情况，所以说这样做“不好”。那么，什么方法更好一些呢？
+So, back to the previous question, why not use $\bm{A}-\bm{B}$ to calculate similarity? We will find that its accuracy and recall are inferior to most current methods, and there may be many false-positive or false-negative cases, so it is ``not good.'' So, which method is better?
 
-\section{词袋模型}
-既然直接用两张图像相减的方式不够好，那么我们就需要一种更加可靠的方式。结合前面几讲的内容，一种直观的思路是：为何不像VO那样使用特征点来做回环检测呢？和VO一样，我们对两幅图像的特征点进行匹配，只要匹配数量大于一定值，就认为出现了回环。进一步，根据特征点匹配，我们还能计算出这两幅图像之间的运动关系。当然这种做法会存在一些问题，例如，特征的匹配会比较费时、当光照变化时特征描述可能不稳定等，但离我们要介绍的词袋模型已经很相近了。下面我们先来讲词袋的做法，再来讨论数据结构之类的实现细节。
+\section{Bag of Words}
 
-词袋，也就是Bag-of-Words（BoW），目的是用“图像上有哪几种特征”来描述一幅图像。例如，我们说某张照片中有一个人、一辆车；而另一张中有两个人、一只狗。根据这样的描述，就可以度量这两幅图像的相似性。再具体一些，我们要做以下几件事：
 
-\begin{enumerate}
-	\item 确定“人”“车”“狗”等概念——对应于BoW中的“\textbf{单词}”（Word），许多单词放在一起，组成了“\textbf{字典}”（Dictionary）。
-	\item 确定一幅图像中出现了哪些在字典中定义的概念——我们用单词出现的情况（或直方图）描述整幅图像。这就把一幅图像转换成了一个向量的描述。
-	\item 比较上一步中的描述的相似程度。
-\end{enumerate}
-
-以上面举的例子来说，首先我们通过某种方式得到了一本“字典”。字典上记录了许多单词，每个单词都有一定意义，例如“人”“车”“狗”都是记录在字典中的单词，我们不妨记为$w_1, w_2, w_3$。然后，对于任意图像A，根据它们含有的单词，可记为
-\begin{equation}
-A = 1 \cdot w_1+1\cdot w_2 + 0 \cdot w_3.
-\end{equation}
-
-字典是固定的，所以只要用$[1,1,0]^\mathrm{T}$这个向量就可以表达$A$的意义。通过字典和单词，只需一个向量就可以描述整幅图像了。该向量描述的是“图像是否含有某类特征”的信息，比单纯的灰度值更加稳定。又因为描述向量说的是“\textbf{是否出现}”，而不管它们“\textbf{在哪儿出现}”，所以与物体的空间位置和排列顺序无关，因此在相机发生少量运动时，只要物体仍在视野中出现，我们就仍然保证描述向量不发生变化\footnote{虽然这种性质有时也会带来一些问题，例如，眼睛长在嘴巴下的脸仍是人脸吗？}。 基于这种特性，我们称它为Bag-of-Words而不是什么List-of-Words，强调的是Words的有无，而无关其顺序。因此，可以说字典类似于单词的一个集合。
-
-回到上面的例子，同理，用$[2,0,1]^\mathrm{T}$可以描述图像$B$。如果只考虑“是否出现”而不考虑数量，也可以是$[1,0,1]^\mathrm{T}$，这时候这个向量就是二值的。于是，根据这两个向量，设计一定的计算方式，就能确定图像间的相似性了。当然，如果对两个向量求差仍然有一些不同的做法，比如对于$\bm{a}, \bm{b} \in \mathbb{R}^W$，可以计算：
-\begin{equation}
-s\left( {\bm{a},\bm{b}} \right) = 1 - \frac{1}{W}\left\| {\bm{a} - \bm{b}} \right\|_1.
-\end{equation}
-
-其中范数取$L_1$范数，即各元素绝对值之和。请注意在两个向量完全一样时，我们将得到1；完全相反时（$\bm{a}$为0的地方$\bm{b}$为1）得到0。这样就定义了两个描述向量的相似性，也就定义了图像之间的相似程度。
-
-接下来的问题是什么呢？
-
-\begin{enumerate}
-	\item 我们虽然清楚了字典的定义方式，但它到底是怎么来的呢？
-	\item 如果我们能够计算两幅图像间的相似程度评分，是否就足够判断回环了呢？
-\end{enumerate}
-
-所以接下来，我们首先介绍字典的生成方式，然后介绍如何利用字典实际地计算两幅图像间的相似性。
-
-\section{字典}
-\subsection{字典的结构}
-按照前面的介绍，字典由很多单词组成，而每一个单词代表了一个概念。一个单词与一个单独的特征点不同，它不是从单幅图像上提取出来的，而是某一类特征的组合。所以，字典生成问题类似于一个\textbf{聚类}（Clustering）问题。
-
-聚类问题在无监督机器学习（Unsupervised ML）中特别常见，用于让机器自行寻找数据中的规律。BoW的字典生成问题亦属于其中之一。首先，假设我们对大量的图像提取了特征点，比如说有$N$个。现在，我们想找一个有$k$个单词的字典，每个单词可以看作局部相邻特征点的集合，应该怎么做呢？这可以用经典的K-means（K均值）算法\textsuperscript{\cite{Lloyd1982}}解决。
-
-K-means是一个非常简单有效的方法，因此在无监督学习中广为使用，下面对其原理稍做介绍。简单的说，当有$N$个数据，想要归成$k$个类，那么用K-means来做主要包括如下步骤：
-\begin{mdframed}
-\begin{enumerate}
-	\item 随机选取$k$个中心点：$c_1, \cdots, c_k$。
-	\item 对每一个样本，计算它与每个中心点之间的距离，取最小的作为它的归类。
-	\item 重新计算每个类的中心点。
-	\item 如果每个中心点都变化很小，则算法收敛，退出；否则返回第2步。
-\end{enumerate}
-\end{mdframed}
-
-K-means的做法是朴素且简单有效的，不过也存在一些问题，例如，需要指定聚类数量、随机选取中心点使得每次聚类结果都不相同，以及一些效率上的问题。随后研究者们亦开发出了层次聚类法、K-means++\textsuperscript{\cite{Arthur2007}}等算法以弥补它的不足，不过这都是后话，我们就不详细讨论了。总之，根据K-means，我们可以把已经提取的大量特征点聚类成一个含有$k$个单词的字典了。现在的问题变成了如何根据图像中某个特征点查找字典中相应的单词。
-
-仍然有朴素的思想：只要和每个单词进行比对，取最相似的那个就可以了——这当然是简单有效的做法。然而，考虑到字典的通用性\footnote{你会把一页只有十个单词的纸叫作字典吗？笔者相信大多数人心目中的字典都是相当厚重的。}，我们通常会使用一个较大规模的字典，以保证当前使用环境中的图像特征都曾在字典里出现，或至少有相近的表达。如果你觉得对十个单词一一比较不是什么麻烦事，那么对于一万个呢？十万个呢？
-
-也许读者学过数据结构，这种$O(n)$的查找算法显然不是我们想要的。如果字典排过序，那么二分查找显然可以提升查找效率，达到对数级别的复杂度。而实践当中，我们可能会用更复杂的数据结构，例如Fabmap\textsuperscript{\cite{Cummins2008, Cummins2010, Cummins2011}}中的Chou-Liu tree\textsuperscript{\cite{Chow1968}}等。但我们不想把本书写成复杂细节的集合，所以介绍另一种较为简单实用的树结构\textsuperscript{\cite{Galvez-Lopez2012}}。
-
-在文献\cite{Galvez-Lopez2012}中，使用一种$k$叉树来表达字典。它的思路很简单（如\autoref{fig:lp-dict}所示），类似于层次聚类，是k-means的直接扩展。假定我们有$N$个特征点，希望构建一个深度为$d$、每次分叉为$k$的树，那么做法如下\footnote{我们用了$k$和$d$表达树的分支和深度，这可能会令你想到k-d树\textsuperscript{\cite{Bentley1975}}。笔者觉得虽然做法不尽相同，但它们表达的含义确实是一致的。}：
-
-\begin{mdframed}
-\begin{enumerate}
-	\item 在根节点，用k-means把所有样本聚成$k$类（实际中为保证聚类均匀性会使用k-means++）。这样得到了第一层。
-	\item 对第一层的每个节点，把属于该节点的样本再聚成$k$类，得到下一层。
-	\item 以此类推，最后得到叶子层。叶子层即为所谓的Words。
-\end{enumerate}
-\end{mdframed}
-
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=0.9\textwidth]{loopclosure/dict}
-	\caption{K叉树字典示意图。训练字典时，逐层使用K-means聚类。根据已知特征查找单词时，亦可逐层比对，找到对应的单词。}
-	\label{fig:lp-dict}
-\end{figure}
-
-实际上，最终我们仍在叶子层构建了单词，而树结构中的中间节点仅供快速查找时使用。这样一个$k$分支、深度为$d$的树，可以容纳$k^d$个单词。另一方面，在查找某个给定特征对应的单词时，只需将它与每个中间节点的聚类中心比较（一共$d$次），即可找到最后的单词，保证了对数级别的查找效率。
-
-\subsection{实践：创建字典}
-既然讲到了字典生成，我们就来实际演示一下。前面的VO部分大量使用了ORB特征描述，所以这里就来演示一下如何生成及使用ORB字典。
-
-本实验中，我们选取TUM数据集中的10幅图像（位于slambook2/ch11/data中，如\autoref{fig:lp-data} 所示），它们来自一组实际的相机运动轨迹。可以看出，第一幅图像与最后一幅图像明显采自同一个地方，现在我们要看程序能否检测到这件事情。根据词袋模型，我们先来生成这十张图像对应的字典。
-
-\begin{figure}[!htp]
-	\centering
-	\includegraphics[width=1.0\textwidth]{loopclosure/data}
-	\caption{演示实验中使用的10幅图像，采集自不同时刻的轨迹。}
-	\label{fig:lp-data}
-\end{figure}
-
-需要声明的是，实际BoW使用时字典往往是从更大的数据集生成的，而且最好是来自与目标环境类似的地方。我们通常使用较大规模的字典——越大代表字典单词量越丰富，越容易找到与当前图像对应的单词，但也不能大到超过我们的计算能力和内存。笔者不打算在GitHub上存放一个很大的字典文件，所以我们暂时从十幅图像训练一个小的字典。如果读者想进一步追求更好的效果，应该下载更多的数据，训练更大的字典，这样程序才会实用。也可以使用别人训练好的字典，但请注意字典使用的特征类型是否一致。
-
-下面开始训练字典。首先，请安装本程序使用的BoW库。我们使用的是DBoW3\footnote{选用它的主要原因是其对OpenCV3兼容性较好，且编译和使用都容易上手。}：\url{https://github.com/rmsalinas/DBow3}。读者也可从本书代码的3rdparty文件夹中找到它，它是一个cmake工程，请按照cmake流程对它进行编译安装。
-
-接下来考虑训练字典：
-
-\begin{lstlisting}[language=c++,caption=slambook2/ch11/feature\_training.cpp]
-int main(int argc, char **argv) {
-	// read the image 
-	cout << "reading images... " << endl;
-	vector<Mat> images;
-	for (int i = 0; i < 10; i++) {
-		string path = "./data/" + to_string(i + 1) + ".png";
-		images.push_back(imread(path));
-	}
-	// detect ORB features
-	cout << "detecting ORB features ... " << endl;
-	Ptr<Feature2D> detector = ORB::create();
-	vector<Mat> descriptors;
-	for (Mat &image:images) {
-		vector<KeyPoint> keypoints;
-		Mat descriptor;
-		detector->detectAndCompute(image, Mat(), keypoints, descriptor);
-		descriptors.push_back(descriptor);
-	}
-	
-	// create vocabulary 
-	cout << "creating vocabulary ... " << endl;
-	DBoW3::Vocabulary vocab;
-	vocab.create(descriptors);
-	cout << "vocabulary info: " << vocab << endl;
-	vocab.save("vocabulary.yml.gz");
-	cout << "done" << endl;
-	
-	return 0;
-}
-\end{lstlisting}
-DBoW3的使用非常容易。我们对10张目标图像提取ORB特征并存放至vector容器中，然后调用DBoW3的字典生成接口即可。在DBoW3::Vocabulary对象的构造函数中，我们能够指定树的分叉数量及深度，不过这里使用了默认构造函数，也就是$k=10,d=5$。这是一个小规模的字典，最大能容纳100,000个单词。对于图像特征，我们亦使用默认参数，即每幅图像500个特征点。最后，我们把字典存储为一个压缩文件。
-
-运行此程序，将看到如下字典信息输出：
-
-\begin{lstlisting}
-$ build/feature_training
-reading images...
-detecting ORB features ...
-creating vocabulary ...
-vocabulary info: Vocabulary: k = 10, L = 5, Weighting = tf-idf, Scoring = L1-norm, Number of words = 4983
-done
-\end{lstlisting}
-
-我们看到：分支数量$k$为10，深度$L$为5\footnote{这里的$L$即前文说的$d$。}，单词数量为4983，没有达到最大容量。但是，剩下的Weighting和Scoring是什么呢？从字面上看，Weighting是权重，Scoring似乎指的是评分，但评分是如何计算的呢？
-
-\section{相似度计算}
-\subsection{理论部分}
-下面我们来讨论相似度计算的问题。有了字典之后，给定任意特征$f_i$，只要在字典树中逐层查找，最后都能找到与之对应的单词$w_j$——当字典足够大时，我们可以认为$f_i$和$w_j$来自同一类物体（尽管没有理论上的保证，仅是在聚类意义下这样说）。那么，假设一幅图像中提取了$N$个特征，找到这$N$个特征对应的单词之后，我们就相当于拥有了该图像在单词列表中的分布，或者直方图。直观地讲（或理想情况下），相当于是说“这幅图里有一个人和一辆汽车”这样的意思了。根据Bag-of-Words的说法，不妨认为这是一个Bag。
-
-注意到这种做法中我们对所有单词都是“一视同仁”的——有就是有，没有就是没有。这样做好不好呢？考虑到不同的单词在区分性上的重要性并不相同。例如，“的”“是”这样的字可能在许许多多的句子中出现，我们无法根据它们判别句子的类型；但如果有“文档”“足球”这样的单词，对判别句子的作用就大一些，可以说它们提供了更多信息。所以概括起来，我们希望对单词的区分性或重要性加以评估，给它们不同的权值以起到更好的效果。
-
-TF-IDF（Term  Frequency–Inverse Document Frequency）\textsuperscript{\cite{Sivic2003, Robertson2004}}，或译频率−逆文档频率\footnote{个人觉得TF-IDF称呼起来更顺口，所以后文就用英文缩写而非中文译文了。}，是文本检索中常用的一种加权方式，也用于BoW模型中。TF部分的思想是，某单词在一幅图像中经常出现，它的区分度就高。另一方面，IDF的思想是，某单词在字典中出现的频率越低，则分类图像时区分度越高。
-
-我们可以在建立字典时计算IDF：统计某个叶子节点$w_i$中的特征数量相对于所有特征数量的比例，作为IDF部分。假设所有特征数量为$n$，$w_i$数量为$n_i$，那么该单词的IDF为
-\begin{equation}
-\mathrm{IDF}_i = \log \frac{n}{n_i}.
-\end{equation}
-
-另一方面，TF部分则是指某个特征在单幅图像中出现的频率。假设图像$A$中单词$w_i$出现了$n_i$次，而一共出现的单词次数为$n$，那么TF为
-\begin{equation}
-\mathrm{TF}_i = \frac{n_i}{n}.
-\end{equation}
-
-于是，$w_i$的权重等于TF乘IDF之积：
-\begin{equation}
-\eta_i = \mathrm{TF}_i \times \mathrm{IDF}_i.
-\end{equation}
-
-考虑权重以后，对于某幅图像$A$，它的特征点可对应到许多个单词，组成它的Bag-of-Words：
-\begin{equation}
-A = \left\{ (w_1, \eta_1), (w_2, \eta_2), \ldots, (w_N, \eta_N)  \right\} \buildrel \Delta \over = \bm{v}_A.
-\end{equation}
-
-由于相似的特征可能落到同一个类中，因此实际的$\bm{v}_A$中会存在大量的零。无论如何，通过词袋我们用单个向量$\bm{v}_A$描述了一幅图像$A$。这个向量$\bm{v}_A$是一个稀疏的向量，它的非零部分指示了图像$A$中含有哪些单词，而这些部分的值为TF-IDF的值。
-
-接下来的问题是：给定$\bm{v}_A$和$\bm{v}_B$，如何计算它们的差异呢？这个问题和范数定义的方式一样，存在若干种解决方式，比如文献\cite{Nister2006}中提到的$L_1$范数形式：
-\begin{equation}
-s\left( {{\bm{v}_A} - {\bm{v}_B}} \right) = 2\sum\limits_{i = 1}^N {\left| {{\bm{v}_{Ai}}} \right| + \left| {{\bm{v}_{Bi}}} \right| - \left| {{\bm{v}_{Ai}} - {\bm{v}_{Bi}}} \right|}.
-\end{equation}
-
-当然也有很多种别的方式等你探索，在这里我们仅举一例作为演示。至此，我们已说明了如何通过词袋模型来计算任意图像间的相似度。下面通过程序实际演练一下。
-
-\subsection{实践：相似度的计算}
-上一节的实践部分中，我们已对十幅图像生成了字典。这次我们使用此字典生成Bag-of-Words并比较它们的差异，看看与实际有什么不同。
-
-\begin{lstlisting}[language=c++,caption=slambook/ch12/loop\_closure.cpp]
-int main(int argc, char **argv) {
-	// read the images and database  
-	cout << "reading database" << endl;
-	DBoW3::Vocabulary vocab("./vocabulary.yml.gz");
-	// DBoW3::Vocabulary vocab("./vocab_larger.yml.gz");  // use large vocab if you want: 
-	if (vocab.empty()) {
-		cerr << "Vocabulary does not exist." << endl;
-		return 1;
-	}
-	cout << "reading images... " << endl;
-	vector<Mat> images;
-	for (int i = 0; i < 10; i++) {
-		string path = "./data/" + to_string(i + 1) + ".png";
-		images.push_back(imread(path));
-	}
-	
-	// NOTE: in this case we are comparing images with a vocabulary generated by themselves, this may lead to overfit.
-	// detect ORB features
-	cout << "detecting ORB features ... " << endl;
-	Ptr<Feature2D> detector = ORB::create();
-	vector<Mat> descriptors;
-	for (Mat &image:images) {
-		vector<KeyPoint> keypoints;
-		Mat descriptor;
-		detector->detectAndCompute(image, Mat(), keypoints, descriptor);
-		descriptors.push_back(descriptor);
-	}
-	
-	// we can compare the images directly or we can compare one image to a database 
-	// images :
-	cout << "comparing images with images " << endl;
-	for (int i = 0; i < images.size(); i++) {
-		DBoW3::BowVector v1;
-		vocab.transform(descriptors[i], v1);
-		for (int j = i; j < images.size(); j++) {
-			DBoW3::BowVector v2;
-			vocab.transform(descriptors[j], v2);
-			double score = vocab.score(v1, v2);
-			cout << "image " << i << " vs image " << j << " : " << score << endl;
-		}
-		cout << endl;
-	}
-	
-	// or with database 
-	cout << "comparing images with database " << endl;
-	DBoW3::Database db(vocab, false, 0);
-	for (int i = 0; i < descriptors.size(); i++)
-	db.add(descriptors[i]);
-	cout << "database info: " << db << endl;
-	for (int i = 0; i < descriptors.size(); i++) {
-		DBoW3::QueryResults ret;
-		db.query(descriptors[i], ret, 4);      // max result=4
-		cout << "searching for image " << i << " returns " << ret << endl << endl;
-	}
-	cout << "done." << endl;
-}
-\end{lstlisting}
-
-本程序演示了两种比对方式：图像之间的直接比较，以及图像与数据库之间的比较——尽管它们是大同小异的。此外，我们输出了每幅图像对应的Bag-of-Words描述向量，读者可以从输出数据中看到它们。
-
-\begin{lstlisting}[language=sh,caption=终端输出：]
-$ build/feature_training
-reading database
-reading images... 
-detecting ORB features ... 
-comparing images with images 
-desp 0 size: 500
-transform image 0 into BoW vector: size = 455
-key value pair = <1, 0.00155622>, <3, 0.00222645>, <12, 0.00222645>, <13, 0.00222645>, <14, 0.00222645>, <22, 0.00222645>, <33, 0.00222645>, <37, 0.00155622>, <38, 0.00222645>, <39, 0.00222645>, <43, 0.00222645>, <57, 0.00155622> ......
-\end{lstlisting}
-
-可以看到，BoW描述向量中含有每个单词的ID和权重，它们构成了整个稀疏的向量。当我们比较两个向量时，DBoW3会为我们计算一个分数，计算的方式由之前构造字典时定义：
-
-\begin{lstlisting}[language=sh,caption=终端输出：]
-image 0 vs image 0 : 1
-image 0 vs image 1 : 0.0234552
-image 0 vs image 2 : 0.0225237
-image 0 vs image 3 : 0.0254611
-image 0 vs image 4 : 0.0253451
-image 0 vs image 5 : 0.0272257
-image 0 vs image 6 : 0.0217745
-image 0 vs image 7 : 0.0231948
-image 0 vs image 8 : 0.0311284
-image 0 vs image 9 : 0.0525447
-\end{lstlisting}
-
-在数据库查询时，DBoW对上面的分数进行排序，给出最相似的结果：
-\begin{lstlisting}[language=sh,caption=终端输出：]
-searching for image 0 returns 4 results:
-<EntryId: 0, Score: 1>
-<EntryId: 9, Score: 0.0525447>
-<EntryId: 8, Score: 0.0311284>
-<EntryId: 5, Score: 0.0272257>
-
-searching for image 1 returns 4 results:
-<EntryId: 1, Score: 1>
-<EntryId: 2, Score: 0.0339641>
-<EntryId: 8, Score: 0.0299387>
-<EntryId: 3, Score: 0.0256668>
-
-searching for image 2 returns 4 results:
-<EntryId: 2, Score: 1>
-<EntryId: 7, Score: 0.036092>
-<EntryId: 9, Score: 0.0348702>
-<EntryId: 1, Score: 0.0339641>
-
-searching for image 3 returns 4 results:
-<EntryId: 3, Score: 1>
-<EntryId: 9, Score: 0.0357317>
-<EntryId: 8, Score: 0.0278496>
-<EntryId: 5, Score: 0.0270168>
-
-searching for image 4 returns 4 results:
-<EntryId: 4, Score: 1>
-<EntryId: 5, Score: 0.0493492>
-<EntryId: 0, Score: 0.0253451>
-<EntryId: 6, Score: 0.0253017>
-
-searching for image 5 returns 4 results:
-<EntryId: 5, Score: 1>
-<EntryId: 4, Score: 0.0493492>
-<EntryId: 9, Score: 0.028996>
-<EntryId: 6, Score: 0.0277584>
-
-searching for image 6 returns 4 results:
-<EntryId: 6, Score: 1>
-<EntryId: 8, Score: 0.0306241>
-<EntryId: 5, Score: 0.0277584>
-<EntryId: 3, Score: 0.0267135>
-
-searching for image 7 returns 4 results:
-<EntryId: 7, Score: 1>
-<EntryId: 2, Score: 0.036092>
-<EntryId: 1, Score: 0.0239091>
-<EntryId: 0, Score: 0.0231948>
-
-searching for image 8 returns 4 results:
-<EntryId: 8, Score: 1>
-<EntryId: 9, Score: 0.0329149>
-<EntryId: 0, Score: 0.0311284>
-<EntryId: 6, Score: 0.0306241>
-
-searching for image 9 returns 4 results:
-<EntryId: 9, Score: 1>
-<EntryId: 0, Score: 0.0525447>
-<EntryId: 3, Score: 0.0357317>
-<EntryId: 2, Score: 0.0348702>
-\end{lstlisting}
-
-读者可以查看所有的输出，看看不同图像与相似图像评分有多大差异。我们看到，明显相似的图1和图10（在C++中下标为分别为0和9），其相似度评分约0.0525；而其他图像约为0.02。
-
-在本节的演示实验中，我们看到相似图像1和10的评分明显高于其他图像对，然而就数值上看并没有我们想象的那么明显。按说如果自己和自己比较相似度为100\%，那么我们（从人类角度）认为图1和图10至少也有百分之七八十的相似度，而其他图可能为百分之二三十。然而实验结果却是无关图像约2\%，相似图像约5\%，似乎没有我们想象的那么明显。这是否是我们想要看到的结果呢？
-
-\section{实验分析与评述}
-\subsection{增加字典规模}
-在机器学习领域，如果代码没有出错而结果不满意，我们首先怀疑“网络结构是否够大，层数是否足够深，数据样本是否够多”等，这依然是出于“好模型敌不过烂数据”的大原则（一方面也是因为缺乏更深层次的理论分析）。尽管我们现在是在研究SLAM，但出现这种情况，我们首先会怀疑：是不是字典选得太小了？毕竟我们是从十幅图生成的字典，然后又根据这个字典来计算图像相似性。
-
-slambook2/ch11/vocab\_larger.yml.gz是我们生成的一个稍微大一点儿的字典——事实上是对同一个数据序列的所有图像生成的，大约有2,900幅图像。字典的规模仍然取$k=10,d=5$，即最多一万个单词。读者可以使用同目录下的gen\_vocab\_large.cpp文件自行训练字典。请注意，若要训练大型字典，可能需要一台内存较大的机器，并且耐心等上一段时间。我们对上一节的程序稍加修改，使用更大的字典去检测图像相似性：
-
-\begin{lstlisting}[language=sh,caption=终端输出：]
-comparing images with database 
-database info: Database: Entries = 10, Using direct index = no. Vocabulary: k = 10, L = 5, Weighting = tf-idf, Scoring = L1-norm, Number of words = 99566
-searching for image 0 returns 4 results:
-<EntryId: 0, Score: 1>
-<EntryId: 9, Score: 0.0320906>
-<EntryId: 8, Score: 0.0103268>
-<EntryId: 4, Score: 0.0066729>
-
-searching for image 1 returns 4 results:
-<EntryId: 1, Score: 1>
-<EntryId: 2, Score: 0.0238409>
-<EntryId: 8, Score: 0.00814409>
-<EntryId: 3, Score: 0.00697527>
-
-searching for image 2 returns 4 results:
-<EntryId: 2, Score: 1>
-<EntryId: 1, Score: 0.0238409>
-<EntryId: 5, Score: 0.00897928>
-<EntryId: 8, Score: 0.00893477>
-
-searching for image 3 returns 4 results:
-<EntryId: 3, Score: 1>
-<EntryId: 5, Score: 0.0107005>
-<EntryId: 8, Score: 0.00870392>
-<EntryId: 6, Score: 0.00720695>
-
-searching for image 4 returns 4 results:
-<EntryId: 4, Score: 1>
-<EntryId: 6, Score: 0.0069998>
-<EntryId: 0, Score: 0.0066729>
-<EntryId: 5, Score: 0.0062834>
-
-searching for image 5 returns 4 results:
-<EntryId: 5, Score: 1>
-<EntryId: 3, Score: 0.0107005>
-<EntryId: 2, Score: 0.00897928>
-<EntryId: 4, Score: 0.0062834>
-
-searching for image 6 returns 4 results:
-<EntryId: 6, Score: 1>
-<EntryId: 7, Score: 0.00915307>
-<EntryId: 3, Score: 0.00720695>
-<EntryId: 4, Score: 0.0069998>
-
-searching for image 7 returns 4 results:
-<EntryId: 7, Score: 1>
-<EntryId: 6, Score: 0.00915307>
-<EntryId: 8, Score: 0.00814517>
-<EntryId: 1, Score: 0.00538609>
-
-searching for image 8 returns 4 results:
-<EntryId: 8, Score: 1>
-<EntryId: 0, Score: 0.0103268>
-<EntryId: 2, Score: 0.00893477>
-<EntryId: 3, Score: 0.00870392>
-
-searching for image 9 returns 4 results:
-<EntryId: 9, Score: 1>
-<EntryId: 0, Score: 0.0320906>
-<EntryId: 8, Score: 0.00636511>
-<EntryId: 1, Score: 0.00587605>
-\end{lstlisting}
-
-可以看到，当字典规模增加时，无关图像的相似性明显变小了。而相似的图像，例如图像1和10，虽然分值也略微下降，但相对于其他图像的评分，却变得更为显著了。这说明增加字典训练样本是有益的。同理，读者可以尝试使用更大规模的字典，看看结果会发生怎样的变化。
-
-\subsection{相似性评分的处理}
-对任意两幅图像，我们都能给出一个相似性评分，但是只利用这个分值的绝对大小并不一定有很好的帮助。比如说，有些环境的外观本来就很相似，像办公室往往有很多同款式的桌椅；另一些环境则各个地方都有很大的不同。考虑到这种情况，我们会取一个\textbf{先验相似度}$s\left( \bm{v}_t, \bm{v}_{t-\Delta t}\right)$，它表示某时刻关键帧图像与上一时刻的关键帧的相似性。然后，其他的分值都参照这个值进行归一化：
-\begin{equation}
-s\left( \bm{v}_t, \bm{v}_{t_j}\right)' = s\left( \bm{v}_t, \bm{v}_{t_j}\right) / s\left( \bm{v}_t, \bm{v}_{t-\Delta t}\right).
-\end{equation}
-
-站在这个角度上，我们说：如果当前帧与之前某关键帧的相似度超过当前帧与上一个关键帧相似度的3倍，就认为可能存在回环。这个步骤避免了引入绝对的相似性阈值，使得算法能够适应更多的环境。
-\enlargethispage{-5pt}
-\subsection{关键帧的处理}
-在检测回环时，我们必须考虑到关键帧的选取。如果关键帧选得太近，那么将导致两个关键帧之间的相似性过高，相比之下不容易检测出历史数据中的回环。比如，检测结果经常是第$n$帧和第$n-2$帧、第$n-3$帧最为相似，这种结果似乎太平凡了，意义不大。所以从实践上说，用于回环检测的帧最好是稀疏一些，彼此之间不太相同，又能涵盖整个环境。
-
-另一方面，如果成功检测到了回环，比如说出现在第1帧和第$n$帧。那么很可能第$n+1$帧、第$n+2$帧都会和第1帧构成回环。但是，确认第1帧和第$n$帧之间存在回环对轨迹优化是有帮助的，而再接下去的第$n+1$帧、第$n+2$帧都会和第1帧构成回环产生的帮助就没那么大了，因为我们已经用之前的信息消除了累积误差，更多的回环并不会带来更多的信息。所以，我们会把“相近”的回环聚成一类，使算法不要反复地检测同一类的回环。
-
-\subsection{检测之后的验证}
-词袋的回环检测算法完全依赖于外观而没有利用任何的几何信息，这导致外观相似的图像容易被当成回环。并且，由于词袋不在乎单词顺序，只在意单词有无的表达方式，更容易引发感知偏差。所以，在回环检测之后，我们通常还会有一个验证步骤\textsuperscript{\cite{Latif2013, Cadena2012}}。
-
-验证的方法有很多。其一是设立回环的缓存机制，认为单次检测到的回环并不足以构成良好的约束，而在一段时间中一直检测到的回环，才认为是正确的回环。这可以看成时间上的一致性检测。另一方法是空间上的一致性检测，即对回环检测到的两个帧进行特征匹配，估计相机的运动。然后，再把运动放到之前的Pose Graph中，检查与之前的估计是否有很大的出入。总之，验证部分通常是必需的，但如何实现却是见仁见智的问题。
-
-\subsection{与机器学习的关系}
-从前面的论述中可以看出，回环检测与机器学习有着千丝万缕的关联。回环检测本身非常像是一个分类问题。与传统模式识别的区别在于，回环中的类别数量很大，而每类的样本很少——极端情况下，当机器人发生运动后，图像发生变化，就产生了新的类别，我们甚至可以把类别当成连续变量而非离散变量；而回环检测，相当于两幅图像落入同一类，则是很少出现的。从另一个角度看，回环检测也相当于对“图像间相似性”概念的一个学习。既然人类能够掌握图像是否相似的判断，让机器学习到这样的概念也是非常有可能的。
-
-从词袋模型来说，它本身是一个非监督的机器学习过程——构建词典相当于对特征描述子进行聚类，而树只是对所聚的类的一个快速查找的数据结构而已。既然是聚类，结合机器学习里的知识，我们至少可以问：
-
-\begin{enumerate}
-	\item 是否能对机器学习的图像特征进行聚类，而不是对SURF、ORB这样的人工设计特征进行聚类？
-	\item 是否有更好的方式进行聚类，而不是用树结构加上K-means这些较朴素的方式？
-\end{enumerate}
-
-结合目前机器学习的发展，二进制描述子的学习和无监督的聚类，都是非常有望在深度学习框架中得以解决的问题。我们也陆续看到了利用机器学习进行回环检测的工作。尽管目前词袋方法仍是主流，但笔者本人相信，未来深度学习方法很有希望打败这些人工设计特征的、“传统”的机器学习方法\textsuperscript{\cite{Gao2015, Gao2015b}}。毕竟词袋方法在物体识别问题上已经明显不如神经网络了，而回环检测又是非常相似的一个问题。比如BoW模型的改进形式VLAD就有基于CNN的实现\cite{Arandjelovic2016,AngelinaUy2018}，同时也有一些网格在训练之后，可以从图像回归出采集相机的位姿\cite{Kendall2015}，这些都可能成为新的回环检测算法。
-
-\section*{习题}
-\begin{enumerate}
-	\item 请书写计算PR曲线的小程序。用MATLAB或Python可能更加简便一些，因为它们擅长作图。
-	\item 验证回环检测算法，需要有人工标记回环的数据集，例如\cite{Cummins2008}。然而人工标记回环是很不方便的，我们会考虑根据标准轨迹计算回环。即，如果轨迹中有两个帧的位姿非常相近，就认为它们是回环。请根据TUM数据集给出的标准轨迹，计算出一个数据集中的回环。这些回环的图像真的相似吗？
-	\item 学习DBoW3或DBoW2库，自己寻找几张图片，看能否从中正确检测出回环。
-	\item 调研相似性评分的常用度量方式，哪些比较常用？
-	\item Chow-Liu树是什么原理？它是如何被用于构建字典和回环检测的？
-	\item 阅读文献\cite{Williams2009}，除了词袋模型，还有哪些用于回环检测的方法？
-\end{enumerate}
