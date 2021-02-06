@@ -103,5 +103,58 @@ It is worth mentioning that in SLAM, we have higher requirements for accuracy wh
 So, back to the previous question, why not use $\bm{A}-\bm{B}$ to calculate similarity? We will find that its accuracy and recall are inferior to most current methods, and there may be many false-positive or false-negative cases, so it is ``not good.'' So, which method is better?
 
 \section{Bag of Words}
+Since directly subtracting two images is not good enough, then we need a more reliable method. Recalling the previous lectures' content, we may have an intuitive idea: Why not use feature points from VO to detect the loops? We may match the feature points of the two images just like VO. Furthermore, according to the feature matching, we can also calculate the motion between the two images. Of course, there are some problems with this approach. For example, feature matching will be time-consuming, feature description may be unstable when the illumination changes, etc., but it is very close to the bag of words model we are going to introduce. Let's talk about the bag of words first and then discuss the implementation details.
+
+Bag-of-Words (BoW), the purpose is to describe an image in terms of "what kinds of features are there on the image." For example, we say that there are a person and a car in one photo; and two people and a dog in another photo. According to this description, the similarity of the two images can be measured. To be more specific, we need to do the following things:
+
+\begin{enumerate}
+	\item Determine the concepts of people, cars, and dogs-corresponding to the word. Many words are put together to form a dictionary.
+	\item Detect which predefined words in the dictionary appear in an image-we use the appearance of words (histogram) to describe the entire image. In this way, we convert an image into a vector description.
+	\item Compute the similarity by the histogram in the second step.
+\end{enumerate}
+
+
+Let's give an example. Assume we get a dictionary in some way. There are many words recorded in the dictionary, and each word has a certain meaning. For example, \textit{person}, \textit{car}, and \textit{dog} are all words recorded in the dictionary. We might as well write them as $w_1, w_2, w_3$. Then, for any image A, according to the words they contain, it can be written as:
+\begin{equation}
+	A = 1 \cdot w_1+1\cdot w_2 + 0 \cdot w_3.
+\end{equation}
+
+Since the dictionary is fixed, we may use the vector $[1,1,0]^\mathrm{T}$ to express the meaning of $A$. Through dictionaries and words, only one vector can describe the entire image. This vector describes the information of "whether the image contains a certain type of feature," which is more stable than pure gray value. And because the description vector is only about the existence of the words rather than their order, it has nothing to do with the object's spatial position and arrangement order. Therefore, when the camera moves a little, as long as the object is appearing in the field of vision, we still guarantee that the description vector does not change \footnote{Although this property sometimes brings some problems, for example, is the face with the eyes under the mouth still a human face? }. Based on this feature, we call it Bag-of-Words instead of List-of-Words. The emphasis is on the presence or absence of Words, regardless of their order. Therefore, it can be said that a dictionary is similar to a collection of words.
+
+Going back to the above example, in the same way, the vector $[2,0,1]^\mathrm{T}$ can describe the image $B$. If you only consider "whether it appears" without considering the quantity, it can also be $[1,0,1]^\mathrm{T}$. At this time, this vector is binary. Therefore, by designing a certain calculation method based on these two vectors, the similarity between the images can be determined. Of course, if there are still some different ways to calculate the difference between two vectors, for example, for $\bm{a}, \bm{b} \in \mathbb{R}^W$, you can calculate:
+\begin{equation}
+	s\left( {\bm{a},\bm{b}} \right) = 1 - \frac{1}{W}\left\| {\bm{a} - \bm{b}} \right\|_1,
+\end{equation}
+where we take the $L_1$ norm, which is the sum of the absolute values of the elements. Please note that when the two vectors are exactly the same, we will get 1; when the two vectors are completely different (where $\bm{a}$ is 0, $\bm{b}$ is 1), we will get 0. This defines the similarity of the two description vectors, and also defines the degree of similarity between the images.
+
+Yes, what's next?
+\begin{enumerate}
+	\item How does the dictionary come from?
+	\item If we can calculate the similarity score between two images, is it enough to close the loop?
+\end{enumerate}
+
+Next, we first introduce the generation method of the dictionary and then introduce how to use the dictionary to calculate the similarity between two images.
+
+\section{Train the Dictionary}
+\subsection{The Structure of Dictionary}
+According to the previous introduction, the dictionary is composed of many words, and each word represents a concept. A word is different from a single feature point. It is not extracted from a single image, but a combination of a certain type of feature. Therefore, the dictionary generation problem is similar to a \textbf{clustering} (Clustering) problem.
+
+The clustering problem is particularly common in unsupervised machine learning, which lets the machine find the data structure by itself. Training BoW's dictionary is also one of them. First, suppose we have extracted feature points from many, let's say $N$, images. Now, we want to find a dictionary with $k$ words. Each word can be regarded as a collection of local adjacent feature points. We can solve this with the classic K-means (K-means) algorithm {\cite{Lloyd1982}}.
+
+K-means is a straightforward and effective method. It is widely used in unsupervised learning, and we briefly introduce its principles below. Let's say there are $N$ data, and you want to classify them into $k$ categories, then using K-means to do it mainly includes the following steps:
+
+\begin{mdframed}
+	\begin{enumerate}
+		\item Randomly select $k$ centers: $c_1, \cdots, c_k$.
+		\item Compute the distance between each data sample to the cluster centers. Assign the closest cluster to this sample. 
+		\item Re-compute the centers of the clusters. 
+		\item If the centers converge, exit. Otherwise return to step 2. 
+	\end{enumerate}
+\end{mdframed}
+
+
+
+
+
 
 
