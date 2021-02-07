@@ -152,9 +152,397 @@ K-means is a straightforward and effective method. It is widely used in unsuperv
 	\end{enumerate}
 \end{mdframed}
 
+The K-means approach is simple and effective, but there are some problems, such as the need to specify the number of clusters, randomly select the center point so that each clustering result is different, and some efficiency issues. Later, researchers also developed algorithms such as hierarchical clustering, K-means++{\cite{Arthur2007}} to make up for its shortcomings, but these are all later, we will not discuss them in detail. In short, according to K-means, we can cluster a large number of feature points that have been extracted into a dictionary containing $k$ words. The question now becomes how to find the corresponding word in the dictionary based on a certain feature point in the image.
+
+There is still a simple idea: just compare each word and choose the most similar one-this is of course a simple and effective approach. However, considering the versatility of the dictionary\footnote{Would you call a page of paper with only ten words a dictionary? The author believes that most people's dictionaries are quite heavy. }, we usually use a larger-scale dictionary to ensure that the image features in the current environment have all appeared in the dictionary, or at least have similar expressions. If you think it’s not a hassle to compare ten words one by one, how about ten thousand? How about one hundred thousand?
+
+Perhaps the reader has learned data structure, this kind of $O(n)$ search algorithm is obviously not what we want. If the dictionary is sorted out, then the binary search can obviously improve the search efficiency and reach the logarithmic level of complexity. In practice, we may use more complex data structures, such as the Chou-Liu tree {\cite{Chow1968}} in Fabmap {\cite{Cummins2008, Cummins2010, Cummins2011}}. But we don't want to write this book as a collection of complex details, so we introduce another simpler and more practical tree structure {\cite{Galvez-Lopez2012}}.
+
+In the document of \cite{Galvez-Lopez2012}, a k-d tree is used to express the dictionary. Its idea is very simple (as shown in \autoref{fig:lp-dict}), similar to hierarchical clustering, and a direct extension of k-means. Suppose we have $N$ feature points, and we want to build a tree with a depth of $d$ and each fork of $k$, then the approach is as follows\footnote{We used $k$ and $d$ to express the branches of the tree And depth, this may make you think of kd tree \textsuperscript{\cite{Bentley1975}}. The author feels that although the practices are different, the meanings they express are indeed the same. }:
+
+\begin{mdframed}
+	\begin{enumerate}
+		\item At the root node, use k-means to cluster all samples into $k$ classes (in practice, k-means++ is used to ensure clustering uniformity). This gives the first layer.
+		\item For each node in the first layer, gather the samples belonging to that node into the $k$ class to get the next layer.
+		\item Repeating the second step, the leaf layer is finally obtained. The leaf layer is the so-called \textit{words}.
+	\end{enumerate}
+\end{mdframed}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.9\textwidth]{loopclosure/dict}
+	\caption{Schematic view of K-d tree dictionary. When training the dictionary, K-means clustering is used layer by layer. When searching for words based on known features, we can also compare them layer by layer to find the corresponding words.}
+	\label{fig:lp-dict}
+\end{figure}
+
+In fact, we are still building words at the leaf level in the end, and the intermediate nodes in the tree structure are only used for quick search. Such a tree with $k$ branch and depth $d$ can hold $k^d$ words. On the other hand, when looking for a word corresponding to a given feature, you only need to compare it with the cluster center of each intermediate node (a total of $d$ times) to find the last word, ensuring the logarithmic level search efficiency.
+
+\subsection{Practice: Creating the Dictionary}
+Now that we talked about dictionary generation, let's demonstrate it in practice. The previous VO part used a lot of ORB feature description, so here is how to generate and use ORB dictionary.
+
+In this experiment, we select 10 images in the TUM dataset (located in slambook2/ch11/data, as shown in \autoref{fig:lp-data}), which come from a set of actual camera motion trajectories. It can be seen that the first image and the last image were obviously taken from the same place. Now we have to see if the program can detect this. According to the bag-of-words model, we first generate the dictionary corresponding to these ten images.
+
+\begin{figure}[!htp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{loopclosure/data}
+	\caption{The 10 images used in the demonstration experiment.}
+	\label{fig:lp-data}
+\end{figure}
+
+What needs to be stated is that the actual BoW dictionary is often generated from a larger data set, and preferably from a place similar to the target environment. We usually use larger-scale dictionaries-the larger the dictionary, the more abundant it is, and the easier it is to find the words corresponding to the current image, but it should not exceed our computing power and memory. The author does not plan to store a large dictionary file on GitHub, so we temporarily train a small dictionary from ten images. If readers want to further pursue better results, they should download more data and train larger dictionaries so that the program will be practical. You can also use a dictionary trained by others, but please pay attention to whether the feature types used in the dictionary are consistent.
+
+Let's start training the dictionary. First, please install the BoW library used by this program. We use DBoW3 \footnote{The reason for choosing it is that it has good compatibility with OpenCV3, and it is easy to compile and use. }:\url{https://github.com/rmsalinas/DBow3}. Readers can also find it in the 3rdparty folder of the code in this book. It is a cmake project. Please follow the cmake process to compile and install it.
+
+Now let's do the training work: 
+\begin{lstlisting}[language=c++,caption=slambook2/ch11/feature\_training.cpp]
+int main(int argc, char **argv) {
+	// read the image 
+	cout << "reading images... " << endl;
+	vector<Mat> images;
+	for (int i = 0; i < 10; i++) {
+		string path = "./data/" + to_string(i + 1) + ".png";
+		images.push_back(imread(path));
+	}
+	// detect ORB features
+	cout << "detecting ORB features ... " << endl;
+	Ptr<Feature2D> detector = ORB::create();
+	vector<Mat> descriptors;
+	for (Mat &image:images) {
+		vector<KeyPoint> keypoints;
+		Mat descriptor;
+		detector->detectAndCompute(image, Mat(), keypoints, descriptor);
+		descriptors.push_back(descriptor);
+	}
+	
+	// create vocabulary 
+	cout << "creating vocabulary ... " << endl;
+	DBoW3::Vocabulary vocab;
+	vocab.create(descriptors);
+	cout << "vocabulary info: " << vocab << endl;
+	vocab.save("vocabulary.yml.gz");
+	cout << "done" << endl;
+	
+	return 0;
+}
+\end{lstlisting}
+The use of DBoW3 is very easy. We extract ORB features from 10 target images and store them in a vector container, and then call DBoW3's dictionary generation interface. In the constructor of the DBoW3::Vocabulary object, we can specify the number and depth of the tree branches, but the default constructor is used here, which is $k=10,d=5$. This is a small-scale dictionary with a maximum of 100,000 words. For image features, we also use the default parameters, that is, 500 feature points per image. Finally, we store the dictionary as a compressed file.
+
+Run this program, you will see the following dictionary information output:
+\begin{lstlisting}[language=sh,caption=Terminal output:]
+$ build/feature_training
+reading images...
+detecting ORB features ...
+creating vocabulary ...
+vocabulary info: Vocabulary: k = 10, L = 5, Weighting = tf-idf, Scoring = L1-norm, Number of words = 4983
+done
+\end{lstlisting}
+We see that the number of branches $k$ is 10, and the depth $L$ is 5\footnote{where $L$ is the $d$ mentioned above. }, the number of words is 4983, which does not reach the maximum capacity. But what are the remaining Weighting and Scoring? Literally, Weighting is weight, Scoring seems to refer to scoring, but how is the score calculated?
 
 
+\section{Calculate the Similarity}
+\subsection{Theoretical Part}
+Let's discuss the problem of similarity calculation. After having a dictionary, given any feature $f_i$, as long as you look up layer by layer in the dictionary tree, you can finally find the corresponding word $w_j$-when the dictionary is large enough, we can think of $f_i$ and $ w_j$ comes from the same class of objects (although there is no theoretical guarantee, but only in the sense of clustering). Then, suppose that $N$ features are extracted from an image, and after finding the words corresponding to these $N$ features, we are equivalent to having the distribution of the image in the word list, or histogram. Intuitively (or ideally), it is equivalent to saying ``There is a person and a car in this picture''. According to Bag-of-Words, it may be considered a bag.
+
+Note that in this approach, we treat all words equally-if there is, there is, and if there is not, there is no. Is this good? Considering that the importance of different words in distinguishing is not the same. For example, words such as "的" and "Yes" may appear in many sentences, and we cannot distinguish the type of sentence based on them; but if there are words such as "document" and "football", it will be more effective in distinguishing sentences. Some, it can be said that they provide more information. So in summary, we hope to evaluate the \textit{distinguishability} or importance of words and give them different weights to achieve better results.
+
+TF-IDF (Term Frequency-Inverse Document Frequency)\textsuperscript{\cite{Sivic2003, Robertson2004}} is a weighting method commonly used in text retrieval, and is also used in BoW models. The idea of the TF part is that if a word often appears in an image, its distinguishing degree is high. On the other hand, the idea of IDF is that the lower the frequency of a word in the dictionary, the higher the degree of discrimination when classifying images.
+
+We can calculate IDF when building a dictionary: Count the ratio of the number of features in a leaf node $w_i$ to the number of all features as the IDF part. Assuming that the number of all features is $n$ and the number of $w_i$ is $n_i$, then the IDF of the word is:
+\begin{equation}
+	\mathrm{IDF}_i = \log \frac{n}{n_i}.
+\end{equation}
+
+On the other hand, the TF part refers to the frequency of a certain feature in a single image. Assuming that the word $w_i$ appears $n_i$ times in the image $A$, and the total number of words appears $n$, then TF is:
+\begin{equation}
+	\mathrm{TF}_i = \frac{n_i}{n}.
+\end{equation}
+
+Therefore, the weight of $w_i$ is equal to the product of TF times IDF:
+\begin{equation}
+	\eta_i = \mathrm{TF}_i \times \mathrm{IDF}_i.
+\end{equation}
+
+After considering the weights, for a certain image $A$, its feature points can correspond to many words, forming its Bag-of-Words:
+\begin{equation}
+	A = \left\{ (w_1, \eta_1), (w_2, \eta_2), \ldots, (w_N, \eta_N)  \right\} \buildrel \Delta \over = \bm{v}_A.
+\end{equation}
+
+Since similar features may fall into the same class, there will be a lot of zeros in the actual $\bm{v}_A$. In any case, we use a single vector $\bm{v}_A$ to describe an image $A$ through bag of words. This vector $\bm{v}_A$ is a sparse vector whose non-zero parts indicate which words are contained in the image $A$, and the values of these parts are the value of TF-IDF.
+
+The next question is: Given $\bm{v}_A$ and $\bm{v}_B$, how to calculate the difference between them? This problem is the same as the way the norm is defined. There are several solutions, such as the $L_1$ norm form mentioned in the document \cite{Nister2006}:
+
+\begin{equation}
+	s\left( {{\bm{v}_A} - {\bm{v}_B}} \right) = 2\sum\limits_{i = 1}^N {\left| {{\bm{v}_{Ai}}} \right| + \left| {{\bm{v}_{Bi}}} \right| - \left| {{\bm{v}_{Ai}} - {\bm{v}_{Bi}}} \right|}.
+\end{equation}
+
+Of course, there are many other ways waiting for you to explore, here we just give an example as a demonstration. So far, we have explained how to calculate the similarity between arbitrary images through the bag of words model. Let's practice it through the program.
+
+\subsection{Practice Part}
+In the practice part of the previous section, we have generated a dictionary for ten images. This time we use this dictionary to generate Bag-of-Words and compare their differences to see how they differ from reality.
+
+\begin{lstlisting}[language=c++,caption=slambook/ch12/loop\_closure.cpp]
+int main(int argc, char **argv) {
+	// read the images and database  
+	cout << "reading database" << endl;
+	DBoW3::Vocabulary vocab("./vocabulary.yml.gz");
+	// DBoW3::Vocabulary vocab("./vocab_larger.yml.gz");  // use large vocab if you want: 
+	if (vocab.empty()) {
+		cerr << "Vocabulary does not exist." << endl;
+		return 1;
+	}
+	cout << "reading images... " << endl;
+	vector<Mat> images;
+	for (int i = 0; i < 10; i++) {
+		string path = "./data/" + to_string(i + 1) + ".png";
+		images.push_back(imread(path));
+	}
+	
+	// NOTE: in this case we are comparing images with a vocabulary generated by themselves, this may lead to overfit.
+	// detect ORB features
+	cout << "detecting ORB features ... " << endl;
+	Ptr<Feature2D> detector = ORB::create();
+	vector<Mat> descriptors;
+	for (Mat &image:images) {
+		vector<KeyPoint> keypoints;
+		Mat descriptor;
+		detector->detectAndCompute(image, Mat(), keypoints, descriptor);
+		descriptors.push_back(descriptor);
+	}
+	
+	// we can compare the images directly or we can compare one image to a database 
+	// images :
+	cout << "comparing images with images " << endl;
+	for (int i = 0; i < images.size(); i++) {
+		DBoW3::BowVector v1;
+		vocab.transform(descriptors[i], v1);
+		for (int j = i; j < images.size(); j++) {
+			DBoW3::BowVector v2;
+			vocab.transform(descriptors[j], v2);
+			double score = vocab.score(v1, v2);
+			cout << "image " << i << " vs image " << j << " : " << score << endl;
+		}
+		cout << endl;
+	}
+	
+	// or with database 
+	cout << "comparing images with database " << endl;
+	DBoW3::Database db(vocab, false, 0);
+	for (int i = 0; i < descriptors.size(); i++)
+	db.add(descriptors[i]);
+	cout << "database info: " << db << endl;
+	for (int i = 0; i < descriptors.size(); i++) {
+		DBoW3::QueryResults ret;
+		db.query(descriptors[i], ret, 4);      // max result=4
+		cout << "searching for image " << i << " returns " << ret << endl << endl;
+	}
+	cout << "done." << endl;
+}
+\end{lstlisting}
+
+This program demonstrates two comparison methods: direct comparison between images, and comparison between images and databases-even though they are similar. In addition, we output the Bag-of-Words description vector corresponding to each image, and readers can see them from the output data.
+
+\begin{lstlisting}[language=sh,caption=Terminal output:]
+	$ build/feature_training
+	reading database
+	reading images... 
+	detecting ORB features ... 
+	comparing images with images 
+	desp 0 size: 500
+	transform image 0 into BoW vector: size = 455
+	key value pair = <1, 0.00155622>, <3, 0.00222645>, <12, 0.00222645>, <13, 0.00222645>, <14, 0.00222645>, <22, 0.00222645>, <33, 0.00222645>, <37, 0.00155622>, <38, 0.00222645>, <39, 0.00222645>, <43, 0.00222645>, <57, 0.00155622> ......
+\end{lstlisting}
+
+As you can see, the BoW description vector contains the ID and weight of each word, which constitute the entire sparse vector. When we compare two vectors, DBoW3 will calculate a score for us. The calculation method is defined by the previous dictionary construction:
+
+\begin{lstlisting}[language=sh,caption=Terminal output:]
+image 0 vs image 0 : 1
+image 0 vs image 1 : 0.0234552
+image 0 vs image 2 : 0.0225237
+image 0 vs image 3 : 0.0254611
+image 0 vs image 4 : 0.0253451
+image 0 vs image 5 : 0.0272257
+image 0 vs image 6 : 0.0217745
+image 0 vs image 7 : 0.0231948
+image 0 vs image 8 : 0.0311284
+image 0 vs image 9 : 0.0525447
+\end{lstlisting}
+
+When querying the database, DBoW sorts the above scores and gives the most similar results:
+\begin{lstlisting}[language=sh,caption=Terminal output:]
+searching for image 0 returns 4 results:
+<EntryId: 0, Score: 1>
+<EntryId: 9, Score: 0.0525447>
+<EntryId: 8, Score: 0.0311284>
+<EntryId: 5, Score: 0.0272257>
+
+searching for image 1 returns 4 results:
+<EntryId: 1, Score: 1>
+<EntryId: 2, Score: 0.0339641>
+<EntryId: 8, Score: 0.0299387>
+<EntryId: 3, Score: 0.0256668>
+
+searching for image 2 returns 4 results:
+<EntryId: 2, Score: 1>
+<EntryId: 7, Score: 0.036092>
+<EntryId: 9, Score: 0.0348702>
+<EntryId: 1, Score: 0.0339641>
+
+searching for image 3 returns 4 results:
+<EntryId: 3, Score: 1>
+<EntryId: 9, Score: 0.0357317>
+<EntryId: 8, Score: 0.0278496>
+<EntryId: 5, Score: 0.0270168>
+
+searching for image 4 returns 4 results:
+<EntryId: 4, Score: 1>
+<EntryId: 5, Score: 0.0493492>
+<EntryId: 0, Score: 0.0253451>
+<EntryId: 6, Score: 0.0253017>
+
+searching for image 5 returns 4 results:
+<EntryId: 5, Score: 1>
+<EntryId: 4, Score: 0.0493492>
+<EntryId: 9, Score: 0.028996>
+<EntryId: 6, Score: 0.0277584>
+
+searching for image 6 returns 4 results:
+<EntryId: 6, Score: 1>
+<EntryId: 8, Score: 0.0306241>
+<EntryId: 5, Score: 0.0277584>
+<EntryId: 3, Score: 0.0267135>
+
+searching for image 7 returns 4 results:
+<EntryId: 7, Score: 1>
+<EntryId: 2, Score: 0.036092>
+<EntryId: 1, Score: 0.0239091>
+<EntryId: 0, Score: 0.0231948>
+
+searching for image 8 returns 4 results:
+<EntryId: 8, Score: 1>
+<EntryId: 9, Score: 0.0329149>
+<EntryId: 0, Score: 0.0311284>
+<EntryId: 6, Score: 0.0306241>
+
+searching for image 9 returns 4 results:
+<EntryId: 9, Score: 1>
+<EntryId: 0, Score: 0.0525447>
+<EntryId: 3, Score: 0.0357317>
+<EntryId: 2, Score: 0.0348702>
+\end{lstlisting}
+
+Readers can view all the output to see how different images differ from similar image scores. We see that the obvious similarity of Figure 1 and Figure 10 (subscripts are 0 and 9, respectively in C++), the similarity score is about 0.0525; while the other images are about 0.02.
+
+In the demonstration experiment in this section, we see that the scores of similar images 1 and 10 are significantly higher than other image pairs, but they are not as obvious in terms of value as we thought. Ordinarily, if we compare ourselves with a similarity of 100\%, then we (from a human perspective) think that Figure 1 and Figure 10 also have at least 70 to 80\% similarity, while other images may be 20 to 30\%. However, the experimental results are about 2\% of irrelevant images and about 5\% of similar images, which seems not as obvious as we thought. Is this the result we want to see?
+
+\section{Discussion about the Experiment}
+\subsection{Increasing the Dictionary Scale}
+In the field of machine learning, if there is no error in the code and the result is not satisfactory, we first doubt whether the network structure is large enough, whether the number of layers is deep enough, whether the data samples are enough, etc. This is still because the principle of ``a good model is no match for bad data'' (On the one hand, it is also because of the lack of deeper theoretical analysis). Although we are now studying SLAM, when this happens, we will first wonder: Is the dictionary selected too small? After all, we generated a dictionary from ten images, and then calculated the image similarity based on this dictionary.
+
+slambook2/ch11/vocab\_larger.yml.gz is a slightly larger dictionary we generated-in fact, it is generated for all images of the same data sequence, there are about 2,900 images. The size of the dictionary is still taken as $k=10,d=5$, that is, up to 10,000 words. Readers can use the gen\_vocab\_large.cpp file in the same directory to train the dictionary by themselves. Please note that to train a large dictionary, you may need a machine with a larger memory, and wait patiently for a while. We slightly modify the program in the previous section and use a larger dictionary to detect image similarity:
 
 
+\begin{lstlisting}[language=sh,caption=Terminal output:]
+comparing images with database 
+database info: Database: Entries = 10, Using direct index = no. Vocabulary: k = 10, L = 5, Weighting = tf-idf, Scoring = L1-norm, Number of words = 99566
+searching for image 0 returns 4 results:
+<EntryId: 0, Score: 1>
+<EntryId: 9, Score: 0.0320906>
+<EntryId: 8, Score: 0.0103268>
+<EntryId: 4, Score: 0.0066729>
 
+searching for image 1 returns 4 results:
+<EntryId: 1, Score: 1>
+<EntryId: 2, Score: 0.0238409>
+<EntryId: 8, Score: 0.00814409>
+<EntryId: 3, Score: 0.00697527>
 
+searching for image 2 returns 4 results:
+<EntryId: 2, Score: 1>
+<EntryId: 1, Score: 0.0238409>
+<EntryId: 5, Score: 0.00897928>
+<EntryId: 8, Score: 0.00893477>
+
+searching for image 3 returns 4 results:
+<EntryId: 3, Score: 1>
+<EntryId: 5, Score: 0.0107005>
+<EntryId: 8, Score: 0.00870392>
+<EntryId: 6, Score: 0.00720695>
+
+searching for image 4 returns 4 results:
+<EntryId: 4, Score: 1>
+<EntryId: 6, Score: 0.0069998>
+<EntryId: 0, Score: 0.0066729>
+<EntryId: 5, Score: 0.0062834>
+
+searching for image 5 returns 4 results:
+<EntryId: 5, Score: 1>
+<EntryId: 3, Score: 0.0107005>
+<EntryId: 2, Score: 0.00897928>
+<EntryId: 4, Score: 0.0062834>
+
+searching for image 6 returns 4 results:
+<EntryId: 6, Score: 1>
+<EntryId: 7, Score: 0.00915307>
+<EntryId: 3, Score: 0.00720695>
+<EntryId: 4, Score: 0.0069998>
+
+searching for image 7 returns 4 results:
+<EntryId: 7, Score: 1>
+<EntryId: 6, Score: 0.00915307>
+<EntryId: 8, Score: 0.00814517>
+<EntryId: 1, Score: 0.00538609>
+
+searching for image 8 returns 4 results:
+<EntryId: 8, Score: 1>
+<EntryId: 0, Score: 0.0103268>
+<EntryId: 2, Score: 0.00893477>
+<EntryId: 3, Score: 0.00870392>
+
+searching for image 9 returns 4 results:
+<EntryId: 9, Score: 1>
+<EntryId: 0, Score: 0.0320906>
+<EntryId: 8, Score: 0.00636511>
+<EntryId: 1, Score: 0.00587605>
+\end{lstlisting}
+
+It can be seen that when the size of the dictionary increases, the similarity of irrelevant images decreases significantly. Similar images, such as images 1 and 10, although their scores have dropped slightly, their scores have become more significant relative to other images. This shows that increasing the dictionary training samples is beneficial. In the same way, readers can try to use larger-scale dictionaries to see how the results will change.
+
+\subsection{Similarity Score Processing}
+For any two images, we can give a similarity score, but just using the absolute value of this score is not necessarily very helpful. For example, the appearance of some environments is very similar in nature. Offices often have many tables and chairs of the same style; in other environments, they are very different from place to place. Considering this situation, we will take a \textbf{prior similarity} $s\left( \bm{v}_t, \bm{v}_{t-\Delta t}\right)$, which means The similarity between the keyframe at a certain moment and the keyframe at the previous moment. Then, other scores are normalized with reference to this value:
+
+\begin{equation}
+	s\left( \bm{v}_t, \bm{v}_{t_j}\right)' = s\left( \bm{v}_t, \bm{v}_{t_j}\right) / s\left( \bm{v}_t, \bm{v}_{t-\Delta t}\right).
+\end{equation}
+
+From this perspective, we say: If the similarity between the current frame and a previous keyframe exceeds 3 times the similarity between the current frame and the previous keyframe, it is considered that there may be a loop. This step avoids the introduction of an absolute similarity threshold, so that the algorithm can adapt to more environments.
+
+\subsection{Processing the Keyframes}
+When detecting loops, we must consider the selection of keyframes. If the keyframes are selected too close, the similarity between the two keyframes will be too high. In contrast, it is not easy to detect loops in the historical data. For example, the detection result is often that the $n$th frame is the most similar to the $n-2$th frame and the $n-3$th frame. This result seems to be too trivial and of little significance. Therefore, in practice, the frames used for loopback detection are better to be sparse, different from each other, and to cover the entire environment.
+
+On the other hand, if a loop is successfully detected, for example, it appears in the first frame and the $n$th frame. Then it is very likely that the $n+1$th frame and the $n+2$th frame will form a loop with the first frame. However, confirming that there is a loop between the 1st frame and the $n$th frame is helpful for trajectory optimization, and the next $n+1$th frame and $n+2$th frame will form the first frame The help generated by the loop is not that great, because we have used the previous information to eliminate the accumulated error, and more loops will not bring more information. Therefore, we will group the "similar" loops into one type, so that the algorithm does not repeatedly detect the same type of loops.
+
+\subsection{Validation of the Detected Loops}
+The loop detection algorithm of the bag of words completely relies on the appearance without using any geometric information, which causes images with similar appearance to be easily regarded as loops. Moreover, since the bag of words does not care about the order of words, it only cares about the expression of words, which is more likely to cause perceptual deviation. Therefore, after the loopback detection, we usually have a verification step {\cite{Latif2013, Cadena2012}}.
+
+There are many verification methods. One is to set up a buffering mechanism for loops. It is considered that a single detected loop is not enough to constitute a good constraint, and a loop that has been detected for a period of time is considered a correct loop. This can be seen as a time consistency check. Another method is spatial consistency detection, which is to perform feature matching on the two frames detected by the loop to estimate the movement of the camera. Then, put the movement in the previous Pose Graph to check whether there is a big difference with the previous estimate. In short, the verification part is usually necessary, but how to implement it is a matter of opinion.
+
+\subsection{Relationship with Machine Learning}
+As can be seen from the previous discussion, loop detection and machine learning are inextricably linked. Loop detection itself is very much like a classification problem. The difference with traditional pattern recognition is that the number of categories in the loop is very large, and the samples of each category are very small-in extreme cases, when the robot moves, the image changes, and new categories are created. Categories are treated as continuous variables rather than discrete variables; loop detection, which is equivalent to two images falling into the same category, is rarely seen. From another perspective, loop detection is also equivalent to learning the concept of \textit{similarity}. Since humans can determine whether images are similar, it is very possible for machines to learn such concepts.
+
+From the BoW model, it is an unsupervised machine learning process in itself-building a dictionary is equivalent to clustering feature descriptors, and a tree is just a data structure for quick search of the clustered classes. Since it is clustering, combined with the knowledge in machine learning, we can at least ask:
+\begin{enumerate}
+	\item Is it possible to use the learned features instead of manually designed features such as SURF and ORB to detect the loops?
+	\item Is there a better way to do the clustering, rather than the simpler way of using K-d tree and K-means?
+\end{enumerate}
+
+Combined with the current development of machine learning, the learning of binary descriptors and unsupervised clustering are all very promising problems that can be solved in the deep learning framework. We have also seen the use of machine learning for loop detection. Although the bag-of-words method is still the mainstream at present, the author believes that in the future, deep learning methods are promising to defeat these artificially designed, "traditional" machine learning methods {\cite{Gao2015, Gao2015b}}. After all, the bag-of-words method is obviously inferior to neural networks in object recognition, and loop detection is a very similar problem. For example, the improved form of the BoW model, VLAD, has a CNN-based implementation \cite{Arandjelovic2016,AngelinaUy2018}, and there are also some grids after training, which can be returned from the image to collect the camera's pose \cite{Kendall2015}, these may become new loop detection algorithm.
+
+\section*{Exercises}
+\begin{enumerate}
+	\item Please write a small program to calculate the PR curve. It may be easier to use MATLAB or Python because they are good at drawing the pictures.
+	\item To verify the loop detection result, a data set with manually marked loops is required, such as \cite{Cummins2008}. However, it is very inconvenient to manually mark the loop. We will consider calculating the loop based on the standard trajectory. That is, if the poses of two frames in the trajectory are very similar, they are considered to be loops. Please calculate the loop in a data set based on the standard trajectory given by the TUM data set. Are these looped images really similar?
+	\item Learn the usage of DBoW3 or DBoW2 library, look for a few pictures by yourself, and see if you can correctly detect the loops.
+	\item Survey  common measurement methods of image similarity, which ones are more commonly used?
+	\item What is the principle of Chow-Liu tree? How is it used to build a dictionary and loop detection?
+	\item Read the literature\cite{Williams2009}, in addition to the bag-of-words model, what other methods are used for loop detection?
+\end{enumerate}
