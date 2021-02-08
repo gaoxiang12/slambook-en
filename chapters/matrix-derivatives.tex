@@ -1,5 +1,44 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{矩阵求导}
-\subsection{标量函数对向量求导}
-\subsection{标量函数对矩阵求导}
-\subsection{向量函数对向量求导}
+\chapter{Matrix Derivatives}
+First, the derivation of a scalar function to scalar variable is obvious. Suppose a function $f(x)$ takes the derivative of $x$, then a derivative like $\frac{\mathrm{d}f}{\mathrm{d}x}$ will be obtained, which is obviously still a scalar. Below we discuss the cases when $x$ is a vector or $f$ is a vector function.
+
+\section{Scalar Function to Vector Variable}
+Consider $\bm{x}$ is a vector variable. Suppose $\bm{x} \in \mathbb{R}^m$ is a column vector, then we have:
+\begin{equation}
+	\frac{{\mathrm{d}f}}{{\mathrm{d}\bm{x}}} = {\left[ {\frac{{\mathrm{d}f}}{{\mathrm{d}{x_1}}}, \cdots ,\frac{{\mathrm{d}f}}{{\mathrm{d}{x_m}}}} \right]^\mathrm{T}} \in {\mathbb{R}^m}.
+\end{equation}
+The result is a $m \times 1$ vector. In some documents we may write the denominator as $\bm{x}^\mathrm{T}$:
+\begin{equation}
+	\frac{{\mathrm{d}f}}{{\mathrm{d}\bm{x}^\mathrm{T}}} =  {\left[ {\frac{{\mathrm{d}f}}{{\mathrm{d}{x_1}}}, \cdots ,\frac{{\mathrm{d}f}}{{\mathrm{d}{x_m}}}} \right]}.
+\end{equation}
+The result is a row vector. We usually call $\frac{\mathrm{d}f}{\mathrm{d}\bm{x}}$ as gradient or Jacobian. But it should be noted that the name or manner is not exactly same in different fields.
+
+\section{Vector Function to Vector Variable}
+We may also take the derivative with a vector function to a vector variable. Consider a vector function $\bm{F}(\bm{x})$ like: $$\bm{F}(\bm{x}) = [f_1(\bm{x}), \cdots, f_n(\bm{x})]^\mathrm{T},$$ where each $f_k$ is a scalar function use $\bm{x}$ as its variable. When taking derivative of $\bm{x}$, we usually write it as: 
+\begin{equation}
+	\frac{{\partial \bm{F}}}{{\partial {\bm{x}^\mathrm{T}}}} = \left[ {\begin{array}{*{20}{c}}
+			{\frac{{\partial {f_1}}}{{\partial {\bm{x}^\mathrm{T}}}}}\\
+			\vdots \\
+			{\frac{{\partial {f_n}}}{{\partial {\bm{x}^\mathrm{T}}}}}
+	\end{array}} \right] = \left[ {\begin{array}{*{20}{c}}
+			{\frac{{\partial {f_1}}}{{\partial {x_1}}}}&{\frac{{\partial {f_1}}}{{\partial {x_2}}}}& \cdots &{\frac{{\partial {f_1}}}{{\partial {x_m}}}}\\
+			{\frac{{\partial {f_2}}}{{\partial {x_1}}}}&{\frac{{\partial {f_2}}}{{\partial {x_2}}}}& \cdots &{\frac{{\partial {f_2}}}{{\partial {x_m}}}}\\
+			\vdots & \vdots & \ddots & \vdots \\
+			{\frac{{\partial {f_n}}}{{\partial {x_1}}}}&{\frac{{\partial {f_n}}}{{\partial {x_2}}}}& \cdots &{\frac{{\partial {f_n}}}{{\partial {x_m}}}}
+	\end{array}} \right] \in {\mathbb{R}^{n \times m}}，
+\end{equation}
+which is a column vector function to a row vector variable. Then we get a $n \times m$ Jacobian matrix. Such writing style is standardized. We may write the derivative as: 
+\begin{equation}
+	\frac{\partial \bm{Ax}} {\partial\bm{x}^\mathrm{T}} = \bm{A}.
+\end{equation}
+
+Or a row vector function to a column vector variable, and the result is transposed: 
+\begin{equation}
+	\frac{{\partial \bm{F}}^\mathrm{T}}{{\partial {\bm{x}}}}  = \left(\frac{{\partial \bm{F}}}{{\partial {\bm{x}^\mathrm{T}}}} \right)^ \mathrm{T}.
+\end{equation}
+
+In this book we use the former definition by default. However, this writing style requires adding an extra transpose operator in the denominator, which is inconvenient if we have to write a lot of derivatives. So without ambiguity, we relax the notation by omitting the transpose operator like this: 
+\begin{equation}
+	\frac{\partial \bm{Ax}} {\partial\bm{x}} = \bm{A},
+\end{equation}
+which makes the notation more natural. 

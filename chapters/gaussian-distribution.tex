@@ -1,78 +1,76 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{高斯分布的性质}
-这里总结一下常见的高斯分布的性质，它在本书的很多地方都会用到。
+\chapter{Gaussian Distribution}
 \section{高斯分布}
-如果一个随机变量$x$服从高斯分布$N(\mu, \sigma)$，那么它的概率密度函数为
+If way say a random variable $x$ satisfies a Gaussian distribution $N(\mu, \sigma)$, then its pdf is:
 \begin{equation}
 p\left( x \right) = \frac{1}{{\sqrt {2\pi } \sigma }}\exp \left( { - \frac{1}{2}\frac{{{{\left( {x - \mu } \right)}^2}}}{{{\sigma ^2}}}} \right).
 \end{equation}
 
-其高维形式为
+The matrix form is:
 \begin{equation}
-p\left( x \right) = \frac{1}{{\sqrt {(2\pi)^N  \det \left( \bm{\Sigma } \right) }}}\exp \left( { - \frac{1}{2}{{\left( {\bm{x} - \bm{\mu} } \right)}^\mathrm{T}}{\bm{\Sigma} ^{ - 1}}\left( {\bm{x} - \bm{\mu} } \right)} \right).
+p\left( x \right) = \frac{1}{{\sqrt {(2\pi)^N  \det \left( \boldsymbol{\Sigma } \right) }}}\exp \left( { - \frac{1}{2}{{\left( {\mathbf{x} - \boldsymbol{\mu} } \right)}^\mathrm{T}}{\boldsymbol{\Sigma} ^{ - 1}}\left( {\mathbf{x} - \boldsymbol{\mu} } \right)} \right).
 \end{equation}
 
-\section{高斯分布的运算}
-\subsection{线性运算}
-设两个独立的高斯分布：
+\section{Transform of Gaussian Variables}
+\subsection{Linear Transform}
+Suppose we have two independent Gaussian variables:
 \[
-\bm{x} \sim N( \bm{\mu}_x, \bm{\Sigma}_{xx} ), \quad \bm{y} \sim N( \bm{\mu}_y, \bm{\Sigma}_{yy} ),
+\mathbf{x} \sim N( \boldsymbol{\mu}_x, \boldsymbol{\Sigma}_{xx} ), \quad \mathbf{y} \sim N( \boldsymbol{\mu}_y, \boldsymbol{\Sigma}_{yy} ),
 \]
-那么，它们的和仍是高斯分布：
+the sum of them are still Gaussian: 
 \begin{equation}
-\bm{x}+\bm{y} \sim N( \bm{\mu}_x + \bm{\mu}_y, \bm{\Sigma}_{xx} + \bm{\Sigma}_{yy}).
+\mathbf{x}+\mathbf{y} \sim N( \boldsymbol{\mu}_x + \boldsymbol{\mu}_y, \boldsymbol{\Sigma}_{xx} + \boldsymbol{\Sigma}_{yy}).
 \end{equation}
 
-如果以常数$a$乘以$\bm{x}$，那么$a \bm{x}$满足：
+If we multiply $\mathbf{x}$ with a constant factor $a$, then $a \mathbf{x}$ satisfies:
 \begin{equation}
-a\bm{x} \sim N( a \bm{\mu}_x, a^2 \bm{\Sigma}_{xx}).
+a\mathbf{x} \sim N( a \boldsymbol{\mu}_x, a^2 \boldsymbol{\Sigma}_{xx}).
 \end{equation}
 
-如果取$\bm{y} = \bm{A} \bm{x}$，那么$\bm{y}$满足：
+If we take a linear transform of $\mathbf{x}$ with $\mathbf{y} = \mathbf{A} \mathbf{x}$, then $\mathbf{y}$ satisfies:
 \begin{equation}
-\bm{y} \sim N( \bm{A} \bm{\mu}_x, \bm{A} \bm{\Sigma}_{xx} \bm{A}^\mathrm{T}).
+\mathbf{y} \sim N( \mathbf{A} \boldsymbol{\mu}_x, \mathbf{A} \boldsymbol{\Sigma}_{xx} \mathbf{A}^\mathrm{T}).
 \end{equation}
 
-\subsection{乘积}
-设两个高斯分布的乘积满足$p\left( \bm{xy} \right) = N\left( {\bm{\mu} ,\bm{\Sigma}} \right)$，那么：
+\subsection{Normalized Product}
+If we multiply two Gaussian random variables like $p\left( \mathbf{xy} \right) = N\left( {\boldsymbol{\mu} ,\boldsymbol{\Sigma}} \right)$, then we have:
 \begin{equation}
 \begin{array}{l}
-{\bm{\Sigma}^{-1}} = \bm{\Sigma}_{xx}^{-1} + \bm{\Sigma}_{yy}^{-1} \\
-\bm{\Sigma}^{-1} \bm{\mu} = \bm{\Sigma}_{xx}^{-1}{\bm{\mu}_x} + \bm{\Sigma}_{yy}^{-1}{\bm{\mu}_y}.
+{\boldsymbol{\Sigma}^{-1}} = \boldsymbol{\Sigma}_{xx}^{-1} + \boldsymbol{\Sigma}_{yy}^{-1} \\
+\boldsymbol{\Sigma}^{-1} \boldsymbol{\mu} = \boldsymbol{\Sigma}_{xx}^{-1}{\boldsymbol{\mu}_x} + \boldsymbol{\Sigma}_{yy}^{-1}{\boldsymbol{\mu}_y}.
 \end{array}
 \end{equation}
 
-该公式可以推广到任意多个高斯分布之乘积。
+This formula can be extended to the product of any number of Gaussian distributions.
 
-\subsection{复合运算}
-同样考虑$\bm{x}$和$\bm{y}$，若其不独立，则其复合分布为
+\subsection{Joint and Conditional Distribution}
+If $\mathbf{x}$ and $\mathbf{y}$ are not independent, then their joint distribution is: 
 \begin{equation}
-p(\bm{x}, \bm{y}) = N\left( {\left[ {\begin{array}{*{20}{c}}
-		{{\bm{\mu}_x}}\\
-		{{\bm{\mu}_y}}
+p(\mathbf{x}, \mathbf{y}) = N\left( {\left[ {\begin{array}{*{20}{c}}
+		{{\boldsymbol{\mu}_x}}\\
+		{{\boldsymbol{\mu}_y}}
 		\end{array}} \right],\left[ {\begin{array}{*{20}{c}}
-		{{\bm{\Sigma}_{xx}}}&{{\bm{\Sigma}_{xy}}}\\
-		{{\bm{\Sigma}_{yx}}}&{{\bm{\Sigma}_{yy}}}
+		{{\boldsymbol{\Sigma}_{xx}}}&{{\boldsymbol{\Sigma}_{xy}}}\\
+		{{\boldsymbol{\Sigma}_{yx}}}&{{\boldsymbol{\Sigma}_{yy}}}
 		\end{array}} \right]} \right).
 \end{equation}
 
-由条件分布展开式$p\left( {\bm{x}, \bm{y}} \right) = p\left( {\bm{x}|\bm{y}} \right)p\left( \bm{y} \right)$可以推出，条件概率$p(\bm{x}|\bm{y})$满足：
+Since $p\left( {\mathbf{x}, \mathbf{y}} \right) = p\left( {\mathbf{x}|\mathbf{y}} \right)p\left( \mathbf{y} \right)$, we can find that the conditional distribution $p(\mathbf{x}|\mathbf{y})$ satisfies:
 \begin{equation}
-p\left( {\bm{x} | \bm{y} } \right) = N\left( {{\bm{\mu}_x} + {\bm{\Sigma}_{xy}} \bm{\Sigma}_{yy}^{ - 1} \left( {\bm{y} - {\bm{\mu}_y}} \right),{\bm{\Sigma}_{xx}} - {\bm{\Sigma}_{xy}} \bm{\Sigma}_{yy}^{ - 1}{\bm{\Sigma}_{yx}}} \right).
+p\left( {\mathbf{x} | \mathbf{y} } \right) = N\left( {{\boldsymbol{\mu}_x} + {\boldsymbol{\Sigma}_{xy}} \boldsymbol{\Sigma}_{yy}^{ - 1} \left( {\mathbf{y} - {\boldsymbol{\mu}_y}} \right),{\boldsymbol{\Sigma}_{xx}} - {\boldsymbol{\Sigma}_{xy}} \boldsymbol{\Sigma}_{yy}^{ - 1}{\boldsymbol{\Sigma}_{yx}}} \right).
 \end{equation}
 
-\section{复合的例子}
+\section{Example of Joint Distribution}
 \label{sec:gauss-example}
-下面举一个和卡尔曼滤波器相关的例子。考虑随机变量$\bm{x} \sim N( \bm{\mu}_x, \bm{\Sigma}_{xx})$，另一变量$\bm{y}$满足：
+Let's take an example of the Kalman filter. Consider a random variable $\mathbf{x} \sim N( \boldsymbol{\mu}_x, \boldsymbol{\Sigma}_{xx})$, and another variable $\mathbf{y}$ has:
 \begin{equation}
-\bm{y} = \bm{Ax} + \bm{b} + \bm{w}
+\mathbf{y} = \mathbf{Ax} + \mathbf{b} + \mathbf{w},
+\end{equation}
+where $\mathbf{A}, \mathbf{b}$ is the linear coefficient matrix and bias, $\mathbf{w}$ is the white noise that satisfies: $\mathbf{w} \sim N(\mathbf{0}, \mathbf{R})$.
+
+Then we can calculate $\mathbf{y}$'s distribution:
+\begin{equation}
+p\left( \mathbf{y} \right) = N\left( {\mathbf{A}{\boldsymbol{\mu}_x} + \mathbf{b}, \mathbf{R} + \mathbf{A} {\boldsymbol{\Sigma}_{xx}}{\mathbf{A}^\mathrm{T}}} \right).
 \end{equation}
 
-其中$\bm{A}, \bm{b}$为线性变量的系数矩阵和偏移量，$\bm{w}$为噪声项，为零均值的高斯分布：$\bm{w} \sim N(\bm{0}, \bm{R})$。
-
-我们来看$\bm{y}$的分布。根据前面的介绍，可以推出：
-\begin{equation}
-p\left( \bm{y} \right) = N\left( {\bm{A}{\bm{\mu}_x} + \bm{b}, \bm{R} + \bm{A} {\bm{\Sigma}_{xx}}{\bm{A}^\mathrm{T}}} \right).
-\end{equation}
-
-这为卡尔曼滤波器的预测部分提供了理论基础。
+This provides a theoretical basis for the prediction part of the Kalman filter.
