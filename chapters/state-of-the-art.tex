@@ -1,236 +1,223 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{SLAM：现在与未来}
+\chapter{SLAM: Present and Future}
 \begin{mdframed}  
-	\textbf{主要目标}
+	\textbf{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item 了解经典的SLAM实现方案。
-		\item 通过实验，比较各种SLAM方案的异同。
-		\item 探讨SLAM的未来发展方向。
+		\item Understand the classic SLAM implementation scheme.
+		\item Through experiments, compare the similarities and differences of various SLAM solutions.
+		\item Explore the future development direction of SLAM.
 	\end{enumerate}
 \end{mdframed}
 
-前面介绍了一个SLAM系统中的各个模块的工作原理，这是研究者们多年工作的结晶。目前，除了这些理论框架之外，我们也积累了许多优秀的开源SLAM方案。不过，由于它们大部分的实现都比较复杂，不适合作为初学者的上手材料，所以我们放到了本书的最后加以介绍。相信读者通过阅读之前的内容，应该能明白其基本原理。
+The working principle of each module in a SLAM system was introduced above, which is the crystallization of the work of researchers for many years. At present, in addition to these theoretical frameworks, we have also accumulated many excellent open source SLAM solutions. However, since most of their implementations are more complicated and not suitable for beginners' hands-on materials, we put them at the end of the book to introduce them. I believe that readers should be able to understand the basic principles by reading the previous content.
 
-\newpage 
-\section{当前的开源方案}
-本讲是全书的总结，我们将带着读者去看看现有的SLAM方案能做到怎样的程度。特别地，我们重点关注那些提供开源实现的方案。在SLAM研究领域，能见到开源方案是很不容易的。往往论文中介绍理论只占20\%的内容，其他80\%都写在代码中，是论文里没有提到的。正是这些研究者们的无私奉献，推动了整个SLAM行业的快速前进，使后续研究者有了更高的起点。在我们开始做SLAM之前，应该对相似的方案有深入的了解，然后再进行自己的研究，这样才会更有意义。
+\newpage
+\section{Open-source Implementations}
+This lecture is a summary of the book. We will take readers to see how far the existing SLAM solutions can be. In particular, we focus on solutions that provide open source implementations. In the field of SLAM research, it is not easy to see open source solutions. Often the theories introduced in the paper only account for 20\% of the content, and the other 80\% are in the code, which is not mentioned in the paper. It is the selfless dedication of these researchers that has promoted the rapid advancement of the entire SLAM industry and enabled subsequent researchers to have a higher starting point. Before we start to do SLAM, we should have an in-depth understanding of similar solutions, and then conduct our own research, which will make more sense.
 
-本讲的前半部分将带领读者参观一下当前的视觉SLAM方案，评述其历史地位和优缺点。\autoref{table:opensource-slam}~列举了一些常见的开源SLAM方案，读者可以选择感兴趣的方案进行研究和实验。限于篇幅，我们只选了一部分有代表性的方案，这肯定是不全面的。在后半部分，我们将探讨未来可能的一些发展方向，并给出当前的一些研究成果。
+The first half of this lecture will lead the readers to take a tour of the current visual SLAM program and comment on its historical status, advantages and disadvantages. \autoref{table:opensource-slam}~ lists some popular open source SLAM solutions, and readers can choose the solutions they are interested in for research and experimentation \footnote{The book is basically written in 2016 so we cannot list the newer systems after 2016.}. Due to space limitations, we only selected a part of the representative plan, which is certainly not comprehensive. In the second half, we will explore some possible future development directions and give some current research results.
 
 {
-\small
-\begin{table}[!h]
-\caption{常用开源SLAM方案}
-\label{table:opensource-slam}
-\begin{tabu}{@{}c|c|X@{}}
-\toprule
-	方案名称 & 传感器形式 & 地址 \\
-\midrule
-	MonoSLAM &  单目 & \url{https://github.com/hanmekim/SceneLib2}  \\ 
-	PTAM & 单目 & \url{http://www.robots.ox.ac.uk/~gk/PTAM/} \\ 
-	ORB-SLAM & 单目为主 & \url{http://webdiis.unizar.es/~raulmur/orbslam/} \\ 
-	LSD-SLAM & 单目为主 & \url{http://vision.in.tum.de/research/vslam/lsdslam} \smallskip \\
-	SVO & 单目 & \url{https://github.com/uzh-rpg/rpg_svo} \\ 
-	DTAM & RGB-D & \url{https://github.com/anuranbaka/OpenDTAM} \\ 
-	DVO & RGB-D & \url{https://github.com/tum-vision/dvo_slam} \\ 
-	DSO & 单目 & \url{https://github.com/JakobEngel/dso} \\
-	RTAB-MAP & 双目/RGB-D & \url{https://github.com/introlab/rtabmap} \\ 
-	RGBD-SLAM-V2 & RGB-D & \url{https://github.com/felixendres/rgbdslam_v2} \\ 
-	Elastic Fusion & RGB-D & \url{https://github.com/mp3guy/ElasticFusion} \\ 
-	Hector SLAM & 激光 & \url{http://wiki.ros.org/hector_slam} \\ 
-	GMapping & 激光 & \url{http://wiki.ros.org/gmapping} \\ 
-	OKVIS & 多目+IMU & \url{https://github.com/ethz-asl/okvis} \\ 
-	ROVIO & 单目+IMU & \url{https://github.com/ethz-asl/rovio} \\ 
-\bottomrule
-\end{tabu}
-\end{table}
+	\begin{table}[!h]
+		\small
+		\caption{Open source SLAM systems}
+		\label{table:opensource-slam}
+		\begin{tabu}{@{}c|c|X@{}}
+			\toprule
+			Name & Sensors & URL \\
+			\midrule
+			MonoSLAM &  M & \url{https://github.com/hanmekim/SceneLib2}  \\ 
+			PTAM & M & \url{http://www.robots.ox.ac.uk/~gk/PTAM/} \\ 
+			ORB-SLAM & M/S/R & \url{http://webdiis.unizar.es/~raulmur/orbslam/} \\ 
+			LSD-SLAM & M & \url{http://vision.in.tum.de/research/vslam/lsdslam} \smallskip \\
+			SVO & M & \url{https://github.com/uzh-rpg/rpg_svo} \\ 
+			DTAM & R & \url{https://github.com/anuranbaka/OpenDTAM} \\ 
+			DVO & R & \url{https://github.com/tum-vision/dvo_slam} \\ 
+			DSO & M & \url{https://github.com/JakobEngel/dso} \\
+			VINS & M+IMU & \url{https://github.com/HKUST-Aerial-Robotics/VINS-Mono} \\
+			RTAB-MAP & S/R & \url{https://github.com/introlab/rtabmap} \\ 
+			RGBD-SLAM-V2 & R & \url{https://github.com/felixendres/rgbdslam_v2} \\ 
+			Elastic Fusion & R & \url{https://github.com/mp3guy/ElasticFusion} \\ 
+			Hector SLAM & L & \url{http://wiki.ros.org/hector_slam} \\ 
+			GMapping & L & \url{http://wiki.ros.org/gmapping} \\ 
+			OKVIS & M/S+IMU & \url{https://github.com/ethz-asl/okvis} \\ 
+			ROVIO & M+IMU & \url{https://github.com/ethz-asl/rovio} \\ 
+			\bottomrule
+		\end{tabu}
+	\end{table}
 }
 
-\smallskip
 \subsection{MonoSLAM}
-说到视觉SLAM，很多研究者第一个想到的是A. J. Davison的单目SLAM工作\textsuperscript{\cite{Davison2007,Davison2003}}。Davison教授是视觉SLAM研究领域的先驱，他在2007年提出的MonoSLAM是第一个实时的单目视觉SLAM系统\textsuperscript{\cite{Davison2007}}，被认为是许多工作的发源地\footnote{这是他博士期间工作的延续。他现在也在致力于将SLAM小型化、低功率化。}。MonoSLAM以扩展卡尔曼滤波为后端，追踪前端非常稀疏的特征点。由于EKF在早期SLAM中占据着明显主导地位，所以MonoSLAM亦是建立在EKF的基础之上，以相机的当前状态和所有路标点为状态量，更新其均值和协方差。
+When it comes to visual SLAM, the first thing that many researchers think of is A. J. Davison's monocular SLAM work {\cite{Davison2007,Davison2003}}. Professor Davison is a pioneer in the field of visual SLAM research. He proposed MonoSLAM in 2007 as the first real-time monocular visual SLAM system {\cite{Davison2007}}, which is considered the birthplace of many work. MonoSLAM uses the extended Kalman filter as the back end to track very sparse feature points on the front end. Since EKF occupies an obvious dominant position in early SLAM, MonoSLAM is also based on EKF, using the current state of the camera and all landmark points as the state quantity, and updating its mean and covariance.
 
-\autoref{fig:mono-slam}~所示是MonoSLAM在运行时的情形。可以看到，单目相机在一幅图像当中追踪了非常稀疏的特征点（且用到了主动追踪技术）。在EKF中，每个特征点的位置服从高斯分布，所以我们能够以一个椭球的形式表达它的均值和不确定性。在该图的右半部分，我们可以找到一些在空间中分布着的小球。它们在某个方向上显得越长，说明在该方向的位置就越不确定。我们可以想象，如果一个特征点收敛，我们应该能看到它从一个很长的椭球（相机$Z$方向上非常不确定）最后变成一个小点的样子。
+\autoref{fig:mono-slam}~ shows the situation of MonoSLAM at runtime. It can be seen that the monocular camera tracks very sparse feature points in an image (and active tracking technology is used). In EKF, the position of each feature point obeys Gaussian distribution, so we can express its mean value and uncertainty in the form of an ellipsoid. In the right half of the picture, we can find some small balls distributed in space. The longer they appear in a certain direction, the more uncertain their position in that direction. We can imagine that if a feature point converges, we should be able to see it change from a very long ellipsoid (very uncertain in the direction of the camera $Z$) to a small point.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/mono-slam.pdf}
-	\caption{MonoSLAM的运行时截图。左侧：追踪特征点在图像中的表示； 右侧：特征点在三维空间中的表示。}
+	\caption{Snapshot of MonoSLAM. Left: the tracked features. Right: the map point in 3D space.}
 	\label{fig:mono-slam}
 \end{figure}
 
-这种做法在今天看来固然存在许多弊端，但在当时已经是里程碑式的工作了，因为在此之前的视觉SLAM系统基本不能在线运行，只能靠机器人携带相机采集数据，再离线地进行定位与建图。计算机性能的进步，以及用稀疏的方式处理图像，加在一起才使得一个SLAM系统能够在线地运行。从现代的角度来看，MonoSLAM存在诸如应用场景很窄，路标数量有限，稀疏特征点非常容易丢失的情况，对它的开发也已经停止，取而代之的是更先进的理论和编程工具。不过这并不妨碍我们对前人工作的理解和尊敬。
+This approach seems to have many drawbacks today, but it was already a milestone work at that time, because the previous visual SLAM system basically could not run online, and only rely on the robot to carry the camera to collect data, and then perform offline positioning. And build maps. The advancement of computer performance and the use of sparse methods to process images have combined to make a SLAM system run online. From a modern point of view, MonoSLAM has conditions such as narrow application scenarios, limited number of road signs, and sparse feature points that are very easy to lose. Its development has also been stopped and replaced by more advanced theories and programming tools. But this does not prevent us from understanding and respecting the work of our predecessors.
 
 \subsection{PTAM}
-
-2007年，Klein等人提出了PTAM（Parallel Tracking and Mapping）\textsuperscript{\cite{Klein2007}}，这也是视觉SLAM发展过程中的重要事件。PTAM的重要意义在于以下两点：
-\clearpage
+In 2007, Klein's team proposed PTAM (Parallel Tracking and Mapping) {\cite{Klein2007}}, which is also an important event in the development of visual SLAM. The important significance of PTAM lies in the following two points:
 \begin{enumerate}
-	\item PTAM提出并实现了跟踪与建图过程的并行化。我们现在已然清楚，跟踪部分需要实时响应图像数据，而对地图的优化则没必要实时地计算。后端优化可以在后台慢慢进行，然后在必要的时候进行线程同步即可。这是视觉SLAM中首次区分出前后端的概念，引领了后来许多视觉SLAM系统的设计（我们现在看到的SLAM多半都分前后端）。
-	\item PTAM是第一个使用非线性优化，而不是使用传统的滤波器作为后端的方案。它引入了关键帧机制：我们不必精细地处理每一幅图像，而是把几个关键图像串起来，然后优化其轨迹和地图。早期的SLAM大多数使用EKF滤波器或其变种，以及粒子滤波器等；在PTAM之后，视觉SLAM研究逐渐转向了以非线性优化为主导的后端。由于之前人们未认识到后端优化的稀疏性，所以觉得优化后端无法实时处理那样大规模的数据，而PTAM则是一个显著的反例。
-
-	\hspace{2em}PTAM同时是一个增强现实软件，演示了酷炫的AR效果（如\autoref{fig:ptam}所示）。根据PTAM估计的相机位姿，我们可以在一个虚拟的平面上放置虚拟物体，看起来就像在真实的场景中一样。
+	\item PTAM proposed and realized the parallelization of the tracking and mapping process. It is now clear that the tracking part needs to respond to image data in real time, and the optimization of the map does not need to be calculated in real time. Back-end optimization can be done slowly in the background, and then thread synchronization can be performed when necessary. This is the first time the concept of front and back ends have been distinguished in visual SLAM, leading to the design of many later visual SLAM systems (most of the SLAMs we see now are divided into front and back ends).
+	\item PTAM is the first solution that uses nonlinear optimization instead of using traditional filters as the backend. It introduces a key frame mechanism: we don't need to process each image carefully, but string together several key images, and then optimize its trajectory and map. Early SLAM mostly used EKF filters or their variants, as well as particle filters. After PTAM, visual SLAM research gradually turned to the back end dominated by nonlinear optimization. Because people did not realize the sparsity of back-end optimization before, they felt that the optimized back-end could not process such large-scale data in real time, and PTAM is a significant counterexample.
+	
+	\hspace{2em}PTAM is also an augmented reality software that demonstrates cool AR effects (as shown in \autoref{fig:ptam}). According to the camera pose estimated by PTAM, we can place a virtual object on a virtual plane, which looks like it is in a real scene.
 \end{enumerate}
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/ptam}
-	\caption{PTAM的演示截图。它既可以提供实时的定位和建图，也可以在虚拟平面上叠加虚拟物体。}
+	\caption{Screenshot of PTAM demo. It can not only provide real-time SLAM functions, but also superimpose virtual objects on a virtual plane.}
 	\label{fig:ptam}
 \end{figure}
 
-\clearpage
-不过，从现代的眼光看来，PTAM也算是早期的结合AR的SLAM工作之一。与许多早期工作相似，存在着明显的缺陷：场景小，跟踪容易丢失，等等。这些又在后续的方案中得以修正。
+However, from a modern point of view, PTAM can be regarded as one of the early SLAM work combined with AR. Similar to many earlier works, there are obvious flaws: the scene is small, tracking is easy to lose, and so on. These were revised in the follow-up plan.
 
-\subsection{ORB-SLAM}
-
-介绍了历史上的几种方案之后，我们来看现代的一些SLAM系统。ORB-SLAM是PTAM的继承者中非常有名的一位\textsuperscript{\cite{Mur-Artal2015}}（见\autoref{fig:orb-slam}）。它提出于2015年，是现代SLAM系统中做得非常完善、非常易用的系统之一（如果不是最完善易用的话）。ORB-SLAM代表着主流的特征点SLAM的一个高峰。相比于之前的工作，ORB-SLAM具有以下几条明显的优势：
+\subsection{ORB-SLAM Series} 
+After introducing several historical solutions, let's look at some modern SLAM systems. ORB-SLAM is a very famous \textsuperscript{\cite{Mur-Artal2015}} among the successors of PTAM (see \autoref{fig:orb-slam}). It was proposed in 2015 and is one of the most complete and easy-to-use systems in modern SLAM systems (if not the most complete and easy-to-use). ORB-SLAM represents a peak of the mainstream feature point SLAM. Compared with previous work, ORB-SLAM has the following obvious advantages:
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/orb-slam}
-	\caption{ORB-SLAM运行截图。左侧为图像与追踪到的特征点，右侧为相机轨迹与建模的特征点地图。下方为其标志性的三线程结构。}
+	\caption{ORB-SLAM running screenshot. The left side is the image and the tracked feature points, and the right side is the camera trajectory and the modeled feature point map. Below is the  three-thread framework.}
 	\label{fig:orb-slam}
 \end{figure}
 
 \begin{enumerate}
-	\item 支持单目、双目、RGB-D三种模式。这使得无论我们拿到了哪种常见的传感器，都可以先放到ORB-SLAM上测试一下，它具有良好的泛用性。
-	\item 整个系统围绕ORB特征进行计算，包括视觉里程计与回环检测的ORB字典。它体现出ORB特征是现阶段计算平台的一种优秀的效率与精度之间的折中方式。ORB不像SIFT或SURF那样费时，在CPU上面即可实时计算；相比Harris角点等简单角点特征，又具有良好的旋转和缩放不变性。并且，ORB提供描述子，使我们在大范围运动时能够进行回环检测和重定位。
-	\item  ORB的回环检测是它的亮点。优秀的回环检测算法保证了ORB-SLAM有效地防止累积误差，并且在丢失之后还能迅速找回，这一点许多现有的SLAM系统都不够完善。为此，ORB-SLAM在运行之前必须加载一个很大的ORB字典\mbox{文件}\footnote{目前开源版ORB-SLAM使用了文本格式的字典，改成二进制格式字典之后可以加速不少。}。
-	\item ORB-SLAM创新式地使用了三个线程完成SLAM：实时跟踪特征点的Tracking线程，局部Bundle Adjustment的优化线程（Co-visibility Graph，俗称\textbf{小图}），以及全局Pose Graph的回环检测与优化线程（Essential Graph俗称\textbf{大图}）。其中，Tracking线程负责对每幅新来的图像提取ORB特征点，并与最近的关键帧进行比较，计算特征点的位置并粗略估计相机位姿。小图线程求解一个Bundle Adjustment问题，它包括局部空间内的特征点与相机位姿。这个线程负责求解更精细的相机位姿与特征点空间位置。不过，仅有前两个线程，只完成了一个比较好的视觉里程计。第三个线程，也就是大图线程，对全局的地图与关键帧进行回环检测，消除累积误差。由于全局地图中的地图点太多，所以这个线程的优化不包括地图点，而只有相机位姿组成的位姿图。
+	\item It supports three modes of monocular, binocular and RGB-D. This makes it possible to test it on ORB-SLAM, no matter what kind of common sensors we get, it has good versatility.
+	\item The entire system is calculated around ORB features, including the ORB dictionary for visual odometry and loop detection. It reflects that the ORB feature is an excellent compromise between efficiency and accuracy of the computing platform at this stage. ORB is not as time-consuming as SIFT or SURF, and can be calculated in real time on the CPU; compared to simple corner features such as Harris corners, it has good rotation and scaling invariance. In addition, ORB provides descriptors that enable us to perform loop detection and relocation in a large range of motion.
+	\item ORB's loop detection is its highlight. The excellent loopback detection algorithm ensures that ORB-SLAM effectively prevents accumulated errors and can be quickly retrieved after loss. Many existing SLAM systems are not perfect. For this reason, ORB-SLAM must load a large ORB dictionary \mbox{file}\footnote{Currently, the open source version of ORB-SLAM uses a text format dictionary, which can speed up a lot after changing to a binary format dictionary. }.
+	\item ORB-SLAM innovatively uses three threads to complete SLAM: Tracking thread for real-time tracking of feature points, optimization thread for local Bundle Adjustment (Co-visibility Graph, commonly known as \textbf{small graph}), and global pose graph loop detection and optimization thread (essential graph, commonly known as \textbf{big graph}). Among them, the Tracking thread is responsible for extracting ORB feature points for each new image, comparing it with the most recent key frame, calculating the location of the feature points and roughly estimating the camera pose. The small picture thread solves a Bundle Adjustment problem, which includes the feature points in the local space and the camera pose. This thread is responsible for solving more refined camera poses and spatial locations of feature points. However, only the first two threads have completed a better visual odometer. The third thread, the big picture thread, performs loopback detection on the global map and key frames to eliminate accumulated errors. Because there are too many map points in the global map, the optimization of this thread does not include map points, but only the pose map composed of camera poses.
 	
-	\hspace{2em}继PTAM的双线程结构之后，ORB-SLAM的三线程结构取得了非常好的跟踪和建图效果，能够保证轨迹与地图的全局一致性。这种三线程结构也将被后续的研究者认同和采用。
-	\item ORB-SLAM围绕特征点进行了不少的优化。例如，在OpenCV的特征提取基础上保证了特征点的均匀分布，在优化位姿时使用了一种循环优化4遍以得到更多正确匹配的方法，比PTAM更为宽松的关键帧选取策略，等等。这些细小的改进使得ORB-SLAM具有远超其他方案的稳健性：即使对于较差的场景，较差的标定内参，ORB-SLAM都能够顺利地工作。
+	\hspace{2em} Following the two-thread structure of PTAM, the three-thread structure of ORB-SLAM has achieved very good tracking and mapping effects, which can ensure the global consistency of the trajectory and the map. This three-thread structure will also be recognized and adopted by subsequent researchers.
+	\item ORB-SLAM has carried out many optimizations around feature points. For example, on the basis of OpenCV feature extraction, the uniform distribution of feature points is ensured. When optimizing the pose, a loop optimization method is used to obtain more correct matches, which is a more relaxed key frame selection strategy than PTAM. and many more. These small improvements make ORB-SLAM far more robust than other solutions: even for poor scenarios and poor calibration internal parameters, ORB-SLAM can work smoothly.
 \end{enumerate}
 
-上述这些优势使得ORB-SLAM在特征点SLAM中达到顶峰，许多研究工作都以ORB-SLAM作为标准，或者在它的基础上进行后续的开发。它的代码以清晰易读著称，有着完善的注释，可供后来的研究者进一步理解。
+The above-mentioned advantages make ORB-SLAM reach its peak in the feature point SLAM. Many research works use ORB-SLAM as the standard, or follow-up development based on it. Its code is known for being clear and easy to read, with perfect annotations, which can be further understood by later researchers.
 
-当然，ORB-SLAM也存在一些不足之处。首先，由于整个SLAM系统都采用特征点进行计算，我们必须对每幅图像都计算一遍ORB特征，这是非常耗时的。ORB-SLAM的三线程结构也给CPU带来了较重的负担，使得它只有在当前PC架构的CPU上才能实时运算，移植到嵌入式设备上则有一定困难。其次，ORB-SLAM的建图为稀疏特征点，目前还没有开放存储和读取地图后重新定位的功能（虽然从实现上来讲并不困难）。根据我们在建图部分的分析，稀疏特征点地图只能满足我们对定位的需求，而无法提供导航、避障、交互等诸多功能。然而，如果我们仅用ORB-SLAM处理定位问题，似乎又显得有些过于重量级了。相比之下，另外一些方案提供了更为轻量级的定位，使我们能够在低端的处理器上运行SLAM，或者让CPU有余力处理其他的事务。
+Of course, ORB-SLAM also has some shortcomings. First of all, since the entire SLAM system uses feature points for calculation, we must calculate the ORB feature for each image, which is very time-consuming. The three-thread structure of ORB-SLAM also brings a heavier burden to the CPU, making it only able to operate in real time on the CPU of the current PC architecture, and it is difficult to transform to embedded devices. Secondly, the mapping of ORB-SLAM is sparse feature points, and there is no open storage and relocation function after reading the map (although it is not difficult in terms of implementation). According to our analysis in the mapping section, the sparse feature point map can only meet our needs for positioning, but cannot provide navigation, obstacle avoidance, interaction and many other functions. However, if we only use ORB-SLAM to deal with the positioning problem, it seems a bit too heavyweight. In contrast, some other programs provide a more lightweight positioning, allowing us to run SLAM on low-end processors, or allow the CPU to handle other tasks.
 
 \subsection{LSD-SLAM}
-
-LSD-SLAM（Large Scale Direct monocular SLAM）是J. Engel等人于2014年提出的SLAM工作\textsuperscript{\cite{Engel2013, Engel2014}}。类比于ORB-SLAM之于特征点，LSD-SLAM则标志着单目直接法在SLAM中的成功应用。LSD-SLAM的核心贡献是将直接法应用到了半稠密的单目SLAM中。它不仅不需要计算特征点，还能构建半稠密的地图——这里半稠密的意思主要是指估计梯度明显的像素位置。它的主要优点如下：
+LSD-SLAM (Large Scale Direct monocular SLAM) is a SLAM work {\cite{Engel2013, Engel2014}} proposed by J. Engel et al. in 2014. Analogous to ORB-SLAM to feature points, LSD-SLAM marks the successful application of the monocular direct method in SLAM. The core contribution of LSD-SLAM is to apply the direct method to semi-dense monocular SLAM. Not only does it not need to calculate feature points, but it can also construct a semi-dense map-here semi-dense means mainly to estimate the pixel position with obvious gradient. Its main advantages are as follows:
 
 \begin{enumerate}
-	\item LSD-SLAM的直接法是针对像素进行的。作者有创见地提出了像素梯度与直接法的关系，以及像素梯度与极线方向在稠密重建中的角度关系。这些在本书的第8讲和第13讲均有讨论。不过，LSD-SLAM是在单目图像进行半稠密的跟踪，实现原理要比本书的例程更加复杂。
-	\item LSD-SLAM在CPU上实现了半稠密场景的重建，这在之前的方案中是很少见到的。基于特征点的方法只能是稀疏的，而进行稠密重建的方案大多要使用RGB-D传感器，或者使用GPU构建稠密地图\textsuperscript{\cite{Kerl2013}}。TUM计算机视觉组在多年对直接法研究的基础上，实现了这种CPU上的实时半稠密SLAM。
-	\item 之前也说过，LSD-SLAM的半稠密追踪使用了一些精妙的手段来保证追踪的实时性与稳定性。例如，LSD-SLAM既不是利用单个像素，也不是利用图像块，而是在极线上等距离取5个点，度量其SSD；在深度估计时，LSD-SLAM首先用随机数初始化深度，在估计完后又把深度均值归一化，以调整尺度；在度量深度不确定性时，不仅考虑三角化的几何关系，而且考虑了极线与深度的夹角，归纳成一个光度不确定性项；关键帧之间的约束使用了相似变换群及与之对应的李代数$\bm{\zeta} \in \mathfrak{sim}(3)$显式地表达出尺度，在后端优化中可以将不同尺度的场景考虑进来，减小了尺度飘移现象。
+	\item The direct method of LSD-SLAM is for pixels. The author creatively proposed the relationship between pixel gradient and direct method, and the angular relationship between pixel gradient and epipolar direction in dense reconstruction. These are discussed in Lecture 8 and Lecture 13 of this book. However, LSD-SLAM performs semi-dense tracking on monocular images, and the implementation principle is more complicated than the routines in this book.
+	\item LSD-SLAM realizes the reconstruction of semi-dense scenes on the CPU, which is rarely seen in previous schemes. The method based on feature points can only be sparse, and most of the dense reconstruction schemes use RGB-D sensors, or use GPU to build dense maps\textsuperscript{\cite{Kerl2013}}. The TUM Computer Vision Group has realized this kind of real-time semi-dense SLAM on the CPU based on years of research on the direct method.
+	\item I also said before that the semi-dense tracking of LSD-SLAM uses some subtle methods to ensure the real-time and stability of tracking. For example, LSD-SLAM does not use a single pixel or image block, but takes 5 points on the epipolar line at equal distances to measure its SSD; in depth estimation, LSD-SLAM first initializes the depth with random numbers, After the estimation, the depth mean is normalized to adjust the scale; when measuring the depth uncertainty, not only the geometric relationship of the triangle is considered, but also the angle between the epipolar line and the depth is considered, and it is summarized into a luminosity uncertainty item ; The constraints between key frames use the similar transformation group and the corresponding Lie algebra $\bm{\zeta} \in \mathfrak{sim}(3)$ to express the scale explicitly, which can be used in the back-end optimization Taking scenes of different scales into account, the scale drift phenomenon is reduced.
 \end{enumerate}
 
-\autoref{fig:lsd-slam}~显示了LSD的运行情况。我们可以观察一下这种微妙的半稠密地图是怎样一种介于稀疏地图与稠密地图之间的形式。半稠密地图建模了灰度图中有明显梯度的部分，显示在地图中，很大一部分都是物体的边缘或表面上带纹理的部分。LSD-SLAM对它们进行跟踪并建立关键帧，最后优化得到这样的地图。看起来比稀疏的地图具有更多的信息，但又不像稠密地图那样拥有完整的表面（稠密地图一般认为无法仅用CPU实现实时性）。
+\autoref{fig:lsd-slam}~ shows the operation of LSD. We can observe how this subtle semi-dense map is a form between the sparse map and the dense map. The semi-dense map models the parts with obvious gradients in the grayscale image. A large part of the map is displayed on the edges or textured parts of the object. LSD-SLAM tracks them and establishes key frames, and finally optimizes to get such a map. It seems that it has more information than a sparse map, but it does not have a complete surface like a dense map (dense maps are generally considered to be unable to achieve real-time performance with CPU alone).
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/lsd-slam}
-	\caption{LSD-SLAM运行图片。上半部分为估计的轨迹与地图，下半部分为图像中被建模的部分，即具有较好的像素梯度的部分。}
+	\caption{Snapshots of LSD-SLAM. The upper part is the estimated trajectory and map, and the lower part is the reconstructed part of the image, that is, the part with better pixel gradient.}
 	\label{fig:lsd-slam}
 \end{figure}
 
-由于LSD-SLAM使用了直接法进行跟踪，所以它既有直接法的优点（对特征缺失区域不敏感），也继承了直接法的缺点。例如，LSD-SLAM对相机内参和曝光非常敏感，并且在相机快速运动时容易丢失。另外，在回环检测部分，由于目前并没有基于直接法实现的回环检测方式，因此LSD-SLAM必须依赖于特征点方法进行回环检测，尚未完全摆脱特征点的计算。
+Since LSD-SLAM uses the direct method for tracking, it not only has the advantages of the direct method (insensitive to feature missing areas), but also inherits the shortcomings of the direct method. For example, LSD-SLAM is very sensitive to camera internal parameters and exposure, and is easily lost when the camera moves quickly. In addition, in the loop detection part, since there is currently no loop detection method based on the direct method, LSD-SLAM must rely on the feature point method for loop detection, and has not completely got rid of the calculation of feature points.
 
 \subsection{SVO}
+SVO is the abbreviation of Semi-direct Visual Odoemtry \textsuperscript{\cite{Forster2014}}. It is a visual odometer based on the sparse direct method proposed by Forster et al. in 2014. According to the author's name, it should be called the "semi-direct" method, but according to the conceptual framework of this book, it may be better to call it the "sparse direct method". The meaning of \textbf{semi-direct} in the original text refers to the mixed use of feature points and direct methods: SVO tracks some key points (corner points, no descriptors), and then, like the direct method, based on the information around these key points Estimate camera movement and its position (as shown in \autoref{fig:lsd-slam}). In implementation, SVO uses small blocks of $4\times4$ around the key points for block matching to estimate the camera's own motion.
 
-SVO是Semi-direct Visual Odoemtry的缩写\textsuperscript{\cite{Forster2014}}。它是由Forster等人于2014年提出的一种基于稀疏直接法的视觉里程计。按作者的称呼应该叫“半直接”法，然而按照本书的理念框架，称为“稀疏直接法”可能更好一些。\textbf{半直接}在原文中的意思是指特征点与直接法的混合使用：SVO跟踪了一些关键点（角点，没有描述子），然后像直接法那样，根据这些关键点周围的信息估计相机运动及其位置（如\autoref{fig:lsd-slam}所示）。在实现中，SVO使用了关键点周围的$4\times4$的小块进行块匹配，估计相机自身的运动。
+Compared with other programs, SVO's biggest advantage is extremely fast. Due to the use of the sparse direct method, it does not have to laboriously calculate the descriptor, nor does it need to process as much information as dense and semi-dense, so it can achieve real-time performance even on low-end computing platforms, while on PC platforms It can reach a speed of more than 100 frames per second. In the subsequent SVO 2.0, the speed has reached an astonishing 400 frames per second. This makes SVO very suitable for occasions with limited computing platforms, such as the positioning of drones and handheld AR/VR devices. UAV is also the target application platform for the author to develop SVO.
 
-相比于其他方案，SVO的最大优势是速度极快。由于使用稀疏的直接法，它既不必费力去计算描述子，也不必处理像稠密和半稠密那么多的信息，因此，即使在低端计算平台上也能达到实时性，而在PC平台上则可以达到每秒100多帧的速度。在后续的SVO 2.0中，速度更达到了惊人的每秒400帧。这使得SVO非常适用于计算平台受限的场合，例如无人机、手持AR/VR设备的定位。无人机也是作者开发SVO的目标应用平台。
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/svo}
-	\caption{SVO跟踪关键点的图片。}
+	\caption{Features tracked by SVO.}
 	\label{fig:svo}
 \end{figure}
 
-SVO的另一创新之处是提出了深度滤波器的概念，并推导了基于均匀−高斯混合分布的深度滤波器。这在本书的第13讲有提及，但由于原理较为复杂，我们没有详细解释。SVO将这种滤波器用于关键点的位置估计，并使用了逆深度作为参数化形式，使之能够更好地计算特征点位置。
+Another innovation of SVO is that it puts forward the concept of depth filter and derives a depth filter based on uniform-Gaussian mixture distribution. This is mentioned in Lecture 13 of this book, but since the principle is more complicated, we did not explain it in detail. SVO uses this filter to estimate the position of key points, and uses the inverse depth as a parameterized form to better calculate the position of feature points.
 
-开源版的SVO代码清晰易读，十分适合读者作为第一个SLAM实例进行分析。不过，开源版SVO也存在一些问题：
-
+The open source version of SVO code is clear and easy to read, which is very suitable for readers to analyze as the first SLAM example. However, the open source version of SVO also has some problems:
 \begin{enumerate}
-	\item 由于目标应用平台为无人机的俯视相机，其视野内的物体主要是地面，而且相机的运动主要为水平和上下的移动，SVO的许多细节是围绕这个应用设计的，这使得它在平视相机中表现不佳。例如，SVO在单目初始化时，使用了分解$\bm{H}$矩阵而不是传统的$\bm{F}$或$\bm{E}$矩阵的方式，这需要假设特征点位于平面上。该假设对俯视相机是成立的，但对平视相机通常是不成立的，可能导致初始化失败。再如，SVO在关键帧选择时，使用了平移量作为确定新的关键帧的策略，而没有考虑旋转量。这同样在无人机俯视配置下是有效的，但在平视相机中则会容易丢失。所以，如果读者想要在平视相机中使用SVO，必须自己加以修改。
-	\item SVO为了速度和轻量化，舍弃了后端优化和回环检测部分，也基本没有建图功能。这意味着SVO的位姿估计必然存在累积误差，而且丢失后不太容易进行重定位（因为没有描述子用来回环检测）。所以，我们称它为一个VO，而不是称它为完整的SLAM。
+	\item Since the target application platform is the drone's top-down camera, the object in its field of view is mainly the ground, and the camera's movement is mainly horizontal and up-and-down movement. Many details of SVO are designed around this application, which makes its performance being not very good in head-up cameras. For example, SVO uses the decomposition of the $\bm{H}$ matrix instead of the traditional $\bm{F}$ or $\bm{E}$ matrix during monocular initialization, which requires the assumption that the feature points are on the plane on. This assumption is true for a top-down camera, but it is usually not true for a head-up camera, which may cause initialization failure. For another example, when SVO selects a key frame, it uses the translation amount as a strategy for determining a new key frame without considering the rotation amount. This is also effective in the drone's top view configuration, but it is easy to lose in the head-up camera. Therefore, if readers want to use SVO in a head-up camera, they must modify it themselves.
+	\item SVO discards the back-end optimization and loop closure detection part for speed and light weight, and basically has no image building function. This means that SVO pose estimation must have cumulative errors, and it is not easy to relocate after loss (because there is no descriptor for loop detection). Therefore, we call it a VO, not a complete SLAM.
 \end{enumerate}
 
 \subsection{RTAB-MAP}
+After introducing several monocular SLAM solutions, let's look at some SLAM solutions on RGB-D sensors. Compared with monocular and binocular, the principle of RGB-D SLAM is much simpler (though not necessarily in implementation), and it can build dense maps in real time on the CPU.
 
-介绍了几款单目SLAM方案后，我们再来看一些RGB-D传感器上的SLAM方案。相比于单目和双目，RGB-D SLAM的原理要简单很多（尽管实现上不一定），而且能够在CPU上实时建立稠密的地图。
-
-RTAB-MAP（Real Time Appearance-Based Mapping）\textsuperscript{\cite{Labbe2014}}是RGB-D SLAM中比较经典的一个方案。它实现了RGB-D SLAM中所有应该有的东西：基于特征的视觉里程计、基于词袋的回环检测、后端的位姿图优化，以及点云和三角网格地图。因此，RTAB-MAP给出了一套完整的（但有些庞大的）RGB-D SLAM方案。目前我们已经可以直接从ROS中获得其二进制程序，此外，在Google Project Tango上也可以获取其App使用（如\autoref{fig:rtabmap}~所示）。
+RTAB-MAP (Real Time Appearance-Based Mapping) {\cite{Labbe2014}} is a more classic scheme in RGB-D SLAM. It implements everything that should be in RGB-D SLAM: feature-based visual odometry, bag-of-words-based loop detection, back-end pose map optimization, and point cloud and triangular mesh maps. Therefore, RTAB-MAP provides a complete (but somewhat huge) RGB-D SLAM solution. At present, we can obtain the binary program directly from ROS. In addition, the App can also be used on Google Project Tango (as shown in \autoref{fig:rtabmap}~)。
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/rtabmap}
-	\caption{RTAB-MAP在Google Project Tango上的运行样例。}
+	\caption{RTAB-MAP in Google Project Tango.}
 	\label{fig:rtabmap}
 \end{figure}
 
-RTAB-MAP支持一些常见的RGB-D和双目传感器，像Kinect、Xtion等，且提供实时的定位和建图功能。不过由于集成度较高，使得其他开发者在它的基础上进行二次开发变得困难，所以RTAB-MAP更适合作为SLAM应用而非研究使用。
+RTAB-MAP supports some common RGB-D and binocular sensors, such as Kinect, Xtion, etc., and provides real-time positioning and mapping functions. However, due to the high level of integration, it becomes difficult for other developers to carry out secondary development based on it, so RTAB-MAP is more suitable for SLAM applications rather than research use.
 
-\subsection{其他}
-除了这些开源方案之外，读者还能在\url{openslam.org}之类的网站上找到许多其他的研究，例如，DVO-SLAM\textsuperscript{\cite{Kerl2013a}}、RGBD-SLAM-V2\textsuperscript{\cite{Endres2014}}、DSO\textsuperscript{\cite{Engel2016}}，以及一些Kinect Fusion相关的工作，等等。随着时代发展，更新颖、更优秀的开源SLAM作品亦将出现在人们的视野中，限于篇幅这里就不逐一介绍了。
-	
-%\subsection{OKVis}
-%在视觉SLAM之外，还有一个称为VIO
-%\subsection{未开源的一些工作}
+\subsection{Others}
+In addition to these open source solutions, readers can also find many other studies on websites such as \url{openslam.org}, for example, DVO-SLAM {\cite{Kerl2013a}}, RGBD-SLAM-V2 {\cite{Endres2014}}, DSO  {\cite{Engel2016}}, and some Kinect Fusion related work, etc. With the development of the times, newer and better open source SLAM works will also appear in people's field of vision. Due to space limitations, I will not introduce them one by one here.
 
-\section{未来的SLAM话题}
-看过了现有的方案，我们再来讨论一些未来的发展方向\footnote{这里有一部分是笔者个人的理解，不一定完全正确。}。大体上讲，SLAM将来的发展趋势有两大类：一是朝轻量级、小型化方向发展，让SLAM能够在嵌入式或手机等小型设备上良好运行，然后考虑以它为底层功能的应用。毕竟，大部分场合中，我们的真正目的都是实现机器人、AR/VR设备的功能，比如说运动、导航、教学、娱乐，而SLAM是为上层应用提供自身的一个位姿估计。在这些应用中，我们不希望SLAM占用所有计算资源，所以对SLAM的小型化和轻量化有非常强烈的需求。另一方面则是利用高性能计算设备，实现精密的三维重建、场景理解等功能。在这些应用中，我们的目的是完美地重建场景，而对于计算资源和设备的便携性则没有多大限制。由于可以利用GPU，这个方向和深度学习亦有结合点。
+\section{SLAM in Future}
+After reading the existing systems, let’s discuss some future development directions\footnote{Well, this part is my personal understanding, which may not be completely correct.}. Generally speaking, the future development trend of SLAM is divided into two categories: one is to develop towards lightweight and miniaturization, so that SLAM can run well on small devices such as embedded or mobile phones, and then consider applications that use it as the underlying function. . After all, in most cases, our real goal is to realize the functions of robots and AR/VR devices, such as sports, navigation, teaching, and entertainment. SLAM is to provide its own pose estimation for upper-level applications. In these applications, we do not want SLAM to occupy all computing resources, so there is a very strong demand for the miniaturization and lightweight of SLAM. On the other hand, it uses high-performance computing equipment to realize functions such as precise 3D reconstruction and scene understanding. In these applications, our goal is to reconstruct the scene perfectly, and there are no restrictions on the portability of computing resources and equipment. Since GPU can be used, this direction and deep learning also have a combination.
 
-\subsection{视觉+惯性导航SLAM}
+\subsection{IMU Integrated VSLAM}
+First, we want to talk about a direction with a strong application background: the visual-inertial navigation fusion SLAM scheme. Whether actual robots or hardware devices, they usually do not only carry one sensor, but are often a fusion of multiple sensors. Researchers in academia love the \textit{big clean problems}, such as implementing visual SLAM with a single camera. But friends in the industry pay more attention to making algorithms more practical and have to face some complex and trivial scenarios. In this application context, the use of vision and inertial navigation to integrate SLAM has become a hot spot.
 
-首先，我们要谈一个有很强应用背景的方向：视觉−惯性导航融合SLAM方案。实际的机器人也好，硬件设备也好，通常都不会只携带一种传感器，往往是多种传感器的融合。学术界的研究人员喜爱“大而且干净的问题”（Big Clean Problem），比如说仅用单个摄像头实现视觉SLAM。但产业界的朋友们则更注重让算法更加实用，不得不面对一些复杂而琐碎的场景。在这种应用背景下，用视觉与惯性导航融合进行SLAM成为了一个关注热点。
-
-惯性传感器（IMU）能够测量传感器本体的角速度和加速度，被认为与相机传感器具有明显的互补性，而且十分有潜力在融合之后得到更完善的SLAM系统\textsuperscript{\cite{Gui2015}}。为什么这么说呢？
+The inertial sensor (IMU) can measure the angular velocity and acceleration of the sensor body, which is considered to have obvious complementarity with the camera sensor, and has the potential to obtain a more complete SLAM system after fusion {\cite{Gui2015}}. Why do we say that?
 
 \begin{enumerate}
-	\item IMU虽然可以测得角速度和加速度，但这些量都存在明显的漂移（Drift），使得积分两次得到的位姿数据非常不可靠。好比说，我们将IMU放在桌上不动，用它的读数积分得到的位姿也会漂出十万八千里。但是，对于短时间内的快速运动，IMU能够提供一些较好的估计。这正是相机的弱点。
+	\item IMU can measure angular velocity and acceleration, but these quantities have obvious drift (Drift), which makes the pose data obtained by integration twice very unreliable. For example, if we put the IMU on the table without moving, the posture obtained by integrating its readings will drift out of the distance. However, for fast movements in a short period of time, IMU can provide some better estimates. This is the weakness of the camera.
 	
-	\clearpage
-	\hspace{2em}当运动过快时，（卷帘快门的）相机会出现运动模糊，或者两帧之间重叠区域太少以至于无法进行特征匹配，所以纯视觉SLAM非常害怕快速的运动。而有了IMU，即使在相机数据无效的那段时间内，我们也能保持一个较好的位姿估计，这是纯视觉SLAM无法做到的。
+	When the movement is too fast, the camera (rolling shutter) will have motion blur, or the overlapping area between two frames is too small to be able to perform feature matching, so pure visual SLAM is very afraid of fast movement. With IMU, we can maintain a better pose estimation even during the period when the camera data is invalid, which is not possible with pure visual SLAM.
 	
-	\item 相比于IMU，相机数据基本不会有漂移。如果相机放在原地固定不动，那么（在静态场景下）视觉SLAM的位姿估计也是固定不动的。所以，相机数据可以有效地估计并修正IMU读数中的漂移，使得在慢速运动后的位姿估计依然有效。
+	\item Compared with IMU, the camera data will basically not drift. If the camera is placed in place and fixed, then (in a static scene) the pose estimation of visual SLAM is also fixed. Therefore, the camera data can effectively estimate and correct the drift in the IMU reading, so that the pose estimation after slow motion is still valid.
 	
-	\item 当图像发生变化时，本质上我们没法知道是相机自身发生了运动，还是外界条件发生了变化，所以纯视觉SLAM难以处理动态的障碍物。而IMU能够感受到自己的运动信息，从某种程度上减轻动态物体的影响。
+	\item When the image changes, we essentially cannot know whether the camera itself has moved or the external conditions have changed, so pure visual SLAM is difficult to deal with dynamic obstacles. The IMU can feel its own motion information, to some extent reduce the impact of dynamic objects.
 \end{enumerate}
 
-总而言之，我们看到IMU为快速运动提供了较好的解决方式，而相机又能在慢速运动下解决IMU的漂移问题——在这个意义下，它们二者是互补的。
+In summary, we see that IMU provides a better solution for fast motion, and the camera can solve the drift problem of IMU under slow motion-in this sense, the two are complementary.
 
 \begin{figure}[!thp]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/visensor}
-	\caption{越来越多的相机开始集成IMU设备。}
+	\caption{More and more devices start to integrate IMU with cameras. }
 	\label{fig:visensor}
 \end{figure}
 
-当然，虽然说得很好听，不管是理论还是实践，VIO（Visual Inertial Odometry）都是相当复杂的。其复杂性主要来源于IMU测量加速度和角速度这两个量的事实，所以不得不引入运动学计算。目前VIO的框架已经定型为两大类：松耦合（Loosely Coupled）和紧耦合（Tightly Coupled）\textsuperscript{\cite{Martinelli2014}}。松耦合是指IMU和相机分别进行自身的运动估计，然后对其位姿估计结果进行融合。紧耦合是指把IMU的状态与相机的状态合并在一起，共同构建运动方程和观测方程，然后进行状态估计——这和我们之前介绍的理论非常相似。我们可以预见，紧耦合理论也必将分为基于滤波和基于优化两个方向。在滤波方面，传统的EKF\textsuperscript{\cite{Bloesch2015}}以及改进的MSCKF（Multi-State Constraint KF）\textsuperscript{\cite{Li2013}}都取得了一定的成果，研究者对EKF也进行了深入的讨论（例如能观性\textsuperscript{\cite{Huang2014}}）；优化方面亦有相应的方案\textsuperscript{\cite{Leutenegger2015, Forster2015}}。值得一提的是，尽管在纯视觉SLAM中优化方法已经占了主流，但在VIO中，由于IMU的数据频率非常高，对状态进行优化需要的计算量就更大，因此目前仍处于滤波与优化并存的阶段\textsuperscript{\cite{Tkocz2015, Usenko2016}}。由于过于复杂，限于篇幅，这里就只能大概地介绍一下这个方向了。
+Of course, although it sounds very good, VIO (Visual Inertial Odometry) is quite complicated whether it is theory or practice. Its complexity mainly comes from the fact that IMU measures acceleration and angular velocity, so kinematic calculations have to be introduced. At present, the framework of VIO has been finalized into two categories: loosely coupled and tightly coupled {\cite{Martinelli2014}}. Loose coupling means that the IMU and the camera perform their own motion estimation separately, and then merge their pose estimation results. Tight coupling refers to combining the state of the IMU with the state of the camera, jointly constructing the motion equation and observation equation, and then performing state estimation-this is very similar to the theory we introduced before. We can foresee that tightly coupled theory will also be divided into two directions: filtering-based and optimization-based. In terms of filtering, the traditional EKF {\cite{Bloesch2015}} and the improved MSCKF (Multi-State Constraint KF) {\cite{Li2013}} have achieved certain results, and the researchers have also carried out the EKF In-depth discussion (such as observability {\cite{Huang2014}}); there are also corresponding solutions for optimization {\cite{Leutenegger2015, Forster2015}}. It is worth mentioning that although optimization methods in pure visual SLAM have taken the mainstream, in VIO, because the data frequency of IMU is very high, the amount of calculation required to optimize the state is greater, so it is still in filtering and Optimizing the coexistence stage {\cite{Tkocz2015, Usenko2016}}. Due to its complexity and limited space, I can only briefly introduce this direction here.
 
-VIO为将来SLAM的小型化与低成本化提供了一个非常有效的方向。而且结合稀疏直接法，我们有望在低端硬件上取得良好的SLAM或VO效果，是非常有前景的。
+VIO provides a very effective direction for the miniaturization and cost reduction of SLAM in the future. And combined with the sparse direct method, we are expected to achieve good SLAM or VO effects on low-end hardware, which is very promising.
 
-\subsection{语义SLAM}
-SLAM的另一个大方向就是和深度学习技术结合。到目前为止，SLAM的方案都处于特征点或者像素的层级。关于这些特征点或像素到底来自于什么东西，我们一无所知。这使得计算机视觉中的SLAM与我们人类的做法不怎么相似，至少我们自己从来看不到特征点，也不会去根据特征点判断自身的运动方向。我们看到的是一个个物体，通过左右眼判断它们的远近，然后基于它们在图像当中的运动推测相机的移动。
+\subsection{Semantic SLAM}
+Another general direction of SLAM is to combine with deep learning technology. So far, SLAM solutions are at the feature point or pixel level. We don't know what exactly these feature points or pixels come from. This makes the SLAM in computer vision not very similar to what we humans do, at least we never see the feature points, nor do we judge our own movement direction based on the feature points. We see objects one by one, judge their distance through the left and right eyes, and then guess the movement of the camera based on their movement in the image.
 
-很久之前，研究者就试图将物体信息结合到SLAM中。例如文献\cite{Nuechter2008, Civera2011, Koppula2011, Anand2012}中就曾把物体识别与视觉SLAM结合起来，构建带物体标签的地图。另一方面，把标签信息引入到BA或优化端的目标函数和约束中，我们可以结合特征点的位置与标签信息进行优化\textsuperscript{\cite{Fioraio2013}}。这些工作都可以称为语义SLAM。综合来说，SLAM和语义的结合点主要有两个方面\textsuperscript{\cite{Cadena2016}}：
+A long time ago, researchers tried to incorporate object information into SLAM. For example, the literature \cite{Nuechter2008, Civera2011, Koppula2011, Anand2012} once combined object recognition and visual SLAM to construct a map with object labels. On the other hand, by introducing the label information into the objective function and constraints of the BA or optimization end, we can combine the position of the feature point with the label information to optimize {\cite{Fioraio2013}}. These tasks can be called semantic SLAM. In summary, the combination of SLAM and semantics mainly has two aspects {\cite{Cadena2016}}:
 
 \begin{enumerate}
-	\item 语义帮助SLAM。传统的物体识别、分割算法往往只考虑一幅图，而在SLAM中我们拥有一台移动的相机。如果我们把运动过程中的图片都带上物体标签，就能得到一个带有标签的地图。另外，物体信息亦可为回环检测、BA优化带来更多的条件。 
-	\item SLAM帮助语义。物体识别和分割都需要大量的训练数据。要让分类器识别各个角度的物体，需要从不同视角采集该物体的数据，然后进行人工标定，非常辛苦。而SLAM中，由于我们可以估计相机的运动，可以自动地计算物体在图像中的位置，节省人工标定的成本。如果有自动生成的带高质量标注的样本数据，能够很大程度上加速分类器的训练过程。
+	\item Semantics help SLAM. Traditional object recognition and segmentation algorithms often only consider one image, while in SLAM we have a moving camera. If we put object labels on all the pictures during the movement, we can get a labeled map. In addition, object information can also bring more conditions for loop detection and BA optimization.
+	\item SLAM helps semantics. Both object recognition and segmentation require a lot of training data. In order for the classifier to recognize objects from various angles, it is necessary to collect data of the object from different perspectives, and then perform manual calibration, which is very difficult. In SLAM, since we can estimate the movement of the camera, we can automatically calculate the position of the object in the image, saving the cost of manual calibration. If there is automatically generated sample data with high-quality annotations, it can greatly accelerate the training process of the classifier.
 \end{enumerate}
 
 \begin{figure}[!thp]
 	\centering
 	\includegraphics[width=1.0\textwidth]{past-and-future/semantic-slam}
-	\caption{语义SLAM的一些结果，左图和右图分别来自文献\cite{Anand2012, Salas-Moreno2014}。}
+	\caption{Semantic SLAM results from \cite{Anand2012, Salas-Moreno2014}.}
 	\label{fig:semantic-slam}
 \end{figure}
 
-在深度学习广泛应用之前，我们只能利用支持向量机、条件随机场等传统工具对物体或场景进行分割和识别，或者直接将观测数据与数据库中的样本进行比较\textsuperscript{\cite{Salas-Moreno2013, Salas-Moreno2014}}，尝试构建语义地图\textsuperscript{\cite{Anand2012, Stueckler2012, Kostavelis2013, Couprie2013}}。由于这些工具本身在分类正确率上存在限制，所以效果也往往不尽如人意。随着深度学习的发展，我们开始使用网络，越来越准确地对图像进行识别、检测和分割\textsuperscript{\cite{Deng2009, Krizhevsky2012, He2015, Ren2015, Long2014, Zheng2015}}。这为构建准确的语义地图打下了更好的基础\textsuperscript{\cite{Gupta2014}}。我们正看到，逐渐开始有学者将神经网络方法引入到SLAM中的物体识别和分割，甚至SLAM本身的位姿估计与回环检测中\textsuperscript{\cite{Konda2015, Kendall2015, Hou2015}}。虽然这些方法目前还没有成为主流，但将SLAM与深度学习结合来处理图像，亦是一个很有前景的研究方向。
+Before deep learning is widely used, we can only use traditional tools such as support vector machines and conditional random fields to segment and recognize objects or scenes, or directly compare observation data with samples in the database. {\cite{Salas- Moreno2013, Salas-Moreno2014}}, try to build a semantic map {\cite{Anand2012, Stueckler2012, Kostavelis2013, Couprie2013}}. Because these tools themselves have limitations on the classification accuracy, the effect is often not satisfactory. With the development of deep learning, we began to use the network to recognize, detect and segment images more and more accurately {\cite{Deng2009, Krizhevsky2012, He2015, Ren2015, Long2014, Zheng2015}}. This lays a better foundation for constructing accurate semantic maps {\cite{Gupta2014}}. We are seeing that some scholars are gradually introducing neural network methods into the object recognition and segmentation in SLAM, and even the pose estimation and loop detection of SLAM itself {\cite{Konda2015, Kendall2015, Hou2015}}. Although these methods have not yet become mainstream, the combination of SLAM and deep learning to process images is also a promising research direction.
 
-\subsection{SLAM的未来}
-除此之外，基于线/面特征的SLAM\textsuperscript{\cite{An2012, Zhou2015, Benedettelli2012}}、动态场景下的SLAM\textsuperscript{\cite{Saarinen2013, Maddern2012,  Wang2008}}、多机器人的SLAM\textsuperscript{\cite{Zou2013, Gil2010a, Vidal-Calleja2011}}，等等，都是研究者感兴趣并发力的地方。按照文献\cite{Cadena2016}的观点，视觉SLAM经过了三个大时代：提出问题、寻找算法、完善算法。而我们目前正处于第三个时代，面对着如何在已有的框架中进一步改善，使视觉SLAM系统能够在各种干扰的条件下稳定运行。这一步需要许多研究者的不懈努力。
+In addition, SLAM based on line/surface features  {\cite{An2012, Zhou2015, Benedettelli2012}} , SLAM in dynamic scenes {\cite{Saarinen2013, Maddern2012, Wang2008}}, and multi-robot SLAM {\cite{Zou2013, Gil2010a, Vidal-Calleja2011}}, etc., are all places where researchers are interested in concurrency. According to the opinion of the \cite{Cadena2016}, visual SLAM has gone through three major eras: asking questions, searching for algorithms, and improving algorithms. And we are currently in the third era, facing how to further improve the existing framework, so that the visual SLAM system can operate stably under various interference conditions. This step requires the unremitting efforts of many researchers.
 
-当然，没有人能够预测未来，我们也说不准会不会突然有一天，整个框架都被新的技术推倒重写。不过即使是那样，今天我们的付出仍将是有意义的。没有今天的研究，也就不会有将来的发展。最后，希望读者能在读完本书之后，对现有的整个SLAM系统有了充分的认识。我们也期待你能够为SLAM研究做出贡献！
+Of course, no one can predict the future, and we are not sure if one day, the entire framework will be overturned and rewritten by new technologies. But even then, our contribution today will still be meaningful. Without today's research, there will be no future development. Finally, I hope that readers will have a full understanding of the entire existing SLAM system after reading this book. We also look forward to your contribution to SLAM research!
 
-\section*{习题}
+\section*{Exercises}
 \begin{enumerate}
-	\item 选择本讲提到的任意一个开源SLAM系统，在你的机器上编译运行它，直观体验其过程。
-	\item 你应该已经能够看懂绝大多数SLAM相关论文了。拿起纸和笔，开始你的研究吧！
+	\item Choose any of the open source SLAM systems mentioned in this lecture, compile and run it on your machine, and experience the process intuitively.
+	\item You should be able to understand most SLAM related papers. Pick up paper and pen and start your research!
 \end{enumerate}
+
