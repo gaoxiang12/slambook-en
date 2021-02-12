@@ -5760,15 +5760,17 @@ organization={IEEE}
   year      = {2018},
   pages     = {4470--4479},
 }
-@article{qin2017vins,
-  title={VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator},
-  author={Qin, Tong and Li, Peiliang and Shen, Shaojie},
-  journal={IEEE Transactions on Robotics}, 
-  year={2018},
-  volume={34}, 
-  number={4}, 
-  pages={1004-1020}
+
+@Article{Qin2018,
+  author  = {Qin, Tong and Li, Peiliang and Shen, Shaojie},
+  journal = {IEEE Transactions on Robotics},
+  title   = {VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator},
+  year    = {2018},
+  number  = {4},
+  pages   = {1004-1020},
+  volume  = {34},
 }
+
 @Comment{jabref-meta: databaseType:bibtex;}
 
 @Comment{jabref-meta: grouping:
