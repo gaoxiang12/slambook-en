@@ -196,32 +196,32 @@ Metrical maps emphasize the exact metrical locations of the objects in maps. The
 Compared to the accurate metrical maps, topological maps emphasize the relationships among map elements. A topological map is a graph composed of nodes and edges, only considering the connectivity between nodes. For instance, we only care about that point A and point B are connected, regardless of how we could travel from point A to point B. It relaxes the requirements on precise locations of a map by removing map details and is, therefore, a more compact expression. However, topological maps are not good at representing maps with complex structures. Questions such as how to split a map to form nodes and edges and how to use a topological map for navigation and path planning are still open problems to be studied.
 
 \section{Mathematical Formulation of SLAM Problems}
-Through the previous introduction, readers should have gained an intuitive understanding of the modules in a SLAM system and the main functionality of each module. However, we cannot write runnable programs only based on intuitive impressions. We want to rise it to a rational and rigorous level, that is, using mathematical symbols to formulate a SLAM process. We will be using variables and formulas, but please rest assured that we will try our best to keep it clear enough.
+Through the previous introduction, readers should have gained an intuitive understanding of the modules in a SLAM system and each module's main functionality. However, we cannot write runnable programs only based on intuitive impressions. We want to raise it to a rational and rigorous level, using mathematical symbols to formulate a SLAM process. We will be using variables and formulas, but please rest assured that we will try our best to keep it clear enough.
 
-Assuming that our Little Carrot is moving in an unknown environment, carrying some sensors. How can this be described in mathematical language? First, since sensors usually collect data at different time points, we are only concerned with the locations and the map at these moments. This turns a continuous process into discrete time steps, say $1, \cdots, k$, at which data sampling happens. We use $\mathbf{x}$ to indicate positions of Little Carrot. So the positions at different time steps can be written as $\mathbf{x}_1,\cdots,\mathbf{x}_k$, which constitute the trajectory of Little Carrot. In terms of the map, we assume that the map is made up of a number of \emph{landmarks}, and at each time step, the sensors can see a part of the landmarks and record their observations. Assume there is a total of $N$ landmarks in the map, and we will use $\mathbf{y}_1, \cdots, \mathbf{y}_N$ to denote them.
+Assuming that our Little Carrot is moving in an unknown environment, carrying some sensors. How can this be described in mathematical language? First, since sensors usually collect data at different time points, we are only concerned with the locations and the map at these moments. This turns a continuous process into discrete time steps, say $1, \cdots, k$, at which data sampling happens. We use $\mathbf{x}$ to indicate positions of Little Carrot. So the positions at different time steps can be written as $\mathbf{x}_1,\cdots,\mathbf{x}_k$, which constitute the trajectory of Little Carrot. In terms of the map, we assume that the map is made up of several \emph{landmarks}, and at each time step, the sensors can see a part of the landmarks and record their observations. Assume there is a total of $N$ landmarks in the map, and we will use $\mathbf{y}_1, \cdots, \mathbf{y}_N$ to denote them.
 
-With such a setting, the process that ``Little Carrot move in the environment with sensors'' basically has two parts: 
+With such a setting, the process that \textit{Little Carrot moves in the environment with sensors} basically has two parts: 
 
 \begin{enumerate}
-\item What is its \emph{motion}? We want to describe how $\mathbf{x}$ has changed from time step $k-1$ to $k$.
-\item What are the sensor \emph{observations}? Assuming that the Little Carrot detects a certain landmark, let's say $\mathbf{y}_j$ at position $\mathbf{x}_k$, we need to describe this event in mathematical language.
+\item What is its \emph{motion}? We want to describe how $\mathbf{x}$ changes from time step $k-1$ to $k$.
+\item What are the sensor \emph{observations}? Assuming that the Little Carrot detects a specific landmark, let's say $\mathbf{y}_j$ at position $\mathbf{x}_k$, we need to describe this event in mathematical language.
 \end{enumerate}
 
-Let's first take a look at motion. Typically, we may send some motion messages to the robots like ``turn 15 degrees to left''. These messages or orders will be finally carried out by the controller, but probably in many different ways. Sometimes we control the position of robots, but acceleration or angular velocity would always be reasonable alternates. However, no matter what the controller is, we can use a universal and abstract mathematical model to describe it:
+Let's first take a look at motion. Typically, we may send some motion commands to the robots like ``turn 15 degrees to left''. These commands will be finally carried out by the controller, probably in many different ways. Sometimes we control the position of robots, but acceleration or angular velocity would always be reasonable alternates. However, no matter what the controller is, we can use a universal and abstract mathematical model to describe it:
 \begin{equation}
 {\mathbf{x}_k} = f\left( {{\mathbf{x}_{k - 1}},{\mathbf{u}_k}, \mathbf{w}_k} \right),
 \end{equation}
-where $\mathbf{u}_k$ is the input orders, and $\mathbf{w}_k$ is noise. Note that we use a general $f(\cdot)$ to describe the process, instead of specifying the exact form of $f$. This allows the function to represent any motion input, rather than being limited to a particular one and thus becoming a general equation. We call it the \emph{motion equation}.
+where $\mathbf{u}_k$ is the input commands, and $\mathbf{w}_k$ is noise. Note that we use a general $f(\cdot)$ to describe the process, instead of specifying the exact form of $f$. This allows the function to represent any motion input, rather than being limited to a particular one. We call it the \emph{motion equation}.
 
-The presence of noise turns this model into a stochastic model. In other words, even if we give an order as ``move forward one meter'', it does not mean that our robot really advances one meter. If all the instructions are accurate, there is no need to \emph{estimate} anything. In fact, the robot may only advance by, say, 0.9 meters, and at another moment, it moves by 1.1 meters. Thus, the noise during each movement is random. If we ignore this noise, the position determined only by the command maybe a hundred miles away from the actual position after several minutes.
+The presence of noise turns this model into a stochastic model. In other words, even if we give an order as ``move forward one meter'', it does not mean that our robot really drives one meter in front. If all the instructions are accurate, there is no need to estimate anything. In fact, the robot may only forward by, say, 0.9 meters, and at another moment, it moves by 1.1 meters. Thus, the noise during each movement is random. If we ignore this noise, the position determined only by the input command maybe a hundred miles away from the real position after several minutes.
 
-Corresponding to the motion equation, there is also an \emph{observation equation}. The observation equation describes the process that the Little Carrot sees a landmark point $\mathbf{y}_j$ at $\mathbf{x}_k$ and generates an observation data $\mathbf{z}_{k,j}$. Likewise, we will describe this relationship with an abstract function $h(\cdot)$:
+Corresponding to the motion equation, we also have an \textit{observation equation}. The observation equation describes the process that the Little Carrot sees a landmark point $\mathbf{y}_j$ at $\mathbf{x}_k$ and generates an observation data $\mathbf{z}_{k,j}$. Likewise, we will describe this relationship with an abstract function $h(\cdot)$:
 \begin{equation}
 {\mathbf{z}_{k,j}} = h\left( {{\mathbf{y}_j},{\mathbf{x}_k}, \mathbf{v}_{k,j} } \right),
 \end{equation}
-where $\mathbf{v}_{k,j}$ is the noise in this observation. Since there are various forms of observation sensors, the observed data $\mathbf{z}$ and the observation equation $h$ may also have many different forms.
+where $\mathbf{v}_{k,j}$ is the noise in this observation. Since there are various observation sensors, the observed data $\mathbf{z}$ and the observation equation $h$ may also have many different forms.
 
-Readers may say that the function $f,h$ here does not seem to specify what is going on in the motion and observation. Also, what does $\mathbf{x}$, $\mathbf{y}$, $\mathbf{z}$ mean here? In fact, depending on the actual motion and the type of sensor, there are several kinds of \textbf{parameterization} methods. What is parameterization? For example, suppose our robot moves in a plane, then its pose \footnote{ In this book, we use the word ``pose'' to mean ``position'' plus ``rotation''. } is described by two $x-y$ coordinates and an angle, ie $\mathbf{x}_k = [x_1,x_2,\theta]_k^\mathrm{T}$, where $x_1, x_2$ are positions on two axes and $\theta$ is the angle. At the same time, the input command is the position and angle change between the time interval: $\mathbf{u}_k = [ \Delta x_1, \Delta x_2, \Delta \theta ]_k^\mathrm{T} $, so the motion equation can be parameterized as:
+Readers may say that the function $f,h$ here does not seem to specify what is going on in the motion and observation. Also, what do the variables $\mathbf{x}$, $\mathbf{y}$, $\mathbf{z}$ mean here? Depending on the actual motion and the type of sensor, there are several kinds of parameterization methods. What is parameterization? For example, suppose our robot moves in a plane, then its pose \footnote{ In this book, we use the word ``pose'' to mean ``position'' plus ``rotation''. } is described by two $x-y$ coordinates and an angle, i.e.,  $\mathbf{x}_k = [x_1,x_2,\theta]_k^\mathrm{T}$, where $x_1, x_2$ are positions on two axes and $\theta$ is the angle. At the same time, the input command is the position and angle change between the time interval: $\mathbf{u}_k = [ \Delta x_1, \Delta x_2, \Delta \theta ]_k^\mathrm{T} $, so the motion equation can be parameterized as:
 \begin{equation}
 {\left[ \begin{array}{l}
     x_1\\
@@ -237,9 +237,9 @@ Readers may say that the function $f,h$ here does not seem to specify what is go
     \Delta \theta
     \end{array} \right]_k} + {\mathbf{w}_k},
 \end{equation}
-where $\mathbf{w}_k$ is the noise again. This is a simple linear relationship. However, not all input commands are position and angular changes. For example, the input of ``throttle'' or ``joystick'' is the speed or acceleration, so there are other forms of more complex equations of motion. At that time, we would say the kinetic analysis is required.
+where $\mathbf{w}_k$ is the noise again. This is a simple linear relationship. However, not all input commands are position and angular changes. For example, the input of ``throttle'' or ``joystick'' is the speed or acceleration, so there are other forms of more complex motion equations. At that time, we would say the kinetic analysis is required.
 
-Regarding the observation equation, for example, the robot carries a two-dimensional laser sensor. We know that when a laser sensor observes a 2D landmark by measuring two quantities: the distance $r$ between the landmark point and the robot, and the angle $\phi$. Let's say the landmark is at $\mathbf{y}_j = [y_1, y_2]_j^\mathrm{T}$, the pose is $\mathbf{x}_k=[x_1,x_2]_k^\mathrm{T}$，and the observed data is $\mathbf{z}_{k,j} = [r_{k,j}, \phi_{k,j}]^\mathrm{T}$, then the observation equation is written as:
+Regarding the observation equation, for example, the robot carries a two-dimensional laser sensor. We know that a laser observes a 2D landmark by measuring two quantities: the distance $r$ between the landmark point and the robot, and the angle $\phi$. Let's say the landmark is at $\mathbf{y}_j = [y_1, y_2]_j^\mathrm{T}$, the pose is $\mathbf{x}_k=[x_1,x_2]_k^\mathrm{T}$，and the observed data is $\mathbf{z}_{k,j} = [r_{k,j}, \phi_{k,j}]^\mathrm{T}$, then the observation equation is written as:
 \begin{equation}
 \left[ \begin{array}{l}
 r_{k,j}\\
@@ -250,7 +250,7 @@ r_{k,j}\\
 \end{array} \right] + \mathbf{v}_{k, j}.
 \end{equation}
 
-When considering visual SLAM, the sensor is a camera, then the observation equation is a process like ``getting the pixels in the image of the landmarks.'' This process involves a description of the camera model, which will be covered in detail in Chapter 5, which is skipped here.
+When considering visual SLAM, the sensor is a camera, then the observation equation is a process like ``getting the pixels in the image of the landmarks.'' This process involves a description of the camera model, which will be covered in detail in chapter \ref{cpt:5}.
 
 Obviously, it can be seen that the two equations have different parameterized forms for different sensors. If we maintain versatility and take them into a common abstract form, then the SLAM process can be summarized into two basic equations:
 \begin{equation}
@@ -260,42 +260,41 @@ Obviously, it can be seen that the two equations have different parameterized fo
 {\mathbf{z}_{k,j}} = h\left( {{ \mathbf{y}_j},{ \mathbf{x}_k}}, \mathbf{v}_{k,j} \right), \quad (k,j) \in \mathcal{O}
 \end{array} \right. ,
 \end{equation}
-where $\mathcal{O}$ is a set that contains the information at which pose the landmark was observed (usually not all the landmarks can be seen at every moment – ​​we are likely to see only a small part of the landmarks  at a single moment). These two equations together describe a most basic SLAM problem: how to solve the estimate $\mathbf{x}$ (localization) and $\mathbf{y}$ (mapping) problem with the noisy control input $\mathbf{u}$ and the sensor reading $\mathbf{z}$ data? Now, as we see, we have modeled the SLAM problem as a \textbf{state estimation problem}: How to estimate the internal, hidden state variables through the noisy measurement data?
+where $\mathcal{O}$ is a set that contains the information at which pose the landmark was observed (usually not all the landmarks can be seen at every moment – ​​we are likely to see only a small part of the landmarks  at a single moment). These two equations together describe a basic SLAM problem: how to solve the estimate $\mathbf{x}$ (localization) and $\mathbf{y}$ (mapping) problem with the noisy control input $\mathbf{u}$ and the sensor reading $\mathbf{z}$ data? Now, as we see, we have modeled the SLAM problem as a \textbf{state estimation problem}: How to estimate the internal, hidden state variables through the noisy measurement data?
 
-The solution to the state estimation problem is related to the specific form of the two equations and which distribution the noise obeys. According to whether the motion and observation equations are \textbf{linear}, and whether the noise is assumed to be \textbf{Gaussian}, it is divided into \textbf{linear/nonlinear} and \textbf{Gaussian/non-Gaussian} systems. The Linear Gaussian (LG system) is the simplest, and its unbiased optimal estimation can be given by the Kalman Filter (KF). In the complex nonlinear non-Gaussian (NLNG system), we basically rely on two methods: Extended Kalman Filter (EKF) and nonlinear optimization. Until the early 21st century, the EKF-based filter method still dominated SLAM. We will linearize the system at the working point and solve it in two steps: predict-update (see Lecture 10). The earliest real-time visual SLAM system was developed based on EKF {\cite{Davison2007}}. Subsequently, in order to overcome the shortcomings of EKF (such as the linearization error and noise Gaussian distribution assumptions), people began to use other filters such as particle filters, and even use nonlinear optimization methods. Today, the mainstream of visual SLAM uses state-of-the-art optimization techniques represented by Graph Optimization {\cite{Strasdat2012}}. We believe that optimization methods are clearly superior to filters, and as long as computing resources allow, optimization methods are often preferred (see lectures 10 and 11).
+The solution to the state estimation problem is related to the two equations' specific form and the noise probability distribution. Whether the motion and observation equations are \textit{linear} and whether the noise is assumed to be \textit{Gaussian}, it is divided into \textbf{linear/nonlinear} and \textbf{Gaussian/non-Gaussian} systems. The Linear Gaussian (LG system) is the simplest, and its unbiased optimal estimation can be given by the Kalman Filter (KF). In the complex nonlinear non-Gaussian (NLNG system), we basically rely on two methods: Extended Kalman Filter (EKF) and nonlinear optimization. Until the early 21st century, the EKF-based filter method still dominated SLAM. We will linearize the system at the working point and solve it in two steps: predict-update (see chapter \ref{cpt:backend1}). The earliest real-time visual SLAM system was developed based on EKF {\cite{Davison2007}}. Subsequently, in order to overcome the shortcomings of EKF (such as the linearization error and noise Gaussian distribution assumptions), people began to use other filters such as particle filters, and even use nonlinear optimization methods. Today, the mainstream of visual SLAM uses state-of-the-art optimization techniques represented by \textit{graph optimization} {\cite{Strasdat2012}}. We believe that optimization methods are clearly superior to filters, and as long as computing resources allow, optimization methods are often preferred (see chapters \ref{cpt:backend1} and \ref{cpt:backend2}).
 
-Now we believe the reader has a general understanding of the mathematical model of SLAM, but we still need to clarify some issues. First, we should explain what the \textbf{pose} $\bm{x}$ is. The word \textbf{pose} we just said is somewhat vague. Perhaps the reader can understand that a robot moving in the plane can be parameterized by two coordinates plus an angle. However, more robots are more like things in three-dimensional space. We know that the motion of the three-dimensional space consists of three axes, so the movement of the robot is described by the translation on the three axes and the rotation around the three axes, totally having six Degrees of Freedom (DoF). But wait, does that mean that we can describe it with a vector in $\mathbb{R}^6$? We will find that things are not that simple. For a 6 DoF \textbf{pose}\footnote{We will call it \textbf{pose} in the future to distinguish it from the position. The pose we are talking about includes \textbf{Rotation} and \textbf{Translation}. }, how to express it? How to optimize it? How to describe its mathematical properties?  This will be the main content of the third and fourth chapters. Next, we will explain how the \textbf{observation equation} is parameterized in the visual SLAM. In other words, how the landmark points in space are projected onto a photo? This requires an explanation of the camera's projection model and distortion, which we will cover in chapter 5. Finally, when you know this information, \textbf{how to solve the above state estimation problem}? This requires knowledge of nonlinear optimization and is the content of Lecture 6.
+Now we believe the reader has a general understanding of SLAM's mathematical model, but we still need to clarify some issues. First, we should explain what the \textit{pose} $\mathbf{x}$ is. The word \textit{pose} we just said is somewhat vague. Perhaps the reader can understand that a robot moving in the plane can be parameterized by two coordinates plus an angle. However, more robots are more like things in three-dimensional space. We know that the motion of the three-dimensional space consists of three axes, so the movement of the robot is described by the translation on the three axes and the rotation around the three axes, totally having six \textit{degrees of freedom} (DoF). But wait, does that mean that we can describe it with a vector in $\mathbb{R}^6$? We will find that things are not that simple. For a 6 DoF \textbf{pose}\footnote{We will call it \textit{pose} in the future to distinguish it from the position. The pose we are talking about includes \textit{rotation} and \textit{translation}. }, how to express it? How to optimize it? How to describe its mathematical properties?  This will be the main content of the chapter \ref{cpt:3} and \ref{cpt:4}. Next, we will explain how the \textit{observation equation} is parameterized in the visual SLAM. In other words, how the landmark points in space are projected onto a photo? This requires an explanation of the camera's projection model and distortion, which we will cover in chapter \ref{cpt:5}. Finally, when we know this information, how to solve the above state estimation problem? This requires knowledge of nonlinear optimization and is the content of chapter \ref{cpt:6}.
     
-These contents form part of the mathematical knowledge of this book. After laying the groundwork for them, we can discuss more detailed knowledge of visual odometry, backend optimization, and more. It can be seen that the content of this lecture constitutes a summary of the book. If you don't understand the above concepts well, you may want to go back and read them again. Let's start the introduction of programming!
-
+These contents form part of the mathematical knowledge of this book. After laying the groundwork for them, we can discuss more detailed knowledge of visual odometry, backend optimization, and more. It can be seen that the content of this lecture constitutes a summary of the book. If you don't understand the above concepts well, you may want to go back and read them again. Now let's start the introduction of programming!
 
 \section{Practice: Basics}
 \subsection{Installing Linux}
 Finally, we come to the exciting practice session! Are you ready? In order to complete the practice of this book, we need to prepare a computer. You can use a laptop or desktop, preferably your personal computer, because we need to install an operating system on it for experiments.
 
-Our program is based on C++ programs on Linux. During the experiment, we will use several open-source libraries. Most libraries are only supported in Linux, while configuration on Windows is relatively (or quite) cumbersome. Therefore, we have to assume that you already have a basic knowledge of Linux (see the exercises in the previous lecture), including using basic commands to understand how the software is installed. Of course, you don't have to know how to develop C++ programs under Linux, which is exactly what we want to talk about below.
+Our program is based on C++ programs on Linux. During the experiment, we will use several open-source libraries. Most libraries are only supported in Linux, while configuration on Windows is relatively (or quite) troublesome. Therefore, we have to assume that you already have a basic knowledge of Linux (see the previous lecture exercises), including using basic commands to understand how to install the software. Of course, you don't have to know how to develop C++ programs under Linux, which is what we want to talk about below.
 
-Let's start by installing the experimental environment required for this book. As a book for beginners, we use Ubuntu as a development environment. Ubuntu and its variances have enjoyed a good reputation as a novice user in all major Linux distributions. Ubuntu is an open-source operating system. Its system and software can be downloaded freely on the official website (\url{http://ubuntu.com}), which provides detailed instructions on how to install it. At the same time, Tsinghua University, China Science and Technology University, and other major universities in China have also provided Ubuntu software mirrors, making the software installation very convenient (probably there are also mirror websites in your country).
+Let's start by installing the experimental environment required for this book. As a book for beginners, we recommend Ubuntu as a development environment. Ubuntu and its variances have enjoyed a good reputation as a novice user in all major Linux distributions. Ubuntu is an open-source operating system. Its system and software can be downloaded freely on the official website (\url{http://ubuntu.com}), which provides detailed installation instructions. At the same time, Tsinghua University, China Science and Technology University, and other major universities in China have also provided Ubuntu software mirrors, making the software installation very convenient (probably there are also mirror websites in your country).
 
-The first version of this book uses Ubuntu 14.04 as the default development environment. In the second edition, we updated the default version to the newer \textbf{Ubuntu 18.04} (\autoref{fig:ubuntu1804}) for later research. If you want to change the styles, then Ubuntu Kylin, Debian, Deepin, and Linux Mint are also good choices. I promise that all the code in the book has been well tested under Ubuntu 18.04, but if you choose a different distribution, I am not sure if you will encounter some minor problems. You may need to spend some time solving small issues (but you can also take them as opportunities to exercise yourself). In general, Ubuntu's support for various libraries is relatively complete, and the software is also very rich. Although we don't limit which Linux distribution you use, in the explanation, \textbf{we will use Ubuntu 18.04 as an example}, and mainly use Ubuntu commands (such as apt-get), so in other versions of Ubuntu, there will be no obvious differences below. In general, the migration of programs between Linux is not very difficult. But if you want to use the programs in this book under Windows or OS X, you need to have some porting experience.
+The first version of this book uses Ubuntu 14.04 as the default development environment. In the second edition, we updated the default version to the newer \textbf{Ubuntu 18.04} (\autoref{fig:ubuntu1804}) for later research. If you want to change the styles, then Ubuntu Kylin, Debian, Deepin, and Linux Mint are also good choices. I promise that all the code in the book has been well tested under Ubuntu 18.04, but if you choose a different distribution, I am not sure if you will encounter some minor problems. You may need to spend some time solving small issues (but you can also take them as opportunities to exercise yourself). In general, Ubuntu's support for various libraries is relatively complete and rich. Although we don't limit which Linux distribution you use, in the explanation, \textbf{we will use Ubuntu 18.04 as an example} and mainly use Ubuntu commands (such as apt-get). So, in other versions of Ubuntu, there will be no obvious differences below. In general, the migration of programs between Linux is not very difficult. But if you want to use the programs in this book under Windows or OS X, you need to have some porting experience.
 
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.8\textwidth]{whatIsSLAM/ubuntu1804.pdf}
-    \caption{Ubuntu 1804 in virtual machine.}
+    \caption{Ubuntu 18.04 in virtual machine.}
     \label{fig:ubuntu1804}
 \end{figure}
 
-Now, I assume there's an Ubuntu 18.04 installed on your PC. Regarding the installation of Ubuntu, you can find a lot of tutorials on the Internet. Just do it, I'll skip here. The easiest way is to use a virtual machine (see \autoref{fig:ubuntu1804}), but it takes a lot of memory (our experience is more than 4GB) and CPU to be smooth. You can also install dual systems, which will be faster, but a blank USB flash drive is required as the boot disk. In addition, virtual machine software support for external hardware is often not good enough. If you want to use real sensors (binocular cameras, Kinects, etc.), it is recommended that you use dual systems to install Linux.
+Now, I assume there's an Ubuntu 18.04 installed on your PC. Regarding the installation of Ubuntu, you can find a lot of tutorials on the Internet. Just do it. I'll skip here. The easiest way is to use a virtual machine (see \autoref{fig:ubuntu1804}), but it takes a lot of memory (our experience is more than 4GB) and CPU to be smooth. You can also install dual systems, which will be faster, but a blank USB flash drive is required as the boot disk. In addition, virtual machine software support for external hardware is often not good enough. If you want to use real sensors (cameras, Kinects, etc.), it is recommended that you use dual systems to install Linux.
 
-Now, let's say you have successfully installed Ubuntu, either it's a virtual machine or a dual system. If you are not familiar with Ubuntu, try its various software and experience its interface and interaction mode\footnote{Most people think Ubuntu is cool for the first time. }. But I have to \textbf{remind} you, especially to the novice friends: don't spend too much time on Ubuntu's user interface! Linux has a lot of chances to waste your time, you may find some niche software, some games, and even spend a lot of time looking for a wallpaper. But remember, you are working with Linux. Especially in this book, you are using Linux to learn SLAM, so try to spend your time learning SLAM\@.
+Now, let's say you have successfully installed Ubuntu, either a virtual machine or a dual system. If you are not familiar with Ubuntu, try its various software and experience its interface and interaction mode \footnote{Most people think Ubuntu is cool for the first time. }. But I have to remind you, especially to the novice friends: don't spend too much time on Ubuntu's user interface. Linux has a lot of chances to waste your time. You may find some niche software, some games, and even spend a lot of time looking for wallpapers. But remember, you are working with Linux. Especially in this book, you are using Linux to learn SLAM, so try to spend your time learning SLAM.
 
-Ok, let's choose a directory and put the code for the SLAM program in this book. For example, you can put the code under ``slambook2'' in the home directory (/home). We will refer to this directory as ``\textbf{code root}'' in the future. At the same time, you can choose another directory to copy the Git code of this book, which is convenient for comparison when doing experiments. The code for this book is divided into chapters. For example, the code for this chapter will be under slambook2/ch2, and the next one will be under slambook2/ch3. So, now please go into the slambook2/ch2 directory (you should create a new folder and enter the folder name).
+Ok, let's choose a directory and put the code for the SLAM program in this book. For example, you can put the code under \textit{slambook2} in the home directory (/home/username). We will refer to this directory \textit{code root} in the future. At the same time, you can choose another directory to copy the git code of this book, which is convenient for comparison when doing experiments. The code for this book is divided into chapters. For example, this chapter's code will be under slambook2/ch2, and the next one will be under slambook2/ch3. So, now please go into the slambook2/ch2 directory (you should create a new folder and enter the folder name).
 
 \subsection{Hello SLAM}
 Like many computer books, let's write a \textit{HelloSLAM} program. But before we do this, let's talk about what a program is.
 
-In Linux, a program is a file with execute permissions. It can be a script or a binary file, but we don't limit its suffix name (unlike Windows, you need to specify it as a .exe file). The commonly used binaries such as \textbf{cd} and \textbf{ls} are executable files located in the /bin directory. For an executable program elsewhere, as long as it has executable permissions, it will run when we enter the program name in the terminal. When programming in C++, we first write a text file:
+In Linux, a program is a file with execute permissions. It can be a script or a binary file, but we don't limit its suffix name (unlike Windows, you need to specify it as a .exe file). The commonly used binaries such as \textit{cd} and \textit{ls} are executable files located in the \textit{/bin} directory. For an executable program elsewhere, as long as it has executable permissions, it will run when we enter the program name in the terminal. When programming in C++, we first write a text file:
 
 \begin{lstlisting}[language=C++,caption=slambook2/ch2/helloSLAM.cpp]
 #include <iostream>
@@ -307,46 +306,46 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-Then use a program called \textbf{compiler} to compile this text file into an executable program. Obviously, this is a very simple program that just prints a hello slam text. You should be able to understand it effortlessly, so there is no explanation here - if this is not the case, please take a look at the basics of C++. This program just outputs a string to the screen. You can use the text editor like \textbf{gedit} (or \textbf{Vim}, if you have learned Vim in the previous tutorial) and enter the code and save it in the path listed above. Now, we compile it into an executable using the compiler g++ (g++ is a C++ compiler). Enter:
+Then use a program called a \textbf{compiler} to turn this text file into an executable program. Obviously, this is a very simple program that just prints a hello slam text. You should be able to understand it effortlessly, so there is no explanation here - if this is not the case, please take a look at the basics of C++. This program just outputs a string to the screen. You can use the text editor like \textit{gedit} (or \textit{vim}, if you have learned vim in the previous tutorial) and enter the code and save it in the path listed above. Now, we compile it into an executable using the compiler g++ (g++ is a C++ compiler). Enter:
 
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 g++ helloSLAM.cpp
 \end{lstlisting}
 
 If it goes well, this command should have no output. If the ``command not found'' error message appears on the screen, you may not have g++ installed yet. Please use the following command to install it:
-\begin{lstlisting}[language=sh,caption=terminal input:]
+\begin{lstlisting}[language=sh,caption=Terminal input:]
 sudo apt-get install g++
 \end{lstlisting}
 If there are other errors, please check again if the program you just entered is correct.
 
-Just now this compile command compiles the text file ``helloSLAM.cpp'' into an executable program. We check the current directory and find that there is an additional a.out file, and it has executed permissions (the colors in the terminal are different, should be green in default settings). We can enter ./a.out to run the program \footnote{Don't type the first \%. }:
+This command compiles the text file ``helloSLAM.cpp'' into an executable program. We check the current directory and find that there is an additional a.out file. It has executed permissions (the color shall be different in default settings). We can enter ./a.out to run the program \footnote{Don't type the first \%. }:
 
-\begin{lstlisting}[language=sh,caption=terminal input:]
+\begin{lstlisting}[language=sh,caption=Terminal input:]
 % ./a.out
 Hello SLAM!
 \end{lstlisting}
 
 As we thought, this program outputs ``Hello SLAM!'', telling us that it is running correctly.
 
-Please review what we did before. In this example, we used the editor to enter the source code for ``helloSLAM.cpp'', then called the g++ compiler to compile it and get the executable. By default, g++ compiles the source file into a program of the name a.out (it is a bit weird but acceptable). If we like, we can also specify the file name of this output. This is an extremely simple example, we actually \textbf{use a lot of hidden default parameters, almost omitting all intermediate steps}, in order to give the reader a simple impression (although you may not have realized it). Below we will use CMake to compile this program.
+Please review what we did before. In this example, we used the editor to enter the source code for ``helloSLAM.cpp'', then called the \textit{g++} compiler to compile it and get the executable. By default, \textit{g++} compiles the source file into a program of the name \textit{a.out} (it is a bit weird but acceptable). If we like, we can also specify the file name of this output. This is an extremely simple example. We actually \textbf{use a lot of hidden default parameters, almost omitting all intermediate steps}, in order to give the reader a simple impression (although you may not have realized it). Below we will use CMake to compile this program.
 
 \subsection{Use CMake}
-Theoretically, any C++ program can be compiled with g++. But when the program size is getting bigger and bigger, a project may have many folders and source files, and the compiled commands will be longer and longer. Usually, a small C++ project may contain more than a dozen classes, and there are complex dependencies between these classes. Some of them are compiled into executables, and some are compiled into libraries. If we only rely on the g++ command, we need to enter a lot of commands, and the whole compilation process will become very cumbersome. Therefore, for C++ projects, using some engineering management tools is more efficient. In history, engineers used \textbf{makefile} to compile automatically, but the CMake to be discussed below is more convenient than it. And CMake is widely used in engineering, we will see that most of the libraries mentioned later use CMake to manage the source code.
+Theoretically, any C++ program can be compiled with g++. But when the program size is getting bigger and bigger, a project may have many folders and source files, and the compiled commands will be longer and longer. Usually, a small C++ project may contain more than a dozen classes, and there are complex dependencies between these classes. Some of them are compiled into executables, and some are compiled into libraries. If we only rely on the g++ command, we need to enter many commands, and the whole compilation process will become very long. Therefore, for C++ projects, using some engineering management tools is more efficient. In history, engineers used \textit{makefile} to compile automatically, but the CMake to be discussed below is more convenient than it. And CMake is widely used in engineering, we will see that most of the libraries mentioned later use CMake to manage the source code.
 
-In a CMake project, we will use the \textit{cmake} command to generate a makefile, and then use the make command to compile the entire project based on the contents of the makefile. The reader may not know what a makefile is, but it doesn't matter, we will learn by example. Still taking the above ``helloSLAM.cpp'' as an example, this time we are not using g++ directly, but using CMake to build a project and then compiling it. Create a new ``CMakeLists.txt'' file in ``slambook2/ch2/'' with the following contents:
+In a CMake project, we will use the \textit{cmake} command to generate a \textit{makefile}, and then use the make command to compile the entire project based on the makefile contents. The reader may not know what a makefile is, but it doesn't matter. We will learn by example. Still taking the above ``helloSLAM.cpp'' as an example, this time we are not using g++ directly, but using CMake to build a project and then compiling it. Create a new ``CMakeLists.txt'' file in ``slambook2/ch2/'' with the following contents:
 \begin{lstlisting}[language=Python,caption=slambook2/ch2/CMakeLists.txt]
 cmake_minimum_required( VERSION 2.8 )
 project( HelloSLAM )
 add_executable( helloSLAM helloSLAM.cpp )
 \end{lstlisting}
 
-The ``CMakeLists.txt'' file is used to tell CMake what we want to do with the files in this directory. The contents of the ``CMakeLists.txt'' file need to follow the CMake syntax. In this example, we demonstrate the most basic project: specifying a project name and an executable program. According to the comments, the reader should understand what each sentence does.
+The ``CMakeLists.txt'' file is used to tell CMake what we want to do with the files in this directory. The contents of the ``CMakeLists.txt'' file need to follow the CMake syntax.  This example demonstrates the most basic project: specifying a project name and an executable program. According to the comments, the reader should understand what each sentence does.
 
 Now, in the current directory (slambook2/ch2/), call \textit{cmake} to compile the project: \footnote{Note that there's a dot at the end of the command, please don't forget it, which means using CMake in the current directory. }:
 \begin{lstlisting}[language=sh,caption=Terminal input]
 cmake .
 \end{lstlisting}
-\textit{cmake} will output some compilation information, and then generate some intermediate files in the current directory, the most important of which is the makefile\footnote{Makefile is an automated compilation script, the reader can now understand it as a system automatically generated compiler instructions, without taking care of its content. }. Since MakeFile is automatically generated, we don't have to modify it. Now, compile the project with the make command.
+\textit{cmake} will output some compilation information, and then generate some intermediate files in the current directory, the most important of which is the makefile\footnote{The \textit{makefile} is an automated compilation script. Please just take it as an automatically generated compiler instructions without taking care of its content. }. Since \textit{makefile} is automatically generated, we don't have to modify it. Now, compile the project with the make command.
 \begin{lstlisting}[language=sh,caption=Terminal input]
 % make
 Scanning dependencies of target helloSLAM
@@ -354,12 +353,12 @@ Scanning dependencies of target helloSLAM
 Linking CXX executable helloSLAM
 [100%] Built target helloSLAM
 \end{lstlisting}
-The compiler will show a process percent during compilation. We then get the declared executable \textbf{helloSLAM} in our ``CMakeLists.txt'' if the compilation is successful. Just type:
+The compiler will show a process percent during compilation. We then get the declared executable \textit{helloSLAM} in our ``CMakeLists.txt'' if the compilation is successful. Just type:
 \begin{lstlisting}[language=sh,caption=Terminal Input]
 % ./helloSLAM
 Hello SLAM!
 \end{lstlisting}
-to run it. Because we didn't modify the source code, we got the same result as before. Please think about the difference between this practice and the previous use of the g++ compiler. This time we used the \textit{cmake-make} process. The \textit{cmake} process handles the relationship between the project files, and the \textit{make} process actually calls g++ to compile the program. By calling this CMake-make process, we have good management for the project: \textbf{from inputting a string of g++ commands to maintaining several relatively intuitive ``CMakeLists.txt'' files}, which will drastically reduce the difficulty of maintaining the entire project. For example, if you want to add another executable file, just add a line ``add\_executable'' in CMakeLists.txt, and the subsequent steps are unchanged. Cmake will help us resolve code dependencies without having to type in a bunch of g++ commands.
+to run it. Because we didn't modify the source code, we got the same result as before. Please think about the difference between this practice and the previous use of the g++ compiler. This time we used the \textit{cmake-make} process. The \textit{cmake} process handles the relationship between the project files, and the \textit{make} process actually calls g++ to compile the program. By calling this \textit{cmake-make} process, we have good management for the project: \textbf{from inputting a string of g++ commands to maintaining several relatively intuitive ``CMakeLists.txt'' files}, which will drastically reduce the difficulty of maintaining the entire project. For example, if you want to add another executable file, just add a line ``add\_executable'' in CMakeLists.txt, and the subsequent steps are unchanged. CMake will help us resolve code dependencies without having to type in a bunch of g++ commands.
 
 The only thing that is dissatisfied with this process is that the intermediate files generated by CMake are still in our code files. When we want to release the code, we don't want to publish these intermediate files together. At this time, we still need to delete them one by one, which is very inconvenient. A better approach is to have these intermediate files in an intermediate directory. After the compilation is successful, we will delete the intermediate directory. Therefore, the more common practice of compiling CMake projects is as follows:
 \begin{lstlisting}[language=sh,caption=Terminal input]
@@ -368,12 +367,12 @@ cd build
 cmake ..
 make
 \end{lstlisting}
-We created a new intermediate folder ``build'', and then entered the build folder, using the ``\textit{cmake ..}'' command to compile the previous folder, which is the folder where the code is located. In this way, the intermediate files generated by CMake will be in the ``build'' folder, separate from the source code. When publishing the source code, we just delete the build folder. Please try to compile the code in ch2 in this way, and then call the generated executable (please remember to delete the intermediate file generated in the last section).
+We created a new intermediate folder ``\textit{build}'', and then entered the build folder, use the ``\textit{cmake ..}'' command to compile the previous folder, which is the folder where the code is located. In this way, the intermediate files generated by CMake will be in the ``\textit{build}'' folder, separate from the source code. When publishing the source code, we just delete the \textit{build} folder. Please try to compile the code in ch2 in this way, and then call the generated executable (please remember to delete the intermediate file generated in the last section).
 
 \subsection{Use Libraries}
-In a C++ project, not all code is compiled into executables. Only executable files with the main function will generate executable programs. For other codes, we just want to package them into a packet for other programs to call. This packet is called \textbf{library}.
+In a C++ project, not all code is compiled into executables. Only executable files with the main function will generate executable programs. For other codes, we just want to package them into a packet for other programs to call. This packet is called \textit{library}.
 
-A library is often just a collection of many algorithms and programs, and we will be exposed to many libraries in later exercises. For example, the OpenCV library provides many computer vision-related algorithms, while the Eigen library provides calculations of matrix algebra. Therefore, we need to learn how to use CMake to generate libraries and use the functions in the library. Now let's demonstrate how to write a library yourself. Write the following ``libHelloSLAM.cpp'' file:
+A library is often just a collection of many algorithms and programs, and we will be exposed to other libraries in later exercises. For example, the OpenCV library provides many computer vision-related algorithms, while the Eigen library provides calculations of matrix algebra. Therefore, we need to learn how to use CMake to generate libraries and use the library's functions. Now let's demonstrate how to write a library yourself. Write the following ``libHelloSLAM.cpp'' file:
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch2/libHelloSLAM.cpp]
 #include <iostream>
@@ -396,14 +395,14 @@ make
 \end{lstlisting}
 At this point, a ``libhello.a'' file is generated in the build folder, which is the library we declared.
 
-In Linux, the library files are divided into \textbf{static library} and \textbf{shared library}. Static libraries have a ``.a'' extension and shared libraries end with ``.so''. All libraries are collections of functions that are packaged. The difference is that \textbf{a static library will generate a copy each time it is called, and the shared library has only one copy}, which saves space. If you want to generate a shared library instead of a static library, just use the following statement:
+In Linux, library files are divided into static libraries and shared libraries. Static libraries have a ``.a'' extension, and shared libraries end with ``.so''. All libraries are collections of functions that are packaged. The difference is that a static library will generate a copy each time it is called, and the shared library has only one copy, which saves space. If you want to generate a shared library instead of a static library, just use the following statement:
 
 \begin{lstlisting}[language=sh,caption=slambook2/ch2/CMakeLists.txt]
 add_library( hello_shared SHARED libHelloSLAM.cpp )
 \end{lstlisting}
 Then we will get a libhello\_shared.so.
 
-The library file is a compressed package with compiled binary functions. However, if there is only a ``.a'' or ``.so'' library file, then we don't know what the function is and how to call it. In order for others (or ourselves) to use this library, we need to provide a \textbf{header file} to indicate what is in the library. Therefore, for the user of the library, \textbf{you can call this library as long as you get the header and library files}. Write the header file for ``libhello'' below.
+The library file is a compressed package with compiled binary functions. However, if there is only a ``.a'' or ``.so'' library file, then we don't know what the function is and how to call it. In order for others (or ourselves) to use this library, we need to provide a \textit{header file} to indicate what is in the library. Therefore, for the library users, \textit{you can call this library as long as you get the header and library files}. Write the header file for ``libhello'' below.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch2/libHelloSLAM.h]
 #ifndef LIBHELLOSLAM_H_
@@ -415,7 +414,7 @@ void printHello();
 #endif
 \end{lstlisting}
 
-In this way, according to this file and the library file we just compiled, you can use the printHello function. Finally, we write an executable program to call this simple function:
+In this way, according to this file and the library file we just compiled, you can use the \textit{printHello} function. Finally, we write an executable program to call this simple function:
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch2/useHello.cpp]
 #include "libHelloSLAM.h"
@@ -427,20 +426,20 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-Then, declare an executable in ``CMakeLists.txt'' and \textbf{link} it to the library:
+Then, declare an executable in ``CMakeLists.txt'' and \textit{link} it to the library:
 \begin{lstlisting}[caption=slambook2/ch2/CMakeLists.txt]
 add_executable( useHello useHello.cpp )
 target_link_libraries( useHello hello_shared )
 \end{lstlisting}
 
-Through these two lines of statements, the ``useHello'' program can successfully use the code in the hello\_shared library. This small example demonstrates how to generate and call a library. Please note that for libraries provided by others, we can also call them in the same way and integrate them into our own programs.
+Through these two lines of statements, the ``useHello'' program can successfully use the code in the hello\_shared library. This small example demonstrates how to generate and call a library. Please note that we can also call other libraries' functions in the same way and integrate them into our own programs.
 
 In addition to the features already demonstrated, \textit{cmake} has many more syntax and options. Of course, we can not list all of them here. In fact, cmake is very similar to a normal programming language, with variables and conditional control statements, so you can learn cmake just like learning programming. The exercises contain some reading materials for cmake, which can be read by interested readers. Now, a brief review of what we did before:
 
 \begin{enumerate}
     \item First, the program code consists of a header file and a source file.
     \item The source file with the main function is compiled into an executable program, and the other is compiled into a library file.
-    \item If the executable wants to call a function in the library file, it needs to refer to the header file provided by the library to understand the format of the call. Also, link the executable to the library file.
+    \item If the executable wants to call a function in the library file, it needs to refer to the library's header file to understand the format of the function. Also, we need to link the executable to the library file.
 \end{enumerate}
 
 These steps should be simple and clear, but you may encounter some problems in the actual operation. For example, what happens if the executable references a library function but we forget to link the library? Try removing the link command in ``CMakeLists.txt'' and see what happens. Can you understand the error message reported by \textit{cmake}?
@@ -448,10 +447,10 @@ These steps should be simple and clear, but you may encounter some problems in t
 \subsection{Use IDE}
 Finally, let's talk about how to use the Integrated Development Environments (IDEs). The previous programming can be done with a simple text editor. However, you may need to jump between files to query the declaration and implementation of a function. This can be a little annoying when there are too many files. The IDE provides developers with a lot of convenient functions such as jump, completion, breakpoint debugging, etc. Therefore, we recommend that the reader choose an IDE for development.
 
-There are many kinds of IDEs under Linux. Although there are still some gaps with the best IDE (I mean Visual Studio in Windows), there are several supported C++ developments, such as Eclipse, Qt Creator, Code::Blocks, Clion, Visual Studio Code, and so on. Again, we don't force readers to use a particular IDE but only give our advice. We are using KDevelop and Clion (see \autoref{fig:kdevelop} and \autoref{fig:clion})\footnote{However, the recent Visual Studio Code is getting better and better. It's free. It's very popular among developers. You may have a try. }. KDevelop is a free software located in Ubuntu's software repository, meaning you can install it with apt-get; Clion is a paid software, but you can use the student mailbox for free for one year. Both are good C++ development environments, the advantages are listed below:
+There are many kinds of IDEs under Linux. Although there are still some gaps with the best IDE (I mean Visual Studio in Windows), there are several C++ IDEs in Linux, such as Eclipse, Qt Creator, Code::Blocks, CLion, Visual Studio Code, and so on. Again, we don't force readers to use a particular IDE but only give our advice \footnote{Yes, vim is cool. But I still suggest use vim in IDE, not vim as IDE.}. We are using KDevelop and CLion (see \autoref{fig:kdevelop} and \autoref{fig:clion}) \footnote{However, the recent Visual Studio Code is getting better and better. It's free. It's very popular among developers. You may have a try. }. KDevelop is a free software located in Ubuntu's software repository, meaning you can install it with apt-get; CLion is a paid software, but you can use the student mailbox for free for one year. Both are good C++ development environments, the advantages are listed below:
 
 \begin{enumerate}
-    \item Support CMake projects.
+    \item Support CMake projects natively.
     \item Support C++ better (including the 11 and later standards). There are highlighting, jumping, and finishing functions. Can automatically format the code.
     \item Makes it easy to see individual files and directory trees.
     \item Has one-click compilation, breakpoint debugging, and other functions.
@@ -464,10 +463,10 @@ There are many kinds of IDEs under Linux. Although there are still some gaps wit
     \label{fig:kdevelop}
 \end{figure}
 
-Below we take a little bit of space to introduce KDevelop and Clion.
+Below we take a little bit of space to introduce KDevelop and CLion.
 
 \subsubsection{Use KDE}
-Kdevelop natively supports the CMake project. To do this, after creating ``CMakeLists.txt'' in the terminal, open the ``CMakeLists.txt'' with ``Project $\rightarrow$Open/Import Project'' in KDevelop. The software will ask you a few questions, and by default create a build folder to help you call the cmake and make commands. These can be done automatically by pressing the shortcut key F8. The following section of \autoref{fig:kdevelop} shows the compilation information.
+Kdevelop natively supports the CMake project. To do this, after creating ``CMakeLists.txt'' in the terminal, open the ``CMakeLists.txt'' with ``Project $\rightarrow$Open/Import Project'' in KDevelop. The software will ask you a few questions, and by default, create a build folder to help you call the cmake and make commands. These can be done automatically by pressing the shortcut key F8. The following section of \autoref{fig:kdevelop} shows the compilation information.
 
 We hand over the task of adapting to the IDE to the reader. If you are transferring from Windows, you will find its interface similar to Visual C++ or Visual Studio. Please use KDevelop to open the previous project and compile it to see what information it outputs. I believe you will feel more convenient than opening the terminal.
 
@@ -486,7 +485,7 @@ The first step is to set the compilation mode by adding the following command to
 Set( CMAKE_BUILD_TYPE "Debug" )
 \end{lstlisting}
 
-CMake has some compilation-related built-in variables that give you more detailed control over the compilation process. For the compilation type, there is usually a Debug mode for debugging and a Release mode for publishing. In Debug mode, the program runs slower, but breakpoint debugging is possible, and you can see the values of the variables; while Release mode is faster, but there is probably no debugging information. We set the program to Debug mode and place the breakpoint. Next, tell KDevelop which program you want to launch.
+CMake has some compilation-related built-in variables that give you more precise control over the compilation process. There is usually a \textit{debug} mode for debugging and a \textit{release} mode for publishing. In debug mode, the program runs slower, but breakpoint debugging is possible, and you can see the values of the variables;. In contrast, release mode is faster, but there is probably no debugging information. We set the program to Debug mode and place the breakpoint. Next, tell KDevelop which program you want to launch.
 
 In the second step, open ``Run $\rightarrow$Configure Launcher'' and click on ``Add New $\rightarrow$ Application'' on the left. In this step, our task is to tell KDevelop which program to launch. As shown in \autoref{fig:launchConfigure}, you can either select a CMake project target (that is, the executable we built with the add\_executable directive) or point to a binary file. The second approach is recommended, and in our experience, this is less of a problem.
 
@@ -499,7 +498,7 @@ In the second step, open ``Run $\rightarrow$Configure Launcher'' and click on ``
 
 In the second column, you can set the program's parameters and working directory. Sometimes programs have runtime parameters that are passed in as arguments to the main function. If not, leave it blank, as is the working directory. After configuring these two items, click the ``OK'' button to save the configuration results.
 
-In just these steps we have configured an application startup item. For each startup item, we can click the ``Execute'' button to start the program directly, or click the ``Debug'' button to debug it. Readers can try to click the ``Execute'' button to see the results of the output. Now, to debug this program, click on the left side of the ``printHello'' line and add a breakpoint. Then, click on the ``Debug'' button and the program will wait at the breakpoint, as shown by \autoref{fig:debug}.
+In these steps, we have configured an application launcher. We can click the ``Execute'' button to start the program directly or click the ``Debug'' button to debug it for each application. Readers can try to click the ``Execute'' button to see the results of the output. To debug this program, click on the left side of the ``printHello'' line and add a breakpoint. Then, click on the ``Debug'' button, and the program will wait at the breakpoint, as shown by \autoref{fig:debug}.
 
 \begin{figure}[!htp]
     \centering
@@ -508,27 +507,26 @@ In just these steps we have configured an application startup item. For each sta
     \label{fig:debug}
 \end{figure}
 
-When debugging, KDevelop will switch to debug mode and the interface will change a bit. At the breakpoint, you can control the operation of the program with a single-step operation (F10 key), single-step follow up (F11 key), and single-step jump (F12 key) function. At the same time, you can click the interface on the left to view the value of the local variable. Or select the ``Stop'' button to end debugging. After debugging, KDevelop will return to the normal development interface.
+When debugging, KDevelop will switch to debug mode, and the interface will change a bit. At the breakpoint, you can control the operation of the program with a single-step operation (F10 key), single-step follow up (F11 key), and single-step jump (F12 key) function. At the same time, you can click the interface on the left to view the local variable's value. Or select the ``Stop'' button to end debugging. After debugging, KDevelop will return to the normal development interface.
 
-Now you should be familiar with the entire process of breakpoint debugging. In the future, if an error occurs during the running phase of the program, causing the program to crash, you can use breakpoint debugging to determine the location of the error, and then modify \footnote{ instead of directly sending us an email asking how to deal with the problem. }.
+Now you should be familiar with the entire process of breakpoint debugging. In the future, if an error occurs during the running phase of the program, causing the program to crash, you can use breakpoint debugging to determine the location of the error, and then modify it \footnote{Instead of directly sending us an email asking how to deal with the problems. }.
 
-\subsubsection{Use Clion}
+\subsubsection{Use CLion}
 \begin{figure}[!t]
     \centering
     \includegraphics[width=1.0\textwidth]{whatIsSLAM/clion.pdf}
-    \caption{Clion interface}
+    \caption{CLion interface.}
     \label{fig:clion}
 \end{figure}
 
-Clion is more complete than KDevelop, but it requires a user account, and the memory/CPU requirements for the host will be higher. \footnote{CLion is abnormally slow in the version after 2018. It is recommended that you use the release version around 2017. }. In Clion, you can also open a ``CMakeLists.txt'' or specify a directory. Clion will complete the \textit{cmake-make} process for you. Its running interface is shown in \autoref{fig:clion}.
+CLion is more complete than KDevelop, but it requires a user account, and the memory/CPU requirements for the host will be higher. \footnote{CLion is abnormally slow in the version after 2018. It is recommended that you use the release version around 2017. }. In CLion, you can also open a ``CMakeLists.txt'' or specify a directory. CLion will complete the \textit{cmake-make} process for you. Its running interface is shown in \autoref{fig:clion}.
 
-Similarly, after opening Clion, you can select the programs you want to run or debug in the upper right corner of the interface, and adjust their startup parameters and working directory. Click the small beetle button in this column to start the breakpoint debugging mode. Clion also has several convenient features, such as automatically creating classes, changing functions, and automatically adjusting the coding style. Please try it.
+Similarly, after opening CLion, you can select the programs you want to run or debug in the upper right corner of the interface and adjust their startup parameters and working directory. Click the small beetle button in this column to start the breakpoint debugging mode. CLion also has several convenient features, such as automatically creating classes, changing functions, and automatically adjusting the coding style. Please try it.
 
-Ok, if you are already familiar with the use of the IDE, then the second chapter will stop here. You may already feel that I have talked too much, so in the following practice section, we will not introduce things like how to create a new build folder, call the \textit{cmake} and \textit{make} commands to compile the program. I believe that readers should master these simple steps. Similarly, since most of the third-party libraries used in this book are cmake projects, you will continue to be familiar with the compilation process. Next, we will start the formal chapter and introduce some related mathematics.
+OK, if you are already familiar with the IDE's usage, then the second chapter will stop here. You may already feel that I have talked too much, so in the following practice section, we will not introduce things like creating a new build folder, calling the \textit{cmake} and \textit{make} commands to compile the program. I believe that readers should master these simple steps. Similarly, since most of the third-party libraries used in this book are cmake projects, you will continue to be familiar with the compilation process. Next, we will start the formal chapter and introduce some related mathematics.
 
 \section*{Exercises}
 \begin{enumerate}
-    \item Read the survey SLAM literature~\cite{Liu2016} and~\cite{Liang2013}, can you read the contents? (They are Chinese papers for beginners. For English reader, see the next  exercise.)
     \item[\optional] Read SLAM's review literature, such as~\cite{Cadena2016, Fuentes-Pacheco2015, Boal2014, Chen2012, Chen2007} and so on. What are the similarities and differences between these papers on SLAM and this book?
     \item What are the parameters of the g++ command? If I want to change the generated program file name, how should I call g++?
     \item Use the build folder to compile your CMake project, then try it in KDevelop.
@@ -538,5 +536,5 @@ Ok, if you are already familiar with the use of the IDE, then the second chapter
     \item[\optional] Improve the hello SLAM problem, make it a small library, and install it on your local hard drive. Then, create a new project, use find\_package to find the library, and call it.
     \item[\optional] Read other CMake instructional materials, such as \url{https://github.com/TheErk/CMake-tutorial}.
     \item Find the official website of KDevelop and see what other features it has. Are you using it?
-    \item If you learned Vim in the last lecture, please try KDevelop's/Clion's Vim editing function.
+    \item If you learned vim in the last lecture, please try KDevelop's/CLion's vim editing function.
 \end{enumerate}
