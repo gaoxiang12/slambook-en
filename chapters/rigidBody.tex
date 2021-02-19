@@ -204,24 +204,24 @@ Again, we use the notation of $ \mathbf{T}_{12} $ to represent a transformation 
 
 Let's take a review now. First, we introduce the vector and its coordinate representation and introduce the operation between the vectors; then, the motion between the coordinate systems is described by the Euclidean transformation, which consists of translation and rotation. The rotation can be described by the rotation matrix $ \mathrm{SO}( 3 ) $, while the translation is directly described by an $ \mathbb{R}^ 3 $ vector. Finally, if the translation and rotation are placed in a matrix, the transformation matrix $ \mathrm{SE}( 3 ) $ is formed.
 
-\section{Practice: Using Eigen}
-The practical part of this lecture has two sections. In the first part, we will explain how to use Eigen to represent matrices and vectors, and then extend to the calculation of rotation matrix and transformation matrix. The code for this section is in \textit{slambook2/ch3/useEigen}.
+\section{Practice: Use Eigen}
+The practical part of this lecture has two sections. In the first part, we will explain how to use Eigen to represent matrices and vectors and then extend to the calculation of rotation matrix and transformation matrix. The code for this section is in \textit{slambook2/ch3/useEigen}.
 
-Eigen\footnote{Official home page: \url{http://eigen.tuxfamily.org/index.php?title=Main_Page}. } is a C++ open source linear algebra library. It provides fast linear algebra operations on matrices, as well as functions such as solving equations. Many upper-level software libraries also use Eigen for matrix operations, including g2o, Sophus, and others. In the theoretical part of this lecture, let's learn about Eigen's programming.
+Eigen \footnote{Official home page: \url{http://eigen.tuxfamily.org/index.php?title=Main_Page}. } is a C++ open-source linear algebra library. It provides fast linear algebra operations on matrices, as well as functions such as solving linear equations. Many upper-level software libraries also use Eigen for matrix operations, including g2o, Sophus, and others. Let's learn about Eigen's programming.
 
-Eigen may not be installed on your PC. Please enter the following command to install it:
+Eigen may not have been installed on your PC. Please enter the following command to install it:
 
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 sudo apt-get install libeigen3-dev
 \end{lstlisting}
 
-Most of the commonly used libraries in our book are available in the Ubuntu software source. Later, if you want to install a library, you may want to search for the Ubuntu software source. With the apt command, we can easily install Eigen. Looking back at the previous lesson, we know that a library consists of header files and library files. The default location of the Eigen header file should be in ``/usr/include/eigen3/''. If you are not sure, you can find it by entering the following command:
+Most of the commonly used libraries in our book are available in the Ubuntu software center. With the apt command, we can easily install Eigen. Looking back at the previous lesson, we know that a library consists of header files and library files. The Eigen header file's default location should be  \textit{/usr/include/eigen3/}. If you are not sure, you can find it by entering the following command:
 
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 sudo locate eigen3
 \end{lstlisting}
 
-Compared to other libraries, Eigen is special in that it is a library built with pure header files (this is amazing!). This means you can only find its header files, not binary files like .so or .a. When you use it, you only need to import Eigen's header file, you don't need to link the library file (because it doesn't have a library file). Write a piece of code below to actually practice the use of Eigen:
+Eigen is a special library built with pure header files (this is the amazing part!). This means you can only locate its header files, not binary files like .so or .a. When you use it, you only need to import Eigen's header file. You don't need to link the library file (because it doesn't have any library files). Now let's write a piece of code below to actually practice the use of Eigen:
 \begin{lstlisting}[language=c++,caption=slambook2/ch3/useEigen/eigenMatrix.cpp]
 #include <iostream>
 using namespace std;
@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
     Matrix<float, 2, 3> matrix_23;
     
     // At the same time, Eigen provides many built-in types via typedef, but the
-    // bottom layer is still Eigen::Matrix For example, Vector3d is essentially
+    // bottom layer is still Eigen::Matrix. For example, Vector3d is essentially
     // Eigen::Matrix<double, 3, 1>, which is a three-dimensional vector.
     Vector3d v_3d;
     // This is the same
@@ -259,9 +259,9 @@ int main(int argc, char **argv) {
     Matrix<double, Dynamic, Dynamic> matrix_dynamic;
     // simpler
     MatrixXd matrix_x;
-    // There are still many types of this, we doesn't list them one by one.
+    // There are still many types of this kind. We don't list them one by one.
     
-    // Here is the operation of the Eigen array
+    // Here is the operation of the Eigen matrix
     // input data (initialization)
     matrix_23 << 1, 2, 3, 4, 5, 6;
     // output
@@ -275,13 +275,13 @@ int main(int argc, char **argv) {
         cout << endl;
     }
     
-    // The matrix and vector are multiplied (actually still matrices and matrices)
+    // We can easily multiply a matrix with a vector (but actually still matrices and matrices)
     v_3d << 3, 2, 1;
     vd_3d << 4, 5, 6;
     
-    // But in Eigen you can't mix two different types of matrices, like this is
-    // wrong Matrix<double, 2, 1> result_wrong_type = matrix_23 * v_3d; should be
-    // explicitly converted
+    // In Eigen you can't mix two different types of matrices, like this is
+    // wrong Matrix<double, 2, 1> result_wrong_type = matrix_23 * v_3d; 
+    // It should be explicitly converted
     Matrix<double, 2, 1> result = matrix_23.cast<double>() * v_3d;
     cout << "[1,2,3;4,5,6]*[3,2,1]=" << result.transpose() << endl;
     
@@ -294,7 +294,7 @@ int main(int argc, char **argv) {
     // matrix_23.cast<double>() * v_3d;
     
     // some matrix operations
-    // Four operations are not demonstrated, just use +-*/.
+    // The basic operations are not demonstrated, just use +-*/ operators.
     Matrix_33 = Matrix3d::Random(); // Random Number Matrix
     cout << "random matrix: \n" << matrix_33 << endl;
     cout << "transpose: \n" << matrix_33.transpose() << endl;
@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
     // Eigenvalues
     // Real symmetric matrix can guarantee successful diagonalization
     SelfAdjointEigenSolver<Matrix3d> eigen_solver(matrix_33.transpose() *
-    matrix_33);
+	    matrix_33);
     cout << "Eigen values = \n" << eigen_solver.eigenvalues() << endl;
     cout << "Eigen vectors = \n" << eigen_solver.eigenvectors() << endl;
     
@@ -318,16 +318,16 @@ int main(int argc, char **argv) {
     // inverse operations is large.
     
     Matrix<double, MATRIX_SIZE, MATRIX_SIZE> matrix_NN =
-    MatrixXd::Random(MATRIX_SIZE, MATRIX_SIZE);
+	    MatrixXd::Random(MATRIX_SIZE, MATRIX_SIZE);
     matrix_NN =
-    matrix_NN * matrix_NN.transpose(); // Guarantee semi-positive definite
+	    matrix_NN * matrix_NN.transpose(); // Guarantee semi-positive definite
     Matrix<double, MATRIX_SIZE, 1> v_Nd = MatrixXd::Random(MATRIX_SIZE, 1);
     
     Clock_t time_stt = clock(); // timing
     // Direct inversion
     Matrix<double, MATRIX_SIZE, 1> x = matrix_NN.inverse() * v_Nd;
     cout << "time of normal inverse is "
-    << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
+	    << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
     cout << "x = " << x.transpose() << endl;
     
     // Usually solved by matrix decomposition, such as QR decomposition, the speed
@@ -335,7 +335,7 @@ int main(int argc, char **argv) {
     time_stt = clock();
     x = matrix_NN.colPivHouseholderQr().solve(v_Nd);
     cout << "time of Qr decomposition is "
-    << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
+	    << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
     cout << "x = " << x.transpose() << endl;
     
     // For positive definite matrices, you can also use cholesky decomposition to
@@ -343,22 +343,22 @@ int main(int argc, char **argv) {
     time_stt = clock();
     x = matrix_NN.ldlt().solve(v_Nd);
     cout << "time of ldlt decomposition is "
-    << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
+	    << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
     cout << "x = " << x.transpose() << endl;
     
     return 0;
 }
 \end{lstlisting}
 
-This example demonstrates the basic operations and operations of the Eigen matrix. To compile it, you need to specify the header file directory of Eigen in ``CMakeLists.txt'':
+This example demonstrates the basic operations and operations of the Eigen matrix. To compile it, you need to specify the header file directory of Eigen in the \textit{CMakeLists.txt}:
 \begin{lstlisting}[caption=slambook2/ch3/useEigen/CMakeLists.txt]
 # Add header file
 include_directories( "/usr/include/eigen3" )
 \end{lstlisting}
 
-Repeat, because the Eigen library only has header files, so you don't need to link the program to the library with the target\_link\_libraries statement. However, for most other libraries, most of the time you need to use the link command. The approach here is not necessarily the best, because others may have Eigen installed in different locations, then you must manually modify the header file directory here. In the rest of the work, we will use the find\_ package command to search the library, but for the time being in this lecture. After compiling this program, run it and you can see the output of each matrix.
+Because the Eigen library only has header files, we don't need to link the program to the library with the target\_link\_libraries statement. However, for most other libraries, you still need to use the link command. The approach here is not necessarily the best because others may have Eigen installed in different locations, then you must manually modify the header file directory here. In the rest of the book, we will use the find\_ package command to search the library, but we keep it simple in this lecture. After compiling this program, run it, and you can see the output of each matrix.
 
-\begin{lstlisting}[caption=Terminal input:]
+\begin{lstlisting}[caption=Terminal output:]
 % build/eigenMatrix
 matrix 2x3 from 1 to 6: 
 1 2 3
@@ -389,44 +389,44 @@ inverse:
 it: 0.208598
 \end{lstlisting}
 
-Since the detailed comments are given in the code, each line of the statement is not explained here. In this book, we will only give a description of several important places (the latter part will also maintain this style).
+Since the detailed comments are given in the code, we will not elaborate on each line of the statements. This book will only describe several important places (the latter part will also keep this style).
 
 \begin{enumerate}
     \item Please enter the above code by yourself if you are a beginner in C++ (not including comments). At least compile and run the above program for once.
     
-    \item Kdevelop may not prompt C++ member operations, which is caused by its incompleteness. Please follow the above to enter, do not care if it prompts an error. Clion will give you a complete hint.
+    \item KDevelop may not prompt C++ member functions, which is caused by its incompleteness. Please type the above contents just like what they are. Do not care if KDevelop prompts any errors. Clion's completion may be better. 
     
-    \item The matrix provided by  Eigen is very similar to MATLAB, and almost all data is treated as a matrix. However, in order to achieve better efficiency, you need to specify the size and type of the matrix in Eigen. For matrices that know the size at compile time, they are processed faster than dynamically changing matrices. Therefore, data such as rotation matrices and transformation matrices can be determined at compile times by their size and data type.
+    \item Eigen's matrix is very similar to MATLAB, and almost all data is treated as a matrix. However, to achieve better efficiency, you need to specify the size and type of the Eigen matrix. For matrices that we know the size at compile-time, they are processed faster than dynamically changing matrices. Therefore, data such as rotation matrices and transformation matrices can be determined at compile times by their size and data type.
     
-    \item The matrix implementation inside  Eigen is more complicated. I won't introduce it here. We hope that you can use Eigen's matrix like the built-in data types like float and double. This should be in line with the original intention of its design.
+    \item The matrix implementation inside  Eigen is more complicated. I won't introduce it here. We hope you can use Eigen's matrix just like the built-in data types such as float and double. 
     
-    \item The  Eigen matrix does not support automatic type promotion, which is quite different from C++'s built-in data types. In a C++ program, we can add and multiply a float variable and double variable, and \textit{the compiler will automatically cast the data type to the most appropriate one}. In Eigen, for performance reasons, you must \textit{explicitly} convert the matrix type. And if you forget to do this, Eigen will (not very friendly) prompt you with a very long ``YOU MIXED DIFFERENT NUMERIC TYPES ...'' compilation error. You can try to find out which part of the error message this message appears in. If the error message is too long, it is best to save it to a file and find it.
+    \item The  Eigen matrix does not support automatic type promotion, which is quite different from C++'s built-in data types. In a C++ program, we can add and multiply a float variable and double variable, and the compiler will automatically \textit{cast} the data type to the most appropriate one. In Eigen, for performance reasons, you must explicitly convert the matrix type. And if you forget to do this, Eigen will (not very friendly) prompt you with a very long ``YOU MIXED DIFFERENT NUMERIC TYPES ...'' compilation error. You can try to find out which part of the error message this message appears in. If the error message is too long, it is best to save it to a file and find it.
     
-    \item Is the same, in the calculation process also need to ensure the correctness of the matrix dimension, otherwise there will be ``YOU MIXED MATRICES OF DIFFERENT SIZES'' error. Please don't complain about this kind of error prompting. For C++ template meta-programming, it is very lucky to be able to prompt the information that can be read. Later, if you find some compilation error about Eigen, you can directly look for the uppercase part and figure out what the problem is.
+    \item At the same time, the calculation process also needs to ensure the correctness of the matrix dimension. Otherwise, there will be a ``YOU MIXED MATRICES OF DIFFERENT SIZES'' error. Please don't complain about this kind of error prompts. For C++ template meta-programming, it is very fortunate to have readable error information. Later, if you find some compilation error about Eigen, you can directly look for the uppercase part and figure out the problem.
     
-    \item Our routines only cover basic matrix operations. You can read more about Eigen by reading the Eigen official website tutorial: \\ { \url{http://eigen.tuxfamily.org/dox-devel/modules.html} }. Only the simplest part is demonstrated here. It is not equal to the fact that you can understand Eigen.
+    \item Our example only covers the very basic matrix operations. You can learn more about Eigen by reading the Eigen official website tutorial: \\ { \url{http://eigen.tuxfamily.org/dox-devel/modules.html} }. Only the simplest part is demonstrated here. It is not equal to the fact that you can understand Eigen.
 \end{enumerate}
 
 In the last piece of code, the efficiency of inversion and QR decomposition is compared. You can look at the time difference on your own machine. Is there a significant difference between the two methods?
 
-\section{Rotation Vector and Euler Angle}
-\subsection{Rotation Vector}
-Now let's return to the theoretical part. With a rotation matrix to describe the rotation, is it enough to use a $4 \times 4$ transformation matrix to describe a 6-degree-of-freedom 3D rigid body motion? Obviously the matrix representation has at least the following disadvantages:
+\section{Rotation Vectors and the Euler Angles}
+\subsection{Rotation Vectors}
+Now let's return to the theoretical part. With a rotation matrix to describe the rotation, is it enough to use a $4 \times 4$ transformation matrix to represent a 6-degree-of-freedom 3D rigid body motion? Obviously, the matrix representation has at least the following disadvantages:
 \begin{enumerate}
     \item  $\mathrm{SO}( 3 ) $ has a rotation matrix of 9 quantities, but a 3D rotation only has 3 degrees of freedom. Therefore the matrix expression is redundant. Similarly, the transformation matrix expresses a 6 degree-of-freedom transformation with 16 quantities. So, is there a more compact representation?
     \item The rotation matrix itself has constraints: it must be an orthogonal matrix with a determinant of 1. The same is true for the transformation matrix. These constraints make the solution more difficult when you want to estimate or optimize a rotation matrix/transform matrix.
 \end{enumerate}
 
-Therefore, we hope that there is a way to describe rotation and translation in a compact manner. For example, is it feasible to express rotation with a three-dimensional vector and express transformation with a six-dimensional vector? In fact, a rotation can be described by \textit {a rotation axis and a rotation angle}. Thus, we can use a vector whose direction is parallel with the axis of rotation and the length is equal to the angle of rotation, which is called the \textit {rotation vector} (or Angle-Axis/Axis-Angle), and only a three-dimensional vector is needed to describe the rotation. Similarly, for a transformation matrix, we use a rotation vector and a translation vector to express a transformation. The variable dimension at this time is exactly six dimensions.
+Therefore, we hope that there is a way to describe rotation and translation more compactly. For example, is it feasible to express the rotation with a three-dimensional vector and express transformation with a six-dimensional vector? Obviously, a rotation can be described by a rotation axis and a rotation angle. Thus, we can use a vector whose direction is parallel with the axis of rotation, and the length is equal to the angle of rotation, which is called the \textit{rotation vector} (or angle-axis/axis-angle). Only a three-dimensional vector is needed here to describe the rotation. Similarly, we may also use a rotation vector and a translation vector to express a transformation for a transformation matrix. The variable dimension at this time is exactly six dimensions.
 
-Consider a rotation represented by $ \mathbf{R} $. If described by a rotation vector, assuming that the rotation axis is a unit-length vector $ \mathbf{n} $ and the angle is $ \theta $, then the vector $ \theta \mathbf{n} $ can also describe this rotation. So, we have to ask, what is the connection between the two expressions? In fact, it is not difficult to derive their conversion relationship. The conversion process from the rotation vector to the rotation matrix is shown by \textit{Rodrigues' Formula}. Since the derivation process is a little complicated, it is not described here. Only the result of the conversion is given\footnote{For interested readers, please refer to \url{https://en.wikipedia.org/wiki/Rodrigues \% 27_rotation_formula}, in fact the next chapter will give a proof from the Lie algebra view.}:
+Consider a rotation represented by $ \mathbf{R} $. If described by a rotation vector, assuming that the rotation axis is a unit-length vector $ \mathbf{n} $ and the angle is $ \theta $, then the vector $ \theta \mathbf{n} $ can also describe this rotation. So, we have to ask, what is the connection between the two expressions? In fact, it is not difficult to derive their conversion relationship. The conversion from the rotation vector to the rotation matrix is shown by the \textit{Rodrigues' formula}. Since the derivation process is a little complicated, it is not described here. Only the result of the conversion is given \footnote{For interested readers, please refer to \url{https://en.wikipedia.org/wiki/Rodrigues \% 27_rotation_formula}, in fact, the next chapter will give a brief proof from the Lie algebra view.}:
 
 \begin{equation}
 \label{eq:rogridues}
 \mathbf{R} = \cos \theta \mathbf{I} + \left({ 1 - \cos \theta } \right) \mathbf{n} { \mathbf {n} ^T } + \sin \theta { \mathbf{n}^ \wedge }.
 \end{equation}
 
-The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formula~\eqref{eq:cross}. Conversely, we can also calculate the conversion from a rotation matrix to a rotation vector. For the corner $ \theta $, take the \textit{trace} \footnote {see \textit{trace} on both sides to find the sum of the diagonal elements of the matrix. }, we have:
+The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formula~\eqref{eq:cross}. Conversely, we can also calculate the conversion from a rotation matrix to a rotation vector. For the corner $ \theta $, taking the \textit{trace} of both sides\footnote {see \textit{trace} on both sides to find the sum of the diagonal elements of the matrix. }, we have:
 
 \begin{equation}
 \begin{aligned}
@@ -436,26 +436,25 @@ The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formul
 \end{aligned} 
 \end{equation}
 
-therefore:
+Therefore:
 \begin{equation}
 \label{eq:R2theta}
 \theta = \arccos ( \frac{\mathrm{tr}(\mathbf{R}) - 1}{2}  ) .
 \end{equation}
 
-Regarding the axis $ \mathbf{n} $, since the vector on the rotation axis does not change after the rotation, it means:
+Regarding the axis $ \mathbf{n} $, since the rotation axis does not change after the rotation, we have:
 \begin{equation}
 \mathbf{R} \mathbf{n} = \mathbf{n}.
 \end{equation}
 
-Therefore, the axis $ \mathbf{n} $ is the eigen vector corresponding to the matrix $ \mathbf{R}$'s eigenvalue 1. Solving this equation and normalizing it gives the axis of rotation. By the way, the two conversion formulas here will still appear in the next lecture, and you will find that they are exactly the correspondence between Lie group and Lie algebra on $ \mathrm{SO}(3) $ .
+Therefore, the axis $ \mathbf{n} $ is the eigenvector corresponding to the matrix $ \mathbf{R}$'s eigenvalue 1. Solving this equation and normalizing it gives the axis of rotation. By the way, the two conversion formulas here will still appear in the next lecture, and you will find that they are exactly the correspondence between Lie group and Lie algebra on $ \mathrm{SO}(3) $ .
 
-\subsection{Euler Angle}
-
+\subsection{Euler Angles}
 Let's talk about the Euler angle.
 
-Whether it is a rotation matrix or a rotation vector, although they can describe the rotation, they are very unintuitive to us humans. When we see a rotation matrix or a rotation vector, it is hard to imagine what this rotation is like. When they change, we don't know which direction the object is turning. The Euler angle provides a very intuitive way to describe rotation—it uses \textit{3 primal axes} to decompose a rotation into three rotations around different axes. Humans can easily understand the process of rotating around a single axis. However, due to the variety of decomposition methods, there are many different and confusing definition methods for Euler angles. For example, we can first rotate around the $X$ axis, then around the $Y$ axis, and finally around the $Z$ axis, and by this way we get a rotation like $XYZ$ order. Similarly, you can define rotation orders such as $ZYZ$ and $ZYX$. You also need to distinguish whether it is rotated around the \textit{fixed axis} or around the \textit{axis after rotation}, which will also give a different definition.
+Whether it is a rotation matrix or a rotation vector, although they can describe the rotation, it is hard to imagine what this rotation is like only with those numbers. When they change, we don't know which direction the object is turning. The Euler angle provides a very intuitive way to describe the rotation—it uses three primal axes to decompose a rotation into three rotations around different axes. Humans can easily understand the process of rotating around a single axis. However, due to the variety of decomposition methods, there are many alternative and confusing definitions of Euler angles. For example, we can first rotate around the $X$ axis, then the $Y$ axis, and finally around the $Z$ axis, and in this way, we get a rotation like $XYZ$ order. Similarly, you can define rotation orders such as $ZYZ$ and $ZYX$. You also need to distinguish whether it is rotated around the \textit{fixed axis} or around the \textit{axis after rotation}, which will also give a different definition.
 
-This uncertainty in the axis orders brings many practical difficulties. Fortunately, in certain research areas, Euler angles usually have a uniform definition. You may have heard the words ``pitch angle'' and ``yaw angle'' of an aircraft. One of the most commonly used Euler angles is the yaw-pitch-roll angles. Since it is equivalent to the rotation of the $ZYX$ axis, the $ZYX$ is taken as an example. Suppose the front of a rigid body (toward our direction) is the $X$ axis, the right side is the $Y$ axis, and the top is the $Z$ axis, as shown by \autoref{fig:eulerAngles}. Then, the $ZYX$ angle is equivalent to decompose any rotation into the following three axes:
+This uncertainty in the axis orders brings many practical difficulties. Fortunately, in specific research areas, Euler angles usually have a uniform definition. You may have heard the words ``pitch angle'' and ``yaw angle'' of an aircraft. One of the most commonly used Euler angles is the yaw-pitch-roll angles. Since it is equivalent to the rotation of the $ZYX$ axis, we take the $ZYX$ Euler angle as an example. Suppose the front of a rigid body (toward our direction) is the $X$ axis, the right side is the $Y$ axis, and the top is the $Z$ axis, as shown by \autoref{fig:eulerAngles}. Then, the $ZYX$ angle is equivalent to decompose any rotation into the following three axes:
 
 \begin{enumerate}
     \item Rotate around the $Z$ axis of the object to get the yaw angle $\theta_{\mathrm{yaw}}=y$;
@@ -470,11 +469,11 @@ This uncertainty in the axis orders brings many practical difficulties. Fortunat
     \label{fig:eulerAngles}
 \end{figure}
 
-By this way, you can use a three-dimensional vector such as $[r,p,y]^T$ to describe any rotation. This vector is very intuitive, we can imagine the rotation process from this vector. The other Euler angles are also decomposed into three axes to obtain a three-dimensional vector, but the axes and order maybe different. The $rpy$ angle introduced here is a widely used one, and only a few Euler angles have such a popular name as $rpy$. Different Euler angles are referred to in the order of the axes of rotation. For example, the rotation order of the rpy angle is $ZYX$. Similarly, there are Euler angles like $XYZ, ZYZ$ - but they don't have a specific name. It is worth mentioning that most areas have their own coordinate directions and order habits when using Euler angles, not necessarily the same as we said here.
+In this way, we can use a three-dimensional vector such as $[r,p,y]^T$ to describe any rotation. This vector is very intuitive. We can imagine the rotation process from this vector. The other Euler angles are also decomposed into three axes to obtain a three-dimensional vector, but the axes and order may be different. The $rpy$ angle introduced here is a widely used one, and only a few Euler angles have such a famous name as $rpy$. Different Euler angles are referred to in the order of the axes of rotation. For example, the rotation order of the rpy angle is $ZYX$. Similarly, there are Euler angles like $XYZ, ZYZ$ - but they don't have a specific name. It is worth mentioning that most areas have their own coordinate directions and habits when using Euler angles, not necessarily the same as we said here.
 
-A major drawback of Euler Angle is that it encounters the famous \textit{Gimbal Lock} \footnote{\url{https://en.wikipedia.org/wiki/Gimbal_lock}.}): in $rpy$'s case, when the pitch angle is $\pm 90 ^\circ $, the first rotation and the third rotation will use the same axis, causing the system to lose a degree of freedom (from 3 rotations to 2 rotations). This is called the singularity problem and also exists in other forms of Euler Angles. In theory, it can be proved that as long as you want to use three real numbers to express the three-dimensional rotation, you will inevitably encounter the singularity problem\footnote{The rotation vector also has singularity, which occurs when the angle $\theta$ exceeds $2\pi$. Obviously rotating $2\pi$ is same with no rotation.}. Due to this principle, Euler angles are not suitable for interpolation and iteration, and are often only used in human-computer interaction. We also rarely use Euler angles to express poses directly in the SLAM program, nor do we use Euler angles to express rotation in filtering or optimization (because it has singularity). However, if you want to verify that your algorithm is correct or not, converting to Euler angles can help you quickly determine if the results are correct. In some cases where the main body is mainly 2D motion (such as sweepers, self-driving vehicles), we can also decompose the rotation into three Euler angles, and then take one of them (such as the yaw angle) as the positioning information output.
+A major drawback of Euler Angle is that it encounters the famous \textit{Gimbal lock} \footnote{See \url{https://en.wikipedia.org/wiki/Gimbal_lock}.}): in the $rpy$'s case, when the pitch angle is $\pm 90 ^\circ $, the first rotation and the third rotation will use the same axis, causing the system to lose a degree of freedom (from 3 rotations to 2 rotations). This is called the singularity problem and also exists in other forms of Euler angles. In theory, it can be proved that as long as you want to use three real numbers to express the three-dimensional rotation, you will inevitably encounter the singularity problem. \footnote{The rotation vector also has a singularity, which occurs when the angle $\theta$ exceeds $2\pi$. Obviously, rotating $2\pi$ is the same with no rotation.} Due to this fact, Euler angles are not suitable for interpolation or iterations, and are often only used in human-computer interaction. We rarely use Euler angles to express poses directly in the SLAM program, nor do we use Euler angles to describe rotation in filtering or optimization (because it has singularity). However, if you want to verify that your algorithm is correct or not, converting to Euler angles can help you quickly determine if the results are correct or not. In some cases where the main body is mainly 2D motion (such as sweepers, self-driving vehicles), we can also decompose the rotation into three Euler angles and then take one of them (such as the yaw angle) as the orientation output.
 
-\section{Quaternion}
+\section{Quaternions}
 
 The rotation matrix describes the rotation of 3 degrees of freedom with 9 quantities, with redundancy; the Euler angles and the rotation vectors are compact but has singularity. In fact, we \textit{cannot find a three-dimensional vector description without singularity}\cite{Stuelpnagel1964}. This is somewhat similar to using two coordinates to represent the Earth's surface (such as longitude and latitude), and there will be singularity (longitude is meaningless when latitude is $ \pm  90 ^ \circ $ ).
 
