@@ -2,27 +2,26 @@
 \chapter{Cameras and Images}
 \label{cpt:5}
 \begin{mdframed}  
-	\textbf{Goal of This Chapter}
+	\textit{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item Understand the pin-hole camera model, intrinsics, extrinsics and distortion. 
-		\item Understand how to project a spatial point into image planes. 
-		\item Understand how to cope with the OpenCV images. 
-		\item Understand the basic calibration methods. 
+		\item Learn the models of the pinhole camera, intrinsics, extrinsics, and distortion. 
+		\item Learn how to project a spatial point into image planes. 
+		\item Learn the basic image process in OpenCV. 
 	\end{enumerate}
 \end{mdframed} 
 
-In the previous two lectures, we introduced the problem that how to express and optimize the robot's 6 DoF pose, and partially explained the meaning of the variables and the equations of motion and observation in SLAM. In this chapter we will discuss ``How robots observe the outside world'', which is part of the observation equation. In the camera-based visual SLAM, the observation mainly refers to the process of \textbf{image projection}.
+In the previous two lectures, we introduced how to express and optimize the robot's 6 DoF pose and partially explained the meaning of the variables and the equations of motion and observation in SLAM. This chapter will discuss ``How robots observe the outside world'', which belongs to the observation equation. In the camera-based visual SLAM, the observation mainly refers to the process of image projection.
 
-We can see a lot of photos in real life. In a computer, a photo consists of millions of pixels, each of which records the information about color or brightness. We will see a bundle of light reflected or emitted by an object in the three-dimensional world pass through the camera's optical center and is projected onto the imaging plane of the camera. After the camera's light sensor receives the light, it produces a measurement and we get the pixels, which form the photo we see. Can this process be described by mathematical equations? This lecture will first discuss the camera model, explain how the projection relationship is described, and what is the internal parameters in this projection process. At the same time, we are also going to give a brief introduction to the stereo and RGB-D cameras. Then, we introduce the basic operations of 2D images in OpenCV. Finally, an experiment of point cloud stitching is demonstrated to show the meaning of intrinsics and extrinsics parameters.
+We have seen a lot of photos in real life. A photo consists of millions of pixels in the computer, recording information about color or brightness. We will see a bundle of light reflected or emitted by an object in the three-dimensional world pass through the camera's optical center and is projected onto the camera's imaging plane. After the camera's light sensor receives the light, it produces a measurement, and we get the pixels, which form the photo we see. Can this process be described by mathematical equations? This lecture will first discuss the camera model, explain how the projection relationship is described, and the internal parameters in this projection process. At the same time, we will also give a brief introduction to the stereo and RGB-D cameras. Then, we introduce the basic operations of 2D images in OpenCV. Finally, an experiment of point cloud stitching is demonstrated to show the meaning of intrinsic and extrinsic parameters.
 
 \newpage
 \includepdf{resources/other/ch5.pdf}
 \newpage
-\section{Pin-hole Camera Models}
-The process of projecting a 3D point (in meters) to a 2D image plane (in pixels) can be described by a geometric model. Actually there are several models to describe this, the simplest of which is called the \textbf{pinhole model}. We will start from this pin-hole projection. At the same time, due to the presence of the lens on the camera lens, \textbf{distortion} is generated during the projection. Therefore, we are going to use the pin-hold model plus with a distortion model to describe the entire projection process.
+\section{Pinhole Camera Models}
+The process of projecting a 3D point (in meters) to a 2D image plane (in pixels) can be described by a geometric model. Actually, several models describe this, the simplest of which is called the pinhole model. We will start with this pinhole projection. At the same time, due to the presence of the lens on the camera lens, \textit{distortion} is generated during the projection. Therefore, we will use the pinhole model plus a distortion model to describe the entire projection process.
 
 \subsection{Pinhole Camera Geometry}
-Most of us have seen the candle projection experiment in the physics class of high school: a lit candle is placed in front of a dark box, and the light of the candle is projected through a small hole in the dark box on the rear plane of the black box. Then an inverted candle image is formed on this plane. In this process, the small hole is able to project a candle in a three-dimensional world onto a two-dimensional imaging plane. For the same reason, we can use this simple model to explain the imaging process of the camera, as shown in \autoref{fig:cameraModel}.
+Most of us have seen the candle projection experiment in the physics class of high school: a lit candle is placed in front of a dark box, and the light of the candle is projected through a small hole in the dark box on the rear plane. Then an inverted candle image is formed on this plane. In this process, the small hole can project a candle in a three-dimensional world onto a two-dimensional imaging plane. For the same reason, we can use this simple model to explain the camera's imaging process, as shown in \autoref{fig:cameraModel}.
 
 \begin{figure}[!ht]
 	\centering
@@ -31,12 +30,12 @@ Most of us have seen the candle projection experiment in the physics class of hi
 	\label{fig:cameraModel}
 \end{figure}
 
-Let's take a look at the simple geometry in this model. Let $O-x-y-z$ be the camera coordinate system. Commonly we put the $z$ axis to the front of the camera, $x$ to the right, and $y$ to the down (so in this figure we should stand on the left side to see the right side). $O$ is the camera's \textbf{Optical Center}, which is also the ``hole'' in the pinhole model. The 3D point $P$, after being projected through the hole $O$, falls on the physical imaging plane $O'-x'-y'$, and produce the image point $P'$. Let the coordinates of $P$ be $[X,Y,Z]^\mathrm{T}$, $P'$ is $[X',Y',Z']^\mathrm{T}$, and set the physical distance from the imaging plane to camera plane is $f$ (focal length). Then, according to the similarity of the triangles, there are:
+Let's take a look at the simple geometry in this model. Let $O-x-y-z$ be the camera coordinate system. Commonly we put the $z$ axis to the front of the camera, $x$ to the right, and $y$ to the down (so in this figure, we should stand on the left side to see the right side). $O$ is the camera's optical center, which is also the ``hole'' in the pinhole model. The 3D point $P$, after being projected through the hole $O$, falls on the physical imaging plane $O'-x'-y'$ and produces the image point $P'$. Let the coordinates of $P$ be $[X,Y,Z]^T$, $P'$ is $[X',Y',Z']^T$, and set the physical distance from the imaging plane to camera plane is $f$ (focal length). Then, according to the similarity of the triangles, there are:
 \begin{equation}
 \frac{Z}{f} = -\frac{X}{{X'}} =-\frac{Y}{{Y'}}.
 \end{equation}
-The negative sign indicates that the image is inverted. However, the image obtained by the actual camera is not an inverted image (otherwise the usage of the camera would be very inconvenient). In order to make the model more realistic, we can equivalently place the imaging plane symmetrically in front of the camera, along with the 3D space points on the same side of the camera coordinate system, as shown by \autoref{fig:planes}. This can remove the negative sign in the formula to make the formula more compact:
 
+The negative sign indicates that the image is inverted. However, the image obtained by modern cameras is not inverted (otherwise, the usage of the camera would be very inconvenient). To make the model more realistic, we can equivalently place the imaging plane symmetrically in front of the camera, as shown by \autoref{fig:planes}. This can remove the negative sign in the formula to make it more compact:
 \begin{equation}
 \frac{Z}{f} = \frac{X}{{X'}} =\frac{Y}{{Y'}}.
 \end{equation}
@@ -50,17 +49,15 @@ The negative sign indicates that the image is inverted. However, the image obtai
 
 Put $X', Y'$ to the left side:
 \begin{equation}\label{eq:P2Pprime}
-\begin{array}{l}
-X' = f\frac{X}{Z}\\
-Y' = f\frac{Y}{Z}
-\end{array}.
+X' = f\frac{X}{Z}, \quad Y' = f\frac{Y}{Z}.
 \end{equation}
 
-Readers may ask why can we seem to arbitrarily move the imaging plane to the front? In fact this is just a mathematical approach to handle the camera projection, and most of the images captured by the camera are not upside-down - the camera's software will flip the image for you, so what we actually get is the image on the symmetric plane. So, although from the physical principle, the pin-hold image should be inverted, but since we have pre-processed the image, it is not bad to take the symmetric one. Therefore, without causing ambiguity, we often emit the minus symbol in the pinhole model.
+Readers may ask why we can arbitrarily move the imaging plane to the front? In fact, this is just a mathematical approach to handle the camera projection, and most of the images captured by the camera are not upside-down. The camera's software will flip the picture for you, so what we actually get is the symmetric plane's image. Although the pin-hole image should be inverted from the physical principle since we have pre-processed the picture, it is not wrong to take the symmetric one. Therefore, without causing ambiguity, we often emit the minus symbol in the pin-hole model.
 
-The formula~\eqref{eq:P2Pprime} describes the spatial relationship between the point $P$ and its image, where the units of all points are meters,  for example, a focal length may be 0.2 meters and $X'$ be 0.14 meters. However, in the camera, we end up with pixels, where we need to sample and quantize the pixels on the imaging plane. In order to describe the process by which the sensor converts the perceived light into image pixels, we set a pixel plane $o-u-v$ fixed on the physical imaging plane. Finally, we get \textbf{pixel coordinates} of $P'$ in the pixel plane: $[u,v]^\mathrm{T}$.
 
-The usual definition ot the \textbf{pixel coordinate system}\footnote{ Or image coordinate system, see section 2 of this lecture. } is : the origin $o'$ is in the upper left corner of the image, the $u$ axis is parallel to the $x$ axis, and the $v$ axis is parallel to the $y$ axis. Between the pixel coordinate system and the imaging plane, there is an obvious \textbf{zoom} and a \textbf{translation of the origin}. We set the pixel coordinates to scale $\alpha$ times on the $u$ axis and $\beta$ times on $v$. At the same time, the origin is translated by $[c_x, c_y]^\mathrm{T}$. Then, the relationship between the coordinates of $P'$ and the pixel coordinate $[u,v]^\mathrm{T}$ is:
+The formula~\eqref{eq:P2Pprime} describes the spatial relationship between the point $P$ and its image, where the units of all points are meters. For example, a focal length maybe 0.2 meters, and $X'$ be 0.14 meters. However, in the camera, we end up with pixels, where we need to sample and quantize the pixels on the imaging plane. To describe how the sensor converts the perceived light into image pixels, we set a pixel plane $o-u-v$ fixed on the physical imaging plane. Finally, we get \textit{pixel coordinates} of $P'$ in the pixel plane: $[u,v]^T$.
+
+The usual definition of the pixel coordinate system \footnote{ Or image coordinate system, see section 2 of this lecture. } is: the origin $o'$ is in the upper left corner of the image, the $u$ axis is parallel to the $x$ axis, and the $v$ axis is parallel to the $y$ axis. Between the pixel coordinate system and the imaging plane, there is an apparent \textit{zoom} and a \textit{translation of the origin}. We set the pixel coordinates to scale $\alpha$ times on the $u$ axis and $\beta$ times on $v$. At the same time, the origin is translated by $[c_x, c_y]^T$. Then, the relationship between the coordinates of $P'$ and the pixel coordinate $[u,v]^T$ is:
 \begin{equation}
 \label{eq:project2pixel1} 
 \left\{
@@ -87,15 +84,15 @@ where $f$ is the focal length in meters, $\alpha, and \beta$ is in pixels/meter,
 \buildrel \Delta \over =\frac{1}{Z} \mathbf{K} \mathbf{P}.
 \end{equation}
 
-Let put $Z$ to the left side as in most books:
+Let's put $Z$ to the left side as in most books:
 \begin{equation}
 Z \begin{pmatrix} u\\ v\\ 1 \end{pmatrix}= \begin{pmatrix} f_x & 0&c_x \\ 0& f_y& c_y\\ 0&0 & 1 \end{pmatrix}\begin{pmatrix} X\\ Y\\ Z \end{pmatrix} 
 \buildrel \Delta \over = \mathbf{K} \mathbf{P}.
 \end{equation}
 
-In this equation, we refer to the matrix composed of the middle quantities as the camera's \textbf{inner parameter matrix} (o Intrinsics)$\mathbf{K}$. It is generally believed that the internal parameters of the camera are fixed after manufacturing and will not change during usage. Some camera manufacturers will tell you the internal parameters of the camera, and sometimes you need to estimate the internal parameters by yourself, which is called \textbf{calibration}. In view of the maturity of the calibration algorithm (such as the famous Zhang Zhengyou's calibration \textsuperscript{\cite{Zhang1999}}), it will not be introduced here \footnote{I'm sure professor Zhang has a copy of this book now.}. 
+In this equation, we refer to the matrix composed of the middle quantities as the camera's inner parameter matrix (o intrinsics) $\mathbf{K}$. It is generally assumed that the camera's internal parameters are fixed after manufacturing and will not change during usage. Some camera manufacturers will tell you the intrinsics, and sometimes you need to estimate the internal parameters by yourself, which is called calibration. Because of the maturity of the calibration algorithm (such as the famous Zhang Zhengyou's calibration {\cite{Zhang1999}}), it will not be introduced here \footnote{I'm sure professor Zhang has a copy of this book now.}. 
 
-There are internal parameters, and naturally there must be something like ``external parameters''. In the equation ~\eqref{eq:intrinmatrix}~, we use the coordinates of $P$ in the camera coordinate system, but in fact the  coordinates of $P$ should be its world coordinates because the camera is moving (we use symbol $\mathbf{P}_w$). It should be converted to the camera coordinate system based on the current pose of the camera. The pose of the camera is described by its rotation matrix $\mathbf{R}$ and the translation vector $\mathbf{t}$. Then there are:
+There are internal parameters, and naturally, there must be something like ``external parameters''. In the equation ~\eqref{eq:intrinmatrix}~, we use the coordinates of $P$ in the camera coordinate system, but in fact, the coordinates of $P$ should be its world coordinates because the camera is moving (we use the symbol $\mathbf{P}_w$). It should be converted to the camera coordinate system based on the current pose of the camera. The camera's pose is described by its rotation matrix $\mathbf{R}$ and the translation vector $\mathbf{t}$. Then there are:
 
 \begin{equation}
 \label{eq:cameraprojection}
@@ -107,19 +104,19 @@ v\\
 \end{array} \right] = \mathbf{K} \left( {\mathbf{R}{ \mathbf{P}_w} + \mathbf{t}} \right) =  \mathbf{K} \mathbf{T} \mathbf{P}_w .
 \end{equation}
 
-Note that the latter formula implies a conversion from homogeneous to non-homogeneous coordinates (can you see it?)\footnote{We use homogeneous coordinates in $\mathbf{T}\mathbf{P}$, then convert to non-homogeneous coordinates, and then multiply it by $\mathbf{K}$. }. It describes the projection relationship of world coordinates to pixel coordinates of $P$. Among them, the camera's pose $\mathbf{R}, \mathbf{t}$ is also called the camera's \textbf{extrinsics} \footnote{In robots or autonomous vehicles, the extrinsics is sometimes explained the transform between the camera coordinate system and the robot body coordinate system, describing ``where the camera is installed''. }. Compared with the intrinsics, the extrinsics may change with the camera installation, and is also the target to be estimated in the SLAM if we only have a camera.
+Note that the latter formula implies a conversion from homogeneous to non-homogeneous coordinates (can you see it?) We use homogeneous coordinates in $\mathbf{T}\mathbf{P}$, then convert to non-homogeneous coordinates, and then multiply it by $\mathbf{K}$.  It describes the projection relationship of world coordinates to pixel coordinates of $P$. Among them, the camera's pose $\mathbf{R}, \mathbf{t}$ is also called the camera's \textit{extrinsics}. \footnote{In robots or autonomous vehicles, extrinsics is often defined as the transform between the camera coordinate system and the robot body coordinate system, describing ``where the camera is installed''.}  Compared with the intrinsic, the extrinsics may change with the camera installation and is also the target to be estimated in the SLAM if we only have a camera.
 
-The projection process can also be viewed from another perspective. The formula ~\eqref{eq:cameraprojection} shows that we can convert a world coordinate point to the camera coordinate system first, and then remove the value of its last dimension (that is, the depth of the point from the imaging plane of the camera), which is equivalent to the \textbf{normalization} on the last dimension. By this way we get the projection of the point $P$ on the camera \textbf{normalized plane}:
+The projection process can also be viewed from another perspective. The formula ~\eqref{eq:cameraprojection} shows that we can convert a world coordinate point to the camera coordinate system first and then remove the last dimension. The depth of the point from the imaging plane of the camera is then removed, which is equivalent to the normalization on the last dimension. In this way, we get the projection of the point $P$ on the camera \textit{normalized plane}:
 \begin{equation}
-\left( {\mathbf{R}{\mathbf{P}_w} + \mathbf{t}} \right) = \underbrace{\left[ X,Y,Z\right]^\mathrm{T}}_{\text{Camera Coordinates}} \to \underbrace {\left[ {X/Z,Y/Z,1} \right]^\mathrm{T}}_{\text{Normalized Coordinates}}.
+\left( {\mathbf{R}{\mathbf{P}_w} + \mathbf{t}} \right) = \underbrace{\left[ X,Y,Z\right]^T}_{\text{Camera Coordinates}} \to \underbrace {\left[ {X/Z,Y/Z,1} \right]^T}_{\text{Normalized Coordinates}}.
 \end{equation}
 
-The \textbf{normalized coordinates} can be seen as a point in the $z=1$ plane in front of the camera\footnote{Note that in the actual calculation, it is necessary to check whether $Z$ is positive, because the negative $Z$ can also get a point on the normalized plane by this method. However, the camera does not capture the scene behind the imaging plane. }.This $z=1$ plane is also called \textbf{normalized plane}. We normalize the coordinates and then multiply it with the intrinsic matrix, yielding the pixel coordinates, so we can also consider the pixel coordinates $[u,v]^\mathrm{T}$ as the result of quantitative measurements on points on the normalized plane. It can also be seen from this model that if the camera coordinates are multiplied by any non-zero constant at the same time, the normalized coordinates are the same, which means that the \textbf{depth is lost during the projection process}, so in monocular vision the depth value of the pixel cannot be obtained by a single image.
+The \textit{normalized coordinates} can be seen as a point in the $z=1$ plane in front of the camera \footnote{Note that in the calculation, it is necessary to check whether $Z$ is positive because the negative $Z$ can also get the point on the normalized plane by this method. However, the camera does not capture the scene behind the imaging plane. }.This $z=1$ plane is also called \textit{normalized plane}. We normalize the coordinates and then multiply them with the intrinsic matrix, yielding the pixel coordinates. We can also consider the pixel coordinates $[u,v]^T$ as the result of quantitative measurements on points on the normalized plane. If the camera coordinates are multiplied by any non-zero constant simultaneously, the normalized coordinates are the same, which means that the depth is lost during the projection process. So, in monocular vision, the pixel's depth value cannot be obtained by a single image.
 
 \subsection{Distortion}
-In order to get a larger FoV (Field-of-View), we normally add a lens in front of the camera. The addition of the lens has an influence on the propagation of light during imaging: (1) the shape of lens may affect the propagation way of light, (2) during the mechanical assembly, the lens and the imaging plane are not completely parallel, which also makes the projected position change.
+In order to get a larger FoV (Field-of-View), we usually add a lens in front of the camera. The addition of the lens has an influence on the propagation of light during imaging: (1) the shape of the lens may affect the propagation way of light, (2) during the mechanical assembly, the lens and the imaging plane are not entirely parallel, which also changes the projected position.
 
-There are some mathematical models to describe the \textbf{distortion} caused by the shape of the lens. In the pinhole model, a straight line keeps straight when projected onto the pixel plane. However, in real photos, the lens of the camera tends to make a straight line in the real environment become a curve \footnote{Yes, it is no longer straight, but becomes curved. If it makes an inside curve, it is called barrel-like distortion; otherwise if the curve looks outward, it is cushion-like distortion. }. The closer to the edge of the image, the more obvious this phenomenon is. Since the lenses actually produced are often center-symmetrical, this makes the irregular distortion generally radially symmetrical. They fall into two main categories: \textbf{barrel-like distortion} and \textbf{cushion-like distortion}, as shown by \autoref{fig:distortion}.
+There are some mathematical models to describe the distortion caused by the shape of the lens. In the pinhole model, a straight line keeps straight when projected onto the pixel plane. However, in real photos, the camera lens tends to make a straight line in the real environment become a curve \footnote{Yes, it is no longer straight but becomes curved. If it makes an inside curve, it is called barrel-like distortion; otherwise, it is cushion-like distortion if the curve looks outward. }. The closer to the edge of the image, the more obvious this phenomenon is. Since the lenses actually produced are often center-symmetrical, this makes the irregular distortion generally radially symmetrical. They fall into two main categories: \textit{barrel-like distortion} and \textit{cushion-like distortion}, as shown by \autoref{fig:distortion}.
 \begin{figure}[!t]
 	\centering
 	\includegraphics[width=0.7\textwidth]{cameraModel/distortion.pdf}
@@ -127,9 +124,9 @@ There are some mathematical models to describe the \textbf{distortion} caused by
 	\label{fig:distortion}
 \end{figure}
 
-In barrel distortion the radius of pixels decreases as the distance from the optical axis increases, while the cushion distortion is just the opposite. In both distortions, the line that intersects the intersection of the center of the image and the optical axis remains the same.
+In barrel distortion, the radius of pixels decreases as the optical axis's distance increases, while the cushion distortion is just the opposite. In both distortions, the line that intersects the center of the image and the optical axis remains the same.
 
-In addition to the shape of the lens, which introduces radial distortion, \textbf{tangential distortion} is introduced in during assembly of the camera because the lens and the imaging surface cannot be strictly parallel, as shown by \autoref{fig:tangen}.
+In addition to the shape of the lens, which introduces radial distortion, \textit{tangential distortion} is introduced during assembly of the camera because the lens and the imaging surface cannot be strictly parallel, as shown by \autoref{fig:tangen}.
 
 \begin{figure}[!t]
 	\centering
@@ -137,8 +134,7 @@ In addition to the shape of the lens, which introduces radial distortion, \textb
 	\caption{Tangential distortion.}
 	\label{fig:tangen}
 \end{figure}
-
-To better understand radial and tangential distortion, we describe them in more rigorous mathematical form. Consider any point on the \textbf{normalized plane}, $\mathbf{p}$, whose coordinates are $[x,y]^\mathrm{T}$, or $[r, \theta]^\mathrm{T}$ in the form of polar coordinates, where $r$ represents the distance between the point $\mathbf{p}$ and the origin of the coordinate system, and $\theta$ represents the angle to the horizontal axis. Radial distortion can be seen as a change in the coordinate point along the length, that is, its radius from the origin. Tangential distortion can be seen as a change in the coordinate point along the tangential direction, that is, the horizontal angle has changed. It is generally assumed that these distortions are polynomial, namely:
+To better understand radial and tangential distortion, we describe them in a more rigorous mathematical form. Consider any point on the \textit{normalized plane}, $\mathbf{p}$, whose coordinates are $[x,y]^T$, or $[r, \theta]^T$ in the form of polar coordinates, where $r$ represents the distance between the point $\mathbf{p}$ and the origin of the coordinate system, and $\theta$ represents the angle to the horizontal axis. Radial distortion can be seen as a change in the coordinate point along the length, that is, its radius from the origin. Tangential distortion can be seen as a change in the coordinate point along the tangential direction, which means that the horizontal angle has changed. It is generally assumed that these distortions are polynomial, namely:
 \begin{equation}
 \label{eq:distortion} 
 \begin{matrix}
@@ -146,7 +142,7 @@ x_\mathrm{distorted} = x(1+k_1r^2+k_2r^4+k_3r^6)\\
 y_\mathrm{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)
 \end{matrix},
 \end{equation}
-where $[x_\mathrm{distorted}, y_\mathrm{distorted}]^\mathrm{T}$ is the \textbf{normalized coordinates} of the point after distortion. On the other hand, for \textbf{tangential distortion}, we can use the other two parameters $p_1,p_2$ to describe it:
+where $[x_\mathrm{distorted}, y_\mathrm{distorted}]^T$ is the \textit{normalized coordinates} of the point after distortion. On the other hand, for \textit{tangential distortion}, we can use the other two parameters $p_1,p_2$ to describe it:
 \begin{equation}
 \label{eq:tangen} 
 \begin{matrix}
@@ -154,7 +150,7 @@ x_\mathrm{distorted} = x+2p_1xy+p_2(r^2+2x^2)\\
 y_\mathrm{distorted} = y+p_1(r^2+2y^2)+2p_2xy
 \end{matrix}. 
 \end{equation}
-Put~\eqref{eq:distortion} and~\eqref{eq:tangen} together we get a joint model with 5 distortion coefficients. The complete form is:
+Putting~\eqref{eq:distortion} and~\eqref{eq:tangen} together we get a joint model with 5 distortion coefficients. The complete form is:
 \begin{equation}
 \left\{\begin{matrix} x_\mathrm{distorted} =x(1+k_1r^2+k_2r^4+k_3r^6)+2p_1xy+p_2(r^2+2x^2)\\ 
 y_\mathrm{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)+p_1(r^2+2y^2)+2p_2xy
@@ -163,24 +159,24 @@ y_\mathrm{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)+p_1(r^2+2y^2)+2p_2xy
 
 In the above process of correcting distortion, we used 5 distortion coefficients. In practical applications, you can flexibly choose to number of parameters, for example, only selecting $k_1, p_1, p_2$, or use $k_1, k_2, p_1, p_2$, etc.
 
-In this section, we modeled the camera's imaging process using a pinhole model and described the radial and tangential distortions caused by the lens. In the actual image system, researchers have proposed many other models, such as the affine model and perspective model, and there are many other types of distortion. In most of the visual SLAM systems, pinhole models and rad-tan distortion models are sufficient, so we will not describe other one.
+This section models the camera's imaging process using a pinhole model and described the radial and tangential distortions caused by the lens. Researchers have proposed many other models in the existing imaging system, such as the affine model and perspective model, and there are many different types of distortion. In most visual SLAM systems, pinhole and rad-tan distortion models are sufficient, so we will not describe the other ones.
 
-It is worth mentioning that there are two ways of undistortion (or correction). We can choose to undistort the entire image first, get the corrected image, and then discuss the spatial position of the points on the image. Alternatively, we can also discuss some feature points in the distorted image, and find its real position through the distortion equation. Both are feasible, but the former seems to be more common in visual SLAM. Therefore, when an image is undistorted, we can directly establish a projection relationship with the pinhole model without considering distortion. Therefore, in the discussion that follows, we can directly assume that the image has been undistorted.
+It is worth mentioning that there are two ways of undistortion (or correction). We can choose to undistort the entire image first, get the corrected image, and then discuss the spatial position of the points on the image. Alternatively, we can also extract some feature points in the distorted image and find its real position through the distortion equation. Both are feasible, but the former seems to be more common in visual SLAM. Therefore, when an image is undistorted, we can directly establish a projection relationship with the pinhole model without considering distortion. Therefore, in the discussion that follows, we can directly assume that the image has been undistorted.
 
 Finally, let's summarize the imaging process of a monocular camera:
 
 \begin{enumerate}
 	\item First, there is a point $P$ in the world coordinate system, and its world coordinates are $\mathbf{P}_w$.
-	\item Since the camera is moving, its motion is described by $\mathbf{R}, \mathbf{t}$ or  transform matrix $\mathbf{T} \in \mathrm{SE}(3)$. The camera coordinates for $P$ are $\mathbf{\tilde{P}}_c = \mathbf{R} \mathbf{P}_w + \mathbf{t}$.
-	\item The $\mathbf{\tilde{P}}_c$ component is $X,Y,Z$, and they are projected onto the normalized plane $Z=1$ to get the normalized coordinates: $\mathbf{P}_c = [X/Z, Y/Z, 1]^\mathrm{T}$\footnote{Note that $Z$ may be less than 1, indicating that the point is behind the normalization plane and it should not be projected on the camera plane.}.
+	\item Since the camera is moving, its motion is described by $\mathbf{R}, \mathbf{t}$ or  transform matrix $\mathbf{T} \in \mathrm{SE}(3)$. The camera coordinates for $P$ are $\tilde{\mathbf{P}}_c = \mathbf{R} \mathbf{P}_w + \mathbf{t}$.
+	\item The $\tilde{\mathbf{P}}_c$ components are $X,Y, Z$, and they are projected onto the normalized plane $Z=1$ to get the normalized coordinates: $\mathbf{P}_c = [X/Z, Y/Z, 1]^T$. Note that $Z$ may be less than 1, indicating that the point is behind the normalization plane and it should not be projected on the camera plane.
 	\item If the image is distorted, the coordinates of $\mathbf{P}_c$ after distortion are calculated according to the distortion parameters.
 	\item Finally, the distorted coordinates of $P$ pass through the intrinsics and we find its pixel coordinates: $\mathbf{P}_{uv} = \mathbf{K} \mathbf{P}_c$.
 \end{enumerate}
 
-In summary, we have talked about four coordinates: the world coordinates, the camera coordinates, the normalized coordinates, and the pixel coordinates. Readers should clarify their relationship, which reflects the entire imaging process and will be used in the future.
+In summary, we have talked about four coordinates: the world coordinates, the camera coordinates, the normalized coordinates, and the pixel coordinates. Readers should clarify their relationship. They reflect the entire imaging process and will be used in the future.
 
 \subsection{Stereo Cameras}
-The pinhole camera model describes the imaging model of a single camera. However, we cannot determine the specific location of a spatial point on by a single pixel. This is because all points on the line from the camera's optical center to the normalized plane can be projected onto that pixel. Only when the depth of $P$ is determined (such as through a binocular or RGB-D camera) can we know exactly its spatial location, as shown in \autoref {fig:pixelLocation}~.
+The pinhole camera model describes the imaging model of a single camera. However, we cannot determine the specific location of a spatial point only by a single pixel. This is because all points on the line from the camera's optical center to the normalized plane can be projected onto that pixel. Only when the depth of $P$ is determined (such as through a binocular or RGB-D camera) can we know exactly its spatial location, as shown in \autoref {fig:pixelLocation}~.
 
 \begin{figure}[!ht]
     \centering
@@ -189,37 +185,37 @@ The pinhole camera model describes the imaging model of a single camera. However
     \label{fig:pixelLocation}
 \end{figure}
 
-There are many ways to measure the pixel distance (or depth). For example, the human eye can judge the distance of the object according to the difference (or parallax) of the scene seen by the left and right eyes. The principle of the binocular camera is also the same: by simultaneously acquiring the images of the left and right cameras, and calculating the parallax/disparity between the images, the depth of each pixel is estimated. In the following paragraph we  briefly describe the imaging principle of the stereo camera (as shown in \autoref{fig:stereoCamera}~).
+There are many ways to measure the pixel distance (or depth). For example, the human eye can judge the object's distance according to the difference (or parallax) of the scene seen by the left and right eyes. The binocular camera principle is also the same. By simultaneously acquiring the left and right cameras' images and calculating the parallax/disparity between the images, each pixel's depth is estimated. In the following paragraph, we briefly describe the stereo camera's imaging principle (as shown in \autoref{fig:stereoCamera}~).
 
-A binocular camera is generally composed of a left-eye camera and a right-eye camera. Of course, it can also be made up and down, but the mainstream binoculars we've seen are all left and right. In left and right cameras are often regarded as simple pin-hole cameras. They are synchrozied and placed horizontally, meaning that the centers of both cameras are on the same $x$ axis. The distance between the two centers is called \textbf {baseline} (denoted as $b$), which is an important parameter.
+A binocular camera is generally composed of a left-eye camera and a right-eye camera. Of course, it can also be made up and down, but the mainstream binoculars we've seen are all left and right. Both the left and right cameras are regarded as simple pinhole cameras. They are synchronized and placed horizontally, meaning that both cameras' centers are on the same $x$ axis. The distance between the two centers is called \textit {baseline} (denoted as $b$), which is an important parameter.
 
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=1.0\textwidth]{cameraModel/stereoCamera.pdf}
-    \caption{Geometry model of stereo cameras from upside down. The $O_L,O_R$ are left and right optical centers. $f$ is the focal length, $u_L$ and $u_R$ are pixel corrdinates of a same point along $x$ axis. Note that $u_R$ should be a negative value in this figure, so the pysical distance should be $-u_R$.}
+    \caption{Geometry model of stereo cameras from upside down view. The $O_L, O_R$ are left and right optical centers. $f$ is the focal length, $u_L$ and $u_R$ are pixel coordinates of the same point along the $x$ axis. Note that $u_R$ should be a negative value in this figure, so the physical distance should be $-u_R$.}
     \label{fig:stereoCamera}
 \end{figure}
 
-Now consider a 3D point $P$, which is projected into the left-eye and the right-eye, written as $P_L, P_R$. Due to the presence of the camera baseline, these two imaging positions are different. Ideally, since the left and right cameras are only shifted on the $x$ axis, the image of $P$ also differs only on the $x$ axis (corresponding to the $u$ axis of the image). Take the left pixel coordinate as $u_L$ and the right coordinate as $u_R$. The geometric relationship is shown on the right of \autoref{fig:stereoCamera}. According to the similarity relationship between $ \triangle P P_L P_R$ and $\triangle P O_L O_R$, there are:
+Now consider a 3D point $P$, projected into the left-eye and the right-eye, written as $P_L, P_R$. Due to the presence of the camera baseline, these two imaging positions are different. Ideally, since the left and right cameras are only shifted on the $x$ axis, the image of $P$ also differs only on the $x$ axis (corresponding to the $u$ axis of the image). Take the left pixel coordinate as $u_L$ and the right coordinate as $u_R$. The geometric relationship is shown on the right of \autoref{fig:stereoCamera}. According to the similarity relationship between $ \triangle P P_L P_R$ and $\triangle P O_L O_R$, there are:
 
 \begin{equation}
 \frac{{z - f}}{z} = \frac{{b - {u_L} + {u_R}}}{b}.
 \end{equation}
 
-Rearrangle it and we have:
+Rearrange it, and we have:
 \begin{equation}
 z = \frac{{fb}}{d}, \quad d \buildrel \Delta \over = {u_L} - {u_R},
 \end{equation}
-where $d$ is defined as the difference between the horizontal coordinates of the left and right figures, and is called \textbf{disparity} or \textbf{parallax}. Based on the parallax, we can estimate the distance between a pixel and the camera. Parallax is inversely proportional to distance: the larger the parallax is, the closer the distance is \footnote {Readers can simulate it with your own eyes.}. At the same time, since the parallax is at least one pixel, there is a theoretical maximum value for the binocular depth, which is determined by $fb$. We see that the in order to see the far away things, we need a larger stereo camera; conversely, small binocular devices can only measure very close distances. By analogy, when the human eye looks at a very distant object (such as a very distant airplane), it is usually impossible to accurately determine its distance.
+where $d$ is defined as the difference between the left and right figures' horizontal coordinates and is called disparity or parallax. Based on the parallax, we can estimate the distance between a pixel and the camera. Parallax is inversely proportional to distance: the larger the parallax is, the closer the distance is \footnote {Readers can simulate it with your own eyes.}. Simultaneously, since the parallax is at least one pixel, there is a theoretical maximum value for the binocular depth, which is determined by $fb$. To see the far-away things, we need a larger stereo camera; conversely, small binocular devices can only measure very close distances. By analogy, when the human eye looks at a very distant object (such as a very distant airplane), it is usually impossible to determine its distance accurately.
 
-Although the formula for calculating the depth from parallax is simple, the calculation of parallax $d$ itself is more difficult. We need to know exactly where a pixel of the left-eye image appears in the right-eye image (that is, the corresponding relationship). This also belongs to the kind of task that is ``easy for humans but difficult for computers''. When we want to calculate the depth of each pixel in an image, the calculation amount and accuracy will become a problem, and the parallax can be calculated only in the place where the image texture is rich. Due to the amount of calculation, binocular depth estimation still needs to use GPU or FPGA to make the distance calculation run in real time. This will be mentioned in lecture 13.
+Although the depth's formula is simple, the real calculation of $d$ itself is more complicated. We need to know precisely where a pixel of the left-eye image appears in the right-eye image (that is, the corresponding relationship). This also belongs to the kind of task that is ``easy for humans but difficult for computers''. When we want to calculate each pixel's depth in an image, the calculation amount and accuracy will become a problem, and the parallax can be calculated only in the place where the image texture is rich. Due to the calculation amount, binocular depth estimation still needs GPU or FPGA to make the distance calculation run in real-time. This will be mentioned in lecture \ref{cpt:12}.
 
 \subsection{RGB-D Cameras}
-Compared to the binocular camera's way of calculating depth, the RGB-D camera's approach is more ``active'': it can actively measure the depth of each pixel. The current RGB-D cameras can be divided into two categories according to their principle (see \autoref {fig:RGBDCamera} ~):
+Compared to the binocular camera's way of calculating depth, the RGB-D camera's approach is more ``active'': it can actively measure each pixel's depth. The current RGB-D cameras can be divided into two categories according to their principle (see \autoref {fig:RGBDCamera} ~):
 
 \begin{enumerate}
-\item The first kind of RGB-D sensor uses \textbf{Infrared Structured Light} (Structured Light) to measure pixel distance. Many of the old RGB-D sensors are belong to this kind, for example, the Kinect 1st generation, Project Tango 1st generation, Intel RealSense, etc.
-\item The second kind measures pixel distance using the \textbf{Time-of-flight (ToF)}. Examples are Kinect 2 and some existing ToF sensors.
+\item The first kind of RGB-D sensor uses structured infrared light to measure pixel distance. Many of the old RGB-D sensors are belong to this kind, for example, the Kinect 1st generation, Project Tango 1st generation, Intel RealSense, etc.
+\item The second kind measures pixel distance using the \textit{time-of-flight (ToF)}. Examples are Kinect 2 and some existing ToF sensors in cellphones.
 \end{enumerate}
 
 \begin{figure}[!ht]
@@ -229,12 +225,11 @@ Compared to the binocular camera's way of calculating depth, the RGB-D camera's 
     \label{fig:RGBDCamera}
 \end{figure}
 
-Regardless of the type, the RGB-D camera needs to emit a beam of light (usually infrared light) to the target object. In the principle of structured light, the camera calculates the distance between the object and itself based on the returned structured light pattern. In the ToF principle, the camera emits light pulse to the target, and then determines the distance according to the time of flight of the beam. The ToF principle is very similar to the laser sensor, except that the laser obtains the distance by scanning point by point (or line by line), and the ToF camera can obtain the pixel depth of the entire image, which is also the characteristics of the RGB-D camera. So, if you take apart an RGB-D camera, you will usually find that there will be at least one transmitter and one receiver in addition to the ordinary camera.
+Regardless of the type, the RGB-D camera needs to emit a light beam (usually infrared light) to the target object. In the structured light principle, the camera calculates the distance between the object and itself based on the returned structured light pattern. In the ToF principle, the camera emits a light pulse to the target and then determines the distance according to the beam's time of flight. The ToF principle is very similar to the laser sensor, except that the laser obtains the distance by scanning point by point (or line by line). The ToF camera can obtain the entire image's pixel depth, which is also the RGB-D camera's main advantage. So, if you take apart an RGB-D camera, you will usually find that there will be at least one transmitter and one receiver in addition to the ordinary camera.
 
-After measuring the depth, the RGB-D camera usually completes the pairing between the depth and color map pixels according to the position of each camera at the time of production, and outputs a pixel-to-pixel corresponding color image and depth image. We can read the color information and distance information at the same image position, calculate the 3D camera coordinates of the pixels, and generate a point cloud. RGB-D data can be processed either at the image level or the point cloud level. The second experiment of this lecture will demonstrate the point cloud construction of RGB-D cameras.
+After measuring the depth, the RGB-D camera usually completes the pairing between the depth and color map pixels according to each camera's position at the time of production. It outputs a pixel-to-pixel corresponding color image and depth image. We can read the color information and distance information at the same image position, calculate the 3D camera coordinates of the pixels, and generate a point cloud. RGB-D data can be processed either at the image level or the point cloud level. The second experiment of this lecture will demonstrate the point cloud construction of RGB-D cameras.
 
-The RGB-D camera can measure the distance of each pixel in real time. However, due to this measurement of transmitting and receiving, its range of use is limited. RGB-D cameras that use infrared light for depth measurement are susceptible to interference from infrared light emitted by daylight or other sensors, so they cannot be used outdoors. Without modulation, multiple RGB-D cameras can interfere with each other. For transmissive objects, the position of these points cannot be measured because they cannot receive reflected light. In addition, RGB-D cameras have some disadvantages in terms of cost and power consumption.
-
+The RGB-D camera can measure the distance of each pixel in real-time. However, due to this measurement of transmitting and receiving, its range of use is limited. RGB-D cameras that use infrared light for depth measurement are susceptible to interference from infrared light emitted by daylight or other sensors, so they cannot be used outdoors. Without modulation, multiple RGB-D cameras can interfere with each other. These points' positions cannot be measured for transparent objects because they cannot receive reflected light. Also, RGB-D cameras have some disadvantages in terms of cost and power consumption.
 \section{Images}
 Cameras and lens convert the information in the three-dimensional world into a photo composed of pixels, which is then stored in the computer as a data source for subsequent processing. In mathematics, images can be described by a matrix; in computers, they occupy a continuous disk or memory space, which can be represented by a two-dimensional array. In this way, the program does not have to distinguish whether they are dealing with a numerical matrix or a meaningful image.
 
@@ -275,14 +270,14 @@ The number and order of channels can be freely defined. In OpenCV color images, 
 The following is a demo program to understand how to access the image in OpenCV, and how to visit its pixels.
 
 \subsubsection{Install OpenCV}
-OpenCV \footnote {Official homepage: \url{http://opencv.org}. } provides a large number of open source image algorithms, and is a very widely used image processing algorithm library in computer vision. This book also uses OpenCV for basic image processing. Before using, readers must install it from library or from source code. Under Ubuntu, there are two options: \textbf{install from source code} or \textbf {only install binary library files}:
+OpenCV \footnote {Official homepage: \url{http://opencv.org}. } provides a large number of open source image algorithms, and is a very widely used image processing algorithm library in computer vision. This book also uses OpenCV for basic image processing. Before using, readers must install it from library or from source code. Under Ubuntu, there are two options: \textit{install from source code} or \textit {only install binary library files}:
 
 \begin{enumerate}
 \item Install from source means to download all OpenCV source code from the OpenCV website, compile and install on the machine for usage. The advantage is that you can freely choose which version to install, and the source code is accessible, but it takes some compilation time.
 \item Or, we can only installs the binary library file, which means it was pre-compiled by the Ubuntu community, so that there is no need to recompile it.
 \end{enumerate}
 
-Since we use a newer version of OpenCV, we must install it from the source code. First, you can adjust some compilation options to match the programming environment (for example, whether you need GPU acceleration, etc.); furthermore, from the source code installation we can use some additional functions. OpenCV currently maintains two major versions, divided into OpenCV 2.4 series and OpenCV 3 series \footnote{In 2020 we can also use version 4.0 or higher.}. This book uses the OpenCV \textbf {3} series.
+Since we use a newer version of OpenCV, we must install it from the source code. First, you can adjust some compilation options to match the programming environment (for example, whether you need GPU acceleration, etc.); furthermore, from the source code installation we can use some additional functions. OpenCV currently maintains two major versions, divided into OpenCV 2.4 series and OpenCV 3 series \footnote{In 2020 we can also use version 4.0 or higher.}. This book uses the OpenCV \textit {3} series.
 
 Because the OpenCV project is relatively large, it will not be placed under 3rdparty in this book. Readers can download it from ~ \url{http://opencv.org/downloads.html}~ and select the OpenCV for Linux version. You will get a compressed package like opencv-3.1.0.zip. Unzip it to any directory, we found that OpenCV is also a CMake project.
 
@@ -459,7 +454,7 @@ Please check the difference between two images by yourself.
 
 \section{Practice: 3D Vision}
 \subsection{Stereo Vision}
-We have introduced the imaging principle of stereo vision. Now we start from the left and right images, calculate the disparity map corresponding to the left eye, and then calculate the coordinates of each pixel in the camera coordinate system, which will form a \textbf{point cloud}. We have prepared left and right images for the readers, as shown in \autoref {fig:stereoExample}. The following code demonstrates the calculation of disparity map and point cloud:
+We have introduced the imaging principle of stereo vision. Now we start from the left and right images, calculate the disparity map corresponding to the left eye, and then calculate the coordinates of each pixel in the camera coordinate system, which will form a \textit{point cloud}. We have prepared left and right images for the readers, as shown in \autoref {fig:stereoExample}. The following code demonstrates the calculation of disparity map and point cloud:
 
 \begin{lstlisting}[language=C++,caption=slambook/ch5/stereoVision/stereoVision.cpp (Part)]
 int main(int argc, char **argv) {
