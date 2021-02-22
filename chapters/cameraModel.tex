@@ -16,6 +16,8 @@ In the previous two lectures, we introduced the problem that how to express and 
 We can see a lot of photos in real life. In a computer, a photo consists of millions of pixels, each of which records the information about color or brightness. We will see a bundle of light reflected or emitted by an object in the three-dimensional world pass through the camera's optical center and is projected onto the imaging plane of the camera. After the camera's light sensor receives the light, it produces a measurement and we get the pixels, which form the photo we see. Can this process be described by mathematical equations? This lecture will first discuss the camera model, explain how the projection relationship is described, and what is the internal parameters in this projection process. At the same time, we are also going to give a brief introduction to the stereo and RGB-D cameras. Then, we introduce the basic operations of 2D images in OpenCV. Finally, an experiment of point cloud stitching is demonstrated to show the meaning of intrinsics and extrinsics parameters.
 
 \newpage
+\includepdf{resources/other/ch5.pdf}
+\newpage
 \section{Pin-hole Camera Models}
 The process of projecting a 3D point (in meters) to a 2D image plane (in pixels) can be described by a geometric model. Actually there are several models to describe this, the simplest of which is called the \textbf{pinhole model}. We will start from this pin-hole projection. At the same time, due to the presence of the lens on the camera lens, \textbf{distortion} is generated during the projection. Therefore, we are going to use the pin-hold model plus with a distortion model to describe the entire projection process.
 
