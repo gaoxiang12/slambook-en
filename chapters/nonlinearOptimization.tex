@@ -4,9 +4,9 @@
 \begin{mdframed}  
 	\textbf{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item Understand how to form the batch state estimation problem into a least square and how to solve the least square problem.
+		\item Understand how to form the batch state estimation problem into a least-square and how to solve the least-square problem.
 		\item Understand the Gauss-Newton and Levenburg-Marquardt method and implement them.
-		\item Learn how to use the Google Ceres and g2o library to solve a least square problem.
+		\item Learn how to use the Google Ceres and g2o library to solve a least-square problem.
 	\end{enumerate}
 \end{mdframed} 
 
@@ -21,7 +21,7 @@ Solving the state estimation problem requires a certain degree of optimization b
 
 \newpage
 \section{State Estimation}
-\subsection{From Batch State Estimation to Least Square}
+\subsection{From Batch State Estimation to least-square}
 According to the previous sections, the SLAM process can be described by a discrete-time motion and observation equations like~\eqref{eq:slamproblem}:
 \begin{equation}
 \left\{ \begin{array}{l}
@@ -75,7 +75,7 @@ Please note that the denominator part of Bayes' rule has nothing to do with the 
 
 Intuitively speaking, likelihood refers to ``what observation data may be generated in the current pose''. Since we know the observation data, the maximum likelihood estimation can be understood as: ``under what state, it is most likely to produce the data currently observed''. 
 
-\subsection{Introduction to Least Squares}
+\subsection{Introduction to least-squares}
 Now we have formulated the state estimation problem into a MAP/MLE problem, and the next question is how to solve it. Under the assumption of Gaussian distribution, we can have a simpler form of the maximum likelihood problem. Looking back at the observation model, for a certain kind of observation, we have:
 \[
 {\mathbf{z}_{k,j}} = h\left( {{ \mathbf{y}_j},{ \mathbf{x}_k}} \right)+ \mathbf{v}_{k, j},
@@ -122,12 +122,12 @@ Then, minimizing the Mahalanobis distance between the estimated value and the me
 	\label{eq:least-square}
 	\min J (\mathbf{x},\mathbf{y}) = \sum\limits_k {\mathbf{e}_{u,k}^T \mathbf{R}_k^{-1} {\mathbf{e}_{u,k}}} + \sum\limits_k {\sum\limits_j {\mathbf{e}_{z,k,j}^T \mathbf{Q}_ {k,j}^{-1}{\mathbf{e}_{z,k,j}}}}.
 \end{equation}
-In this way, a \textit{least square problem} is obtained with the same solution as the MLE problem. Intuitively speaking, due to the presence of noise, when we substitute the estimated trajectory and map into the SLAM motion and observation models, they will not be perfectly fit. What shall we do at this time? We perform \textit{fine-tuning} on the state's estimated value so that the overall error is reduced. Of course, finally, we will reach a (local) \textit{minimum value}. This is a typical nonlinear optimization process.
+In this way, a \textit{least-square problem} is obtained with the same solution as the MLE problem. Intuitively speaking, due to the presence of noise, when we substitute the estimated trajectory and map into the SLAM motion and observation models, they will not be perfectly fit. What shall we do at this time? We perform \textit{fine-tuning} on the state's estimated value so that the overall error is reduced. Of course, finally, we will reach a (local) \textit{minimum value}. This is a typical nonlinear optimization process.
 
 Observing the formula~\eqref{eq:least-square} carefully, we find that the least-squares problem in SLAM has some specific structures:
 
 \begin{itemize}
-	\item First, the objective function of the whole problem consists of many (weighted) error quadratic forms. Although the overall state variable's dimensionality is very high, each error term is simple and is only related to one or two state variables. For example, the motion error is only related to $\mathbf{x}_{k-1}, \mathbf{x}_k$, and the observation error is only related to $\mathbf{x}_k, \mathbf{y}_j$. This relationship will give a \textit{sparse} least square problem, which we will investigate further in the backend chapter.
+	\item First, the objective function of the whole problem consists of many (weighted) error quadratic forms. Although the overall state variable's dimensionality is very high, each error term is simple and is only related to one or two state variables. For example, the motion error is only related to $\mathbf{x}_{k-1}, \mathbf{x}_k$, and the observation error is only related to $\mathbf{x}_k, \mathbf{y}_j$. This relationship will give a \textit{sparse} least-square problem, which we will investigate further in the backend chapter.
 	\item Secondly, if you use Lie algebra to represent the increment, the problem is the least-squares problem of \textit{unconstrained}. However, if the rotation matrix/transformation matrix is ​​used to describe the pose, the constraint of the rotation matrix itself will be introduced, that is, ``$\mathrm{s.t.}\ \mathbf{R}^T \mathbf{R} = \mathbf{I}$ and $\det (\mathbf{R})=1$ '' need to be added to the problem. Additional constraints can make optimization more difficult.
 	\item Finally, we used a quadratic metric error, exactly the $\mathcal{L}_2-$norm. The information matrix is used as the weights of each element. For example, if an observation is very accurate, the covariance matrix will be ``small'' and the information matrix will be ``large'', so this error term will have a higher weight than the others in the whole problem. We will see some drawbacks of the $\mathcal{L}_2$ error later.
 \end{itemize}
@@ -163,7 +163,7 @@ According to the previous statements, the error variable can be constructed as:
 \begin{equation}
     {e_{u,k}} = {x_k}-{x_{k-1}}-{u_k}, \quad {e_{z,k}} = {z_k}-{x_k},
 \end{equation}
-Then the objective function of the least squares is:
+Then the objective function of the least-squares is:
 \begin{equation}
     \min \sum\limits_{k = 1}^3 {e_{u,k}^T Q_k^{-1}{e_{u,k}}} + \sum\limits_{k = 1 }^3 {e_{z,k}^T{R^{-1}_k}{e_{z,k}}}.
 \end{equation}
@@ -194,9 +194,9 @@ Later we will see that this problem has a unique solution:
 \end{equation}
 since $(\mathbf{H}^T \boldsymbol{\Sigma}^{-1} \mathbf{H})^{-1}$ is invertible.
 
-\section{Nonlinear Least Square Problem}
+\section{Nonlinear least-square Problem}
 \label{sec:6.2}
-First, consider a simple least square problem:
+First, consider a simple least-square problem:
 \begin{equation}
     \mathop {\min }\limits_{\mathbf{x}} F(\mathbf{x}) = \frac{1}{2}{\left\| {f\left( \mathbf{x} \right) } \right\|^2_2},
 \end{equation}
@@ -205,7 +205,7 @@ where the state variable is $\mathbf{x} \in \mathbb{R}^n$, and $f$ is any scalar
     \frac{ \mathrm{d} F}{ \mathrm{d} \mathbf{x}} = \mathbf{0}.
 \end{equation}
 
-We reach the minimum, maximum, or saddle points by solving this equation (or, intuitively, by letting the derivative be zero). But is this equation easy to solve? Well, it depends on the form of the derivative function of $f$. If $f$ is just a simple linear function, then the problem is only a simple linear least square problem. But, some derivative functions may be complicated in form, making the equation difficult to solve. Solving this equation requires us to know the \textit{global property} of the objective function, which is usually not possible. For the least square problem that is inconvenient to solve directly, we can use the \textit{iterated methods} to start from an initial value and continuously update the current estimations to reduce the objective function. The specific steps can be listed as follows:
+We reach the minimum, maximum, or saddle points by solving this equation (or, intuitively, by letting the derivative be zero). But is this equation easy to solve? Well, it depends on the form of the derivative function of $f$. If $f$ is just a simple linear function, then the problem is only a simple linear least-square problem. But, some derivative functions may be complicated in form, making the equation difficult to solve. Solving this equation requires us to know the \textit{global property} of the objective function, which is usually not possible. For the least-square problem that is inconvenient to solve directly, we can use the \textit{iterated methods} to start from an initial value and continuously update the current estimations to reduce the objective function. The specific steps can be listed as follows:
 \begin{mdframed}  
     \begin{enumerate}
         \item Give an initial value $\mathbf{x}_0$.
@@ -246,7 +246,7 @@ The right side only contains the zero-order, first-order and quadratic terms of 
 
 We can also solve this linear equation and get the increment. This method is also called \textit{Newton's method}.
 
-We have seen that both the first-order and second-order methods are very intuitive, as long as we can calculate the Taylor expansion of $f$ and find the increments. We say, hey, the function looks like a linear or quadratic one. We can use the approximated function's minimum value to guess the minimum value of the original function. As long as the original objective function really looks like a first-order or quadratic function locally, this type of algorithm is always valid (this is also the most cases in reality). However, these two methods also have their drawbacks. The steepest descent method is too greedy and easy to lead a zigzag way and increases the number of iterations. However, Newton's method needs to calculate the $\mathbf{H}$ matrix of the objective function, which is very time-expensive when the problem is large. We usually tend to avoid the calculation of $\mathbf{H}$. For general problems, some quasi-Newton methods can get better results. For least square problems, there are several more practical methods: the \textit{Gauss-Newton's method} and the (Levernburg-Marquardt's method).
+We have seen that both the first-order and second-order methods are very intuitive, as long as we can calculate the Taylor expansion of $f$ and find the increments. We say, hey, the function looks like a linear or quadratic one. We can use the approximated function's minimum value to guess the minimum value of the original function. As long as the original objective function really looks like a first-order or quadratic function locally, this type of algorithm is always valid (this is also the most cases in reality). However, these two methods also have their drawbacks. The steepest descent method is too greedy and easy to lead a zigzag way and increases the number of iterations. However, Newton's method needs to calculate the $\mathbf{H}$ matrix of the objective function, which is very time-expensive when the problem is large. We usually tend to avoid the calculation of $\mathbf{H}$. For general problems, some quasi-Newton methods can get better results. For least-square problems, there are several more practical methods: the \textit{Gauss-Newton's method} and the (Levernburg-Marquardt's method).
 
 \subsection{The Gauss-Newton Method}
 The Gauss-Newton method is one of the simplest methods in optimization algorithms. Its idea is to carry out a first-order Taylor expansion of $f(\mathbf{x})$. Please note that this is not the objective function $F(\mathbf{x})$ but the lower case $f(\mathbf{x})$, otherwise it is the same as Newton's method.
@@ -255,7 +255,7 @@ The Gauss-Newton method is one of the simplest methods in optimization algorithm
     f\left( {\mathbf{x} + \Delta \mathbf{x}} \right) \approx f\left( \mathbf{x} \right) + \mathbf{J} \left( \mathbf{x} \right)^T \Delta \mathbf{x}.
 \end{equation}
 
-Here $\mathbf{J}(\mathbf{x})$ is the derivative of $f(\mathbf{x})$ with respect to $\mathbf{x}$, which is a column vector of $n \times 1$. According to the previous framework, the current goal is to find the increment $\Delta \mathbf{x}$ such that $\left\| {f\left( \mathbf{x} + \Delta \mathbf{x} \right)} \right \|^2$ reached the minimum. In order to find $\Delta \mathbf{x}$, we need to solve a linear least square problem \footnote{We omit the information matrix to simplify the derivation here.}:
+Here $\mathbf{J}(\mathbf{x})$ is the derivative of $f(\mathbf{x})$ with respect to $\mathbf{x}$, which is a column vector of $n \times 1$. According to the previous framework, the current goal is to find the increment $\Delta \mathbf{x}$ such that $\left\| {f\left( \mathbf{x} + \Delta \mathbf{x} \right)} \right \|^2$ reached the minimum. In order to find $\Delta \mathbf{x}$, we need to solve a linear least-square problem \footnote{We omit the information matrix to simplify the derivation here.}:
 \begin{equation}
     \Delta \mathbf{x}^* = \arg \mathop {\min }\limits_{\Delta \mathbf{x}} \frac{1}{2}{\left\| {f\left( \mathbf{x} \right) + \mathbf{J} \left( \mathbf{x} \right)^T \Delta \mathbf{x} } \right\|^2}.
 \end{equation}
@@ -359,17 +359,18 @@ Fortunately, the visual SLAM matrix has a specific sparse form, which can be sol
 
 \section{Practice: Curve Fitting}
 \subsection{Curve Fitting with Gauss-Newton}
-Next we use a simple example to illustrate how to solve the least squares problem. We will demonstrate how to write Gauss-Newton method by hand, and then introduce how to use the optimization library to solve this problem. For the same problem, these implementations will get the same result because their core algorithms are the same.
+Next, we use a simple example to demonstrate how to solve the least-square problem. We will demonstrate how to write the Gauss-Newton method by hand and then introduce how to use the optimization library to solve this problem. For the same problem, these implementations will get the same result because their core algorithms are the same.
 
 Consider a curve that satisfies the following equation:
 \[
 y = \exp( ax^2 + bx + c ) + w,
 \]
-where $a, b, c$ are the parameters of the curve, and $w$ is Gaussian noise, satisfying $w \sim (0, \sigma^2)$. We deliberately chose such a nonlinear model so that the problem is not too simple. Now, suppose we have $N$ observation data points about $x and y$, and want to find the parameters of the curve based on these data points. Then, the following least-squares problem can be solved to estimate the curve parameters:
+where $a, b, c$ are the parameters of the curve, and $w$ is the Gaussian noise, satisfying $w \sim (0, \sigma^2)$. We deliberately chose such a nonlinear model so that the problem is not too easy. Now, suppose we have $N$ observation data points about $x and y$ and want to find the parameters of the curve based on these data points. Then, we solve the following least-square problem to estimate the curve parameters:
 \begin{equation}
     \min \limits_{a,b,c} \frac{1}{2}\sum\limits_{i = 1}^N {{{\left\| {{y_i} - \exp \left( {ax_i^2 + bx_i + c} \right)} \right\|}^2}} .
 \end{equation}
-Please note that in this question, the variables to be estimated are $a, b, c$, not $x$. In our program, the true value of $x,y$ is generated according to the model, and then Gaussian noise is added to the true value. Subsequently, the Gauss-Newton method was used to fit a parametric model from the noisy data. Define the error as:
+
+Please note that the estimated variables are $a, b, c$, not $x$. In our program, the true value of $x,y$ is generated according to the model, and then the Gaussian noise is added to the true value. Subsequently, the Gauss-Newton method was used to fit a parametric model from the noisy data. Define the error as:
 \begin{equation}
     e_i = y_i - \exp \left( {ax_i^2 + bx_i + c} \right),
 \end{equation}
@@ -381,7 +382,7 @@ Then we can find the derivative of each error term with respect to the state var
         \frac{{\partial {e_i}}}{{\partial c}} &=  - \exp \left( {ax_i^2 + b{x_i} + c} \right)
     \end{aligned}
 \end{equation}
-So $\mathbf{J}_i = \left[\frac{{\partial {e_i}}}{{\partial a}},\frac{{\partial {e_i}}}{{\partial b}},\frac{{\partial {e_i}}}{{\partial c}} \right]^T$, and the normal equation of Gauss-Newton method is:
+So $\mathbf{J}_i = \left[\frac{{\partial {e_i}}}{{\partial a}},\frac{{\partial {e_i}}}{{\partial b}},\frac{{\partial {e_i}}}{{\partial c}} \right]^T$, and the normal equation of the Gauss-Newton method is:
 \begin{equation}
     \left(\sum\limits_{i = 1}^{100} {\mathbf{J}_i{(\sigma^2)^{ - 1}}{\mathbf{J}_i}}^T \right) \Delta \mathbf{x}_k = \sum\limits_{i = 1}^{100} { - {\mathbf{J}_i}{(\sigma^2)^{ - 1}}{e_i}},
 \end{equation}
@@ -466,7 +467,7 @@ int main(int argc, char **argv) {
 \end{lstlisting}
 In this example, we demonstrate how to optimize a simple fitting problem iteratively. Through our handwritten code, it is easy to see the entire optimization process. The program outputs the objective function value and updates the amount of each iteration, as follows:
 
-\begin{lstlisting}[language=sh,caption=terminal output:]
+\begin{lstlisting}[language=sh,caption=Terminal output:]
 /home/xiang/Code/slambook2/ch6/cmake-build-debug/gaussNewton
 total cost: 3.19575e+06, 		update: 0.0455771  0.078164 -0.985329		estimated params: 2.04558,-0.921836,4.01467
 total cost: 376785, 		update:  0.065762  0.224972 -0.962521		estimated params: 2.11134,-0.696864,3.05215
@@ -486,15 +487,15 @@ It is easy to see that the objective function of the whole problem approaches co
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.8\textwidth]{optimization/ceresFitting.pdf}
-    \caption{Estimated curve after fitting when the noise $\sigma=1$. }
+    \caption{Estimated curve when the noise $\sigma=1$. }
     \label{fig:ceres-fitting}
 \end{figure}
 
 \subsection{Curve Fitting with Google Ceres}
-In the next two sections we introduce two C++ optimization libraries: the Ceres library \textsuperscript{\cite{Ceres}} from Google and the g2o library \textsuperscript{\cite{Kummerle2011}} based on graph optimization. Since in g2o, we still need some knowledge about \textit{graph} optimization, we first go through the Ceres here, then introduce some graph optimization theories, and finally talk about g2o. Since the optimization algorithms will still appear in the later "visual odometry" and "backend" chapters, please make sure you understand the meaning of the optimization algorithm and the content of the program.
+In the next two sections we introduce two C++ optimization libraries: the Ceres library \cite{Ceres} from Google and the g2o library \cite{Kummerle2011} based on graph optimization. Since in g2o, we still need some knowledge about graph optimizations, we first go through the Ceres here, then introduce some graph optimization theories, and finally talk about g2o. Since the optimization algorithms will still appear in the later chapters, please make sure you understand the meaning of the optimization algorithm and the content of the program.
 
 \subsubsection{Introduction to Ceres}
-Google Ceres is a widely used optimization library for least-squares problems. In Ceres, as users, we only need to define the optimization problem to be solved according to certain steps and then hand it over to the solver for calculation. The most general form of the least-squares problem solved by Ceres is as follows (kernel function least squares with boundary):
+Google Ceres is a widely used optimization library for least-square problems. In Ceres, as users, we only need to define the optimization problem to be solved according to specific steps and then hand it over to the solver for calculation. The most general form of the least-square problem solved by Ceres is as follows (kernel function least-squares with boundary):
 \begin{equation}
     \begin{array}{ll}
         \min \limits_x \quad & \frac{1}{2}\sum\limits_i {{\rho _i}\left( {{{\left\| {{f_i}\left( {{x_{{i_1}}}, \cdots {x_{{i_n}}}} \right)} \right\|}^2}} \right)} \\
@@ -502,26 +503,26 @@ Google Ceres is a widely used optimization library for least-squares problems. I
     \end{array}
 \end{equation}
 
-In this question, $x_1, \cdots, x_n$ are optimized variables, also called \textit{parameter blocks} (Parameter blocks), $f_i$ is called \textit{cost function} (Cost function), also called residual Residual blocks can also be understood as error terms in SLAM. $l_j$ and $u_j$ are the upper and lower limits of the $j$th optimization variable. In the simplest case, take $l_j = -\infty, u_j=\infty$ (do not limit the boundary of the optimization variable). At this time, the objective function is composed of many square terms after a \textit{kernel function}$\rho(\cdot)$ and then the sum of the \footnote{kernel function is discussed in Chapter 9. }. Similarly, you can take $\rho$ as the identity function. The objective function is the sum of the squares of many terms, and we get the unconstrained least squares problem, which is consistent with the previously introduced theory.
+In this question, $x_1, \cdots, x_n$ are optimized variables, also called parameter blocks, $f_i$ is called cost function, or residual blocks. $l_j$ and $u_j$ are the upper and lower limits of the $j$-th optimization variable. In the simplest case, we can set $l_j = -\infty, u_j=\infty$ (do not limit the boundary of the optimization variable). At this time, the objective function is composed of many square terms after the kernel function $\rho(\cdot)$ and then the sum \footnote{Kernel function is discussed in chapter \ref{cpt:backend1}. }. Similarly, you can take $\rho$ as the identity function. The objective function is the sum of the squares of many terms.
 
 In order to tell Ceres the definition of the problem, we need to do the following things:
 \begin{enumerate}
-    \item defines each parameter block. The parameter block is usually a trivial vector, but it can also be defined as a special structure such as quaternion and Lie algebra in SLAM. If it is a vector, we need to allocate a double array for each parameter block to store the variable's value.
-    \item Then, define the calculation method of the residual block. The residual block is usually associated with several parameter blocks, performs some custom calculations on them, and then returns the residual value. After Ceres sums the squares of them, it is used as the value of the objective function.
-    \item The residual block often also needs to define the Jacobian calculation method. In Ceres, you can use the "automatic derivative" function it provides, or you can manually specify the Jacobian calculation process. If you want to use automatic derivation, then the residual block needs to be written in a specific way: the residual calculation should be a bracketed operator with a template. We will illustrate this point through an example.
-    \item Finally, add all the parameter blocks and residual blocks to the Problem object defined by Ceres and call the Solve function to solve it. Before solving, we can pass some configuration information, such as the number of iterations, termination conditions, etc., or use the default configuration.
+    \item Defines each parameter block. The parameter block is usually a trivial vector, but it can also be defined as a particular structure such as quaternion and Lie algebra in SLAM. If it is a vector, we need to allocate a double array for each parameter block to store the variable's value.
+    \item Then, define the calculation method of the residual block. The residual block is usually associated with several parameter blocks, performs some custom calculations on them, and then returns the residual value. After that, Ceres will sum the squares residuals, which is used as the overall objective function.
+    \item In the residual blocks, we also need to define the Jacobian calculation method. In Ceres, we can use the ``automatic derivative'' function or manually specify the Jacobian calculation process. If you want to use automatic derivation, then the residual block must be written in a specific way: the residual calculation should be implemented as a bracketed operator with a template. We will illustrate this point through an example.
+    \item Finally, add all the parameter blocks and residual blocks to Ceres's Problem object and call the Solve function to solve it. Before solving, we can pass some configuration information, such as the number of iterations, termination conditions, etc., or use the default configuration.
 \end{enumerate}
-Next, let's actually operate Ceres to solve the curve fitting problem and understand the optimization process.
+Next, let's actually operate Ceres to solve the curve-fitting problem and understand the optimization process.
 
 \subsubsection{Install Ceres}
 In order to use Ceres, we first need to compile and install it. Ceres' GitHub address is \url{https://github.com/ceres-solver/ceres-solver}, and you can also directly use Ceres in our 3rdparty directory of the code repository so that you will use the same version as mine.
 
-Like the libraries encountered before, Ceres is also a CMake project. Before compiling it, we need to install the dependencies first. You can install them with apt-get in Ubuntu, mainly some logging and testing tools used by Google itself:
-\begin{lstlisting}[language=sh,caption=terminal input: ]
+Like the libraries encountered before, Ceres is also a CMake project. Before compiling it, we need to install the dependencies first. You can install them with apt-get in Ubuntu, mainly some logging and testing tools used by Google:
+\begin{lstlisting}[language=sh,caption=Terminal input: ]
 sudo apt-get install liblapack-dev libsuitesparse-dev libcxsparse3 libgflags-dev libgoogle-glog-dev libgtest-dev 
 \end{lstlisting}
 
-Then, enter the Ceres library directory, use cmake to compile and install it. We have done this process many times, so I won't repeat it here. After the installation is complete, find the Ceres header file under /usr/local/include/ceres, and find the library file named libceres.a under /usr/local/lib/. With these files, we are able to include the Ceres headers and do the optimization calculations.
+Then, enter the Ceres library directory, use cmake to compile and install it. We have done this process many times, so I won't repeat it here. After the installation is complete, we can find the Ceres header file under /usr/local/include/ceres, and find the library file named libceres.a under /usr/local/lib/. With these files, we are able to include the Ceres headers and do the optimization calculations.
 
 \subsubsection{Use Ceres for Curve Fitting}
 The following code demonstrates how to use Ceres to solve the same problem.
@@ -607,14 +608,17 @@ int main(int argc, char **argv) {
 The code is quite self-explained because we write a lot of comments here. As you can see, we used OpenCV's noise generator to generate 100 data with Gaussian noise and then used Ceres for fitting. The Ceres usage demonstrated here has the following steps:
 
 \begin{enumerate}
-    \item Defines the class of the residual block. The method is to write a class (or structure), and define the () operator with template parameters in the class so that the class becomes a \textit{Functor} \footnote{A C++ term, such a class can be called as if it were a function because the operator () is overloaded. }. This way of definition allows Ceres to call the <double>() method for an instance of this class like a function. In fact, Ceres will pass the Jacobian matrix as a type parameter to this function to realize the function of automatic derivation (auto-diff, which is one of the best feature of Ceres).
-    \item The double array abc[3] in the program is the parameter block, and for the residual block, we construct a CURVE\_FITTING\_COST object for each data and then call AddResidualBlock to add the error term to the objective function. Since optimization requires gradients, we have several options: (1) Use Ceres's Auto Diff feature; (2) Use Numeric Diff (Numeric Diff) \footnote{Automatic derivation is also implemented with numerical derivatives, but since it is a template operation, it runs faster. }; (3) Derive the analytical derivative form by yourself and provide it to Ceres. Because automatic derivation is the most convenient in coding, we use automatic derivation here.
+    \item Defines the class of the residual block. The method is to write a class (or structure) and define the () operator with template parameters in the class to become a functor. \footnote{The functor is a C++ term. Such a class can be called as if it were a function because the operator () is overloaded.}  This definition allows Ceres to call the <double>() method for an instance of this class like a function. In fact, Ceres will pass the Jacobian matrix as a type parameter to this function to realize automatic derivation (auto-diff, which is one of the best features of Ceres).
+    
+    \item The double array abc[3] in the program is the parameter block. We construct a CURVE\_FITTING\_COST object for each data for the residual block and then call AddResidualBlock to add the error term to the objective function. Since the optimization requires gradients, we have several options: (1) Use Ceres's auto diff feature. (2) Use numeric diff \footnote{Automatic derivation is also implemented with numerical derivatives, but since it is a template operation, it runs faster. }; (3) Derive the analytical derivative form by yourself and provide it to Ceres. Because automatic derivation is the most convenient in coding, we use automatic derivation here.
+    
     \item Automatic derivation requires specifying the dimensions of the error term and optimization variable. The error here is a scalar with a dimension of 1; the optimized three quantities are $a, b, c$ with 3. Therefore, the variable dimensions are set to 1, 3 in the template parameter of the auto-derivation class AutoDiffCostFunction.
-    \item After setting the problem, call the Solve function to solve it. You can configure (very detailed) optimization options in Ceres. For example, you can choose to use Line Search or Trust Region, the number of iterations, step size, and so on. Readers can check the definition of Options to see what optimization methods are available. Of course, the default configuration can be used for a wide range of problems.
+    
+    \item After setting the problem, call the Solve function to solve it. You can configure (very detailed) optimization options in Ceres. For example, you can choose to use line search or trust region, the number of iterations, step size, and so on. Readers can check the Ceres options to see what optimization methods are available. Of course, the default configuration can be used for a wide range of problems.
 \end{enumerate}
 
-Finally let's see the experimental results by calling build/ceresCurveFitting: 
-\begin{lstlisting}[caption=terminal output: ]
+Finally, let's see the experimental results by calling build/ceresCurveFitting: 
+\begin{lstlisting}[caption=erminal output: ]
     iter      cost      cost_change  |gradient|   |step|    tr_ratio  tr_radius  ls_iter  iter_time  total_time
     0  1.597873e+06    0.00e+00    3.52e+06   0.00e+00   0.00e+00  1.00e+04        0    2.10e-05    7.92e-05
     1  1.884440e+05    1.41e+06    4.86e+05   9.88e-01   8.82e-01  1.81e+04        1    5.60e-05    1.05e-03
@@ -631,17 +635,17 @@ Finally let's see the experimental results by calling build/ceresCurveFitting:
 
 The final optimized value is basically the same as our experimental result in the previous section, but Ceres is relatively slow in running speed. Ceres used about 1.3 milliseconds on my machine, which is about six times slower than the handwritten Gauss-Newton method.
 
-I hope readers have a general understanding of how to use Ceres through this simple example. Its advantage is that it provides an automatic derivation tool, making it unnecessary to calculate the cumbersome Jacobian matrix. Ceres's automatic derivation is realized through template elements, and the automatic derivation can be completed at compile-time, but it is still a numerical derivative. Most of the time in this book, I will still introduce the calculation of the Jacobian matrix because it is more helpful to understand the problem, and there are fewer problems in the optimization. In addition, Ceres' optimization process configuration is also very rich, making it suitable for a wide range of least squares optimization problems, including various problems other than SLAM.
+I hope readers have a general understanding of how to use Ceres through this simple example. Its advantage is that it provides an automatic derivation tool, making it unnecessary to calculate the troublesome Jacobian matrix. Ceres's automatic derivation is realized through template elements, and the automatic derivation can be completed at compile-time, but it is still a numerical derivative. Most of the time in this book, I will still introduce the Jacobian matrix calculation because it helps understand the problem. Besides, Ceres' optimization process configuration is also very rich, making it suitable for a wide range of least-squares optimization problems, including various problems other than SLAM.
 
-\subsection{Curve Fitting with g2o}
-The second practice part of this lecture is about another optimization library (widely used mainly in the SLAM field): g2o (General Graphic Optimization, G$^2$O). It is a library based on \textit{graphic optimization}. Graph optimization is a theory that combines nonlinear optimization with graph theory, so before using it, let's spend a little space to introduce graph optimization theory.
+\subsection{Curve Fitting with G2o}
+The second practice part of this lecture is about another optimization library (widely used mainly in the SLAM field): g2o (general graphic optimization, g$^2$o). It is a library based on \textit{graphic optimization}. Graph optimization is a theory that combines nonlinear optimization with graph theory, so before using it, let's spend a little space to introduce graph optimization theory.
 
 \subsubsection{Introduction to Graph Optimization Theory}
-We have introduced the solution of nonlinear least squares. The least square problem in SLAM is normally composed of the sum of many small error terms. However, if we only treat them as variables and residuals, it would be hard to tell the \textit{relationship} between them. For example, how many error terms are related to a certain optimization variable $x_j$? If we adjust some variables, does the overall cost function changes or keep the same? Furthermore, we hope to visually see the what optimization problem \textit{looks like}. Therefore, the graph optimization is involved.
+We have introduced the solution of nonlinear least-squares. The least-square problem in SLAM is normally composed of the sum of many small error terms. However, if we only treat them as variables and residuals, it would be hard to tell the \textit{relationship} between them. For example, how many error terms are related to a certain optimization variable $x_j$? If we adjust some variables, does the overall cost function change or keep the same? Furthermore, we hope to visually see what optimization problem \textit{looks like}. Therefore, graph optimization is involved.
 
-Graph optimization is a way to express the optimization problem as \textit{Graph}.  A graph consists of a number of \textit{vertices} and \textit{edges} connecting these vertices. A  \textit{vertex} is used to represent an \textit{optimization variable}, and a \textit{edge} is used to represent an \textit{error term}. Therefore, for any of the above-mentioned nonlinear least squares problem, we can construct a corresponding \textit{graph}. We can simply call it \textit{graph}, or use the definition in the probability graph, call it \textit{Bayesian graph} or \textit{factor graph}. Sometimes they are also called as \textit{hyper graph} because an edge can be connect to more than two variables, e.g., where an error term is related to more than two variables. 
+Graph optimization is a way to express the optimization problem as a graph.  A graph consists of a number of vertices and edges connecting these vertices. A  vertex is used to represent an optimization variable, and an edge is used to represent an error term. Therefore, for any of the above-mentioned nonlinear least-squares problems, we can construct a corresponding graph. We can simply call it a graph or use the probability graph definition, call it a Bayesian graph or a factor graph. Sometimes it is also called a hypergraph because an edge can be connected to more than two variables, e.g., where an error term is related to more than two variables. 
 
-\autoref{fig:graph-optimization}~ is a simple graph optimization example. We use triangles to represent the camera poses, and circles to represent landmark points, which constitute the vertices of the graph optimization; at the same time, the solid line represents the camera's motion model, and the dashed line represents the observation model, which form the edges of the graph optimization. At this point, although the mathematical form of the entire problem is still like \eqref{eq:least-square}, now we can intuitively see the \textit{structure} of the problem. If you want, you can also make improvements like \textit{remove isolated vertices} or \textit{preferentially optimize vertices with more edges (or in graph theory terms, greater degrees)}. But the most basic graph optimization is just to use a graph model to express a nonlinear least-squares optimization problem. And we can use some properties of the graph model to do better optimization.
+\autoref{fig:graph-optimization}~ is a simple graph optimization example. We use triangles to represent the camera poses and circles to represent landmark points, which constitute the vertices. At the same time, the solid line represents the camera's motion model, and the dashed line represents the observation model, which forms the edges of the graph optimization. At this point, although the mathematical form of the entire problem is still like \eqref{eq:least-square}, now we can intuitively see the structure of the problem. If you want, you can also make improvements like removing isolated vertices or preferentially optimizing vertices with more edges (or, in graph theory terms, greater degrees). But the most basic idea is just to use a graph model to express a nonlinear least-squares optimization problem. And we can use some properties of the graph model to do better optimization.
 
 \begin{figure}[!ht]
     \centering
@@ -650,20 +654,20 @@ Graph optimization is a way to express the optimization problem as \textit{Graph
     \label{fig:graph-optimization}
 \end{figure}
 
-The g2o is a \textit{general} graph optimization library. "General" means that you can solve any least squares problem that can be expressed as graph optimization, obviously including the curve fitting problem discussed above. Let us demonstrate how to do that.
+The g2o is a \textit{general} graph optimization library. ``General'' means that you can solve any least-squares problem that can be expressed as graph optimization, obviously including the curve-fitting problem discussed above. Let us demonstrate how to do that.
 
 \subsubsection{Compilation and Installation of G2o}
-Just like the Ceres section, we should first compile and install the g2o library. Readers should have experienced this process many times, and they are basically the same. Regarding g2o, readers can download it from GitHub: \url{https://github.com/RainerKuemmerle/g2o}, or obtain it from the third-party code library provided in this book. Since g2o is still being updated, I suggest you use g2o under 3rdparty to ensure that the version is the same as mine.
+Just like the Ceres section, we should first compile and install the g2o library. Readers should have experienced this process many times, and they are basically the same. Regarding g2o, readers can download it from GitHub: \url{https://github.com/RainerKuemmerle/g2o}, or obtain it from the third-party code library provided in this book. Since g2o is still being updated, I suggest using g2o under 3rdparty to ensure that the version is the same as mine.
 
-g2o is also a cmake project. Let's install its dependencies first (some dependencies overlap with Ceres):
-\begin{lstlisting}[language=sh,caption=terminal input:]
+G2o is also a cmake project. Let's install its dependencies first (some dependencies overlap with Ceres):
+\begin{lstlisting}[language=sh,caption=Terminal input:]
     sudo apt-get install qt5-qmake qt5-default libqglviewer-dev-qt5 libsuitesparse-dev libcxsparse3 libcholmod3
 \end{lstlisting}
 
-Then, compile and install g2o according to the cmake method. The description of the process is omitted here. After the installation is complete, the header files of g2o will be located under /usr/local/g2o, and the library files will be located under /usr/local/lib/. Now, we reconsider the curve fitting experiment in the Ceres routine, and do that experiment again in g2o.
+Then, compile and install g2o according to the cmake method. The description of the process is omitted here. After the installation is complete, the header files of g2o will be located under /usr/local/g2o, and the library files will be located under /usr/local/lib/. We reconsider the curve fitting experiment in the Ceres routine and do that experiment again in g2o.
 
-\subsubsection{Curve Fitting with g2o}
-In order to use g2o, the curve fitting problem must first be constructed into graph optimization. In this process, just remember that \textit{nodes are the optimization variables, and edges are the error terms}. The graph optimization problem of curve fitting can be drawn in the form of \autoref{fig:graph-fitting}~.
+\subsubsection{Curve Fitting with G2o}
+In order to use g2o, the curve fitting problem must first be constructed into graph optimization. In this process, just remember that nodes are the optimization variables, and edges are the error terms. The graph optimization problem of curve fitting can be drawn in the form of \autoref{fig:graph-fitting}~.
 
 \begin{figure}[!ht]
     \centering
@@ -672,17 +676,17 @@ In order to use g2o, the curve fitting problem must first be constructed into gr
     \label{fig:graph-fitting}
 \end{figure}
 
-The entire problem has only one vertex in the curve fitting problem: the parameters $a, b, c$ of the curve model; Each noisy data point constitutes an error term, which is the edge of the graph optimization. But the edges here are not the same as we usually think. They are \textit{Unary Edge} (Unary Edge), that is, \textit{connect only one vertex}-because the entire graph has only one vertex. So in \autoref{fig:graph-fitting}~, we can only draw it as if it is connected to itself. In fact, an edge in graph optimization can connect one, two or more vertices, which mainly reflects how many optimization variables each error is related to. In a slightly mysterious way, we call it \textit{Hyper Edge}, and the whole graph is called \textit{Hyper Graph} \footnote{I personally would better call it just as a graph to avoid being mysterious. }.
+The entire problem has only one vertex: the parameters $a, b, c$ of the curve model. Each noisy data point constitutes an error term, which is the edge of the graph optimization. But the edges here are not the same as we usually think. They are unary edges, which means that the edges connect only one vertex. Because the entire graph has only one vertex. So in \autoref{fig:graph-fitting}~, we can only draw it as if it is connected to itself. An edge in graph optimization can connect one, two, or more vertices, reflecting how many optimization variables each error is related to. In a slightly mysterious way, we call it a hyperedge. The whole graph is called hypergraph \footnote{I personally would better call it just as a graph to avoid being mysterious. }.
 
 After clarifying the graph model, the next step is to build the model in g2o for optimization. As a user of g2o, what we need to do mainly includes the following steps:
 \begin{enumerate}
     \item Define the type of vertices and edges.
     \item Build the graph.
-    \item Select optimization algorithm.
+    \item Select the optimization algorithm.
     \item Call g2o to optimize and get the result.
 \end{enumerate}
 
-This part is very similar to Ceres, of course there will be some differences in coding. Let's demonstrate the program.
+This part is very similar to Ceres. Of course there will be some differences in coding. Let's demonstrate the program.
 \begin{lstlisting}[language=c++,caption=slambook/ch6/g2oCurveFitting.cpp]
 #include <iostream>
 #include <g2o/core/g2o_core_api.h>
@@ -795,23 +799,23 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-In this program, we derive graph optimization vertices and edges for curve fitting from g2o: CurveFittingVertex and CurveFittingEdge, which essentially expands the use of g2o. These two classes are derived from BaseVertex and BaseUnaryEdge, respectively. In the derived classes, we have rewritten some important virtual functions:
+In this program, we derive graph optimization vertices and edges for curve fitting from g2o built-in classes: CurveFittingVertex and CurveFittingEdge, which essentially expands the use of g2o. These two classes are derived from BaseVertex and BaseUnaryEdge, respectively. In the derived classes, we have rewritten some important virtual functions:
 \begin{enumerate}
-    \item Vertex update function: oplusImpl. We know that the most important thing in the optimization process is the calculation of incremental $\Delta \mathbf{x}$, and this function deals with $\mathbf{x}_{k+1} = \mathbf{x}_k + \Delta \mathbf{x}$ process.
+    \item Vertex update function: \textit{oplusImpl}. We know that the most important thing in the optimization process is the calculation of incremental $\Delta \mathbf{x}$, and this function deals with $\mathbf{x}_{k+1} = \mathbf{x}_k + \Delta \mathbf{x}$ process.
 
-    Readers may think this is not something worth mentioning because it is just simple addition. Why doesn't g2o help us complete it? In the curve fitting process, since the optimization variables (curve parameters) are located in plain \textit{vector space}, this update calculation is indeed nothing but just a simple addition. However, when the optimization variable is not in the vector space, for example, for $\mathbf{x}$ is the camera pose, it does not necessarily have an addition operation. At this time, it is necessary to redefine the behavior of \textit{how the increment is added to the existing estimate}. According to the explanation in Lecture 4, we may use the left-multiplication update or the right-multiplication update instead of direct addition.
+    Readers may think this is not something worth mentioning because it is just simple addition. Why doesn't g2o help us complete it? In the curve fitting process, since the optimization variables (curve parameters) are located in the plain vector space, this update calculation is indeed nothing but just simple addition. However, when the optimization variable is not in the vector space, for example, for $\mathbf{x}$ is the camera pose, it does not necessarily have an addition operation. At this time, it is necessary to redefine the behavior of how the increment is added to the existing estimate. According to the explanation in lecture \ref{cpt:4}, we may use the left-multiplication update or the right-multiplication update instead of direct addition.
 
-    \item Vertex reset function: setToOriginImpl. This is trivial, and we just set the estimate to zero.
+    \item Vertex reset function: \textit{setToOriginImpl}. This is trivial, and we just set the estimate to zero.
 
-    \item The error calculation function: computeError. This function needs to take out the current estimated value of the vertex connected by the edge and compare it with its observed value according to the curve model. This is consistent with the error model in the least squares problem.
+    \item The error calculation function: computeError. According to the curve model, this function needs to take out the current estimated value of the vertex connected by the edge and compare it with its observed value. This is consistent with the error model in the least-squares problem.
     
-    \item The Jacobian calculation function: linearizeOplus. In this function, we calculate the Jacobian of each edge relative to the vertex.
+    \item The Jacobian calculation function: \textit{linearizeOplus}. In this function, we calculate the Jacobian of each edge relative to the vertex.
 
     \item Save and read functions: read, write. Since we do not want to perform read/write operations, leave it blank.
 \end{enumerate}
 
 After defining the vertices and edges, we declare a graph model in the main function, then add vertices and edges to the graph model according to the generated noise data, and finally call the optimization function for optimization. g2o will give the optimized result:
-\begin{lstlisting}[language=sh,caption=terminal output:]
+\begin{lstlisting}[language=sh,caption=Terminal output:]
 start optimization
 iteration= 0	 chi2= 376785.128234	 time= 3.3299e-05	 cumTime= 3.3299e-05	 edges= 100	 schur= 0
 iteration= 1	 chi2= 35673.566018	 time= 1.3789e-05	 cumTime= 4.7088e-05	 edges= 100	 schur= 0
@@ -830,21 +834,21 @@ estimated model: 0.890912   2.1719 0.943629
 We use the Gauss-Newton method for gradient descent, and after 9 iterations, the optimization result is obtained, which is almost the same as the Ceres and handwritten Gauss-Newton method. From the running speed perspective, our experimental conclusion is that handwriting is faster than g2o, and g2o is faster than Ceres. This is a generally intuitive experience that versatility and efficiency are often contradictory. However, in this experiment, Ceres uses automatic derivation, and the solver configuration is not completely consistent with Gauss-Newton, so it seems slower.
 
 \section{Summary}
-This section introduces a nonlinear optimization problem often encountered in SLAM: the least squares problem consisting of the sum of squares of many error terms. We introduced its definition and solution and discussed two main gradient descent methods: the Gauss-Newton method and the Levenberg-Marquardt method. In the practice part, two optimization libraries of the handwritten Gauss-Newton method, Ceres and g2o, were used to solve the same curve fitting problem and found that they gave similar results.
+This section introduces a nonlinear optimization problem often encountered in SLAM: the least-squares problem consisting of the sum of squares of many error terms. We introduced its definition and solution and discussed two main gradient descent methods: the Gauss-Newton method and the Levenberg-Marquardt method. In the practice part, two optimization libraries of the handwritten Gauss-Newton method, Ceres and g2o, were used to solve the same curve-fitting problem and found that they gave similar results.
 
-Since Bundle Adjustment has not been discussed in detail, we have chosen a simple but representative example of curve fitting in the practice part to demonstrate the general nonlinear least squares solution method. In particular, if you use g2o to fit a curve, you must first convert the problem to graph optimization and define new vertices and edges. This approach is somewhat roundabout—the main purpose of g2o is not here. In contrast, the usage of Ceres is much more natural because it is designed to be a general optimization library. However, the more problem in SLAM is how to solve an optimization problem with many camera poses and many spatial points. In particular, when the camera pose is represented by Lie algebra, calculating the derivative of the camera pose in the error term will be worthy of detailed discussion. We will find in the follow-up content that g2o provides a large number of ready-to-use vertices and edges, which is very convenient for the camera pose estimation problem. In Ceres, we have to implement each Cost Function ourselves, which has some inconveniences.
+Since the bundle adjustment has not been discussed in detail, we have chosen a simple but representative example of curve fitting in the practice part to demonstrate the general nonlinear least-squares solution method. In particular, if you use g2o to fit a curve, you must first convert the problem to graph optimization and define new vertices and edges. This approach is somewhat roundabout—the main purpose of g2o is not here. In contrast, Ceres' usage is much more natural because it is designed to be a general optimization library. However, the SLAM problem is about solving an optimization problem with many camera poses and many spatial points. In particular, when the camera pose is represented by Lie algebra, calculating the derivative of the camera pose in the error term will be worthy of detailed discussion. We will find in the follow-up content that g2o provides a large number of ready-to-use vertices and edges, which is very convenient for the camera pose estimation problem. In Ceres, we have to implement each cost function by ourselves, which has some inconveniences.
 
-In the two programs of the practical part, we did not calculate the derivative of the curve model with respect to the three parameters but used the numerical derivative of the optimization library, which made the theory and code simpler. The Ceres library provides automatic derivation based on template elements and numerical derivation at runtime, while g2o only provides numerical derivation method at runtime. However, for most problems, if you can derive the analytical form of the Jacobian matrix and tell the optimization library, you can avoid many problems in numerical derivation.
+In the two programs of the practical part, we did not calculate the derivative of the curve model with respect to the three parameters but used the numerical derivative of the optimization library, which made the theory and code simpler. The Ceres library provides automatic derivation based on template elements and numerical derivation at runtime, while g2o only provides a numerical derivation method. However, for most problems, if you can derive the analytical form of the Jacobian matrix and tell the optimization library, you can avoid many problems in numerical derivation.
 
-Finally, I hope readers can adapt to Ceres and g2o's extensive use of template programming. It may seem scary at first (especially the parenthesis operator for Ceres to set the residual block and the code for the g2o initialization part), but once you are familiar with it, you will feel that this method is natural and easy to extend. We will continue to discuss issues such as sparsity, kernel functions, and pose graphs in the SLAM backend lecture.
+Finally, I hope readers can adapt to Ceres and g2o's extensive use of template programming. It may seem scary at first (especially the parenthesis operator for Ceres to set the residual block and the code for the g2o initialization part). But once you are familiar with it, you will feel that this method is natural and easy to extend. We will continue to discuss issues such as sparsity, kernel functions, and pose graphs in the SLAM backend lecture.
 
 \section*{Exercises}
 \begin{enumerate}
-    \item Prove that the linear equation $\mathbf{A} \mathbf{x} = \mathbf{b}$ when the coefficient matrix $\mathbf{A}$ is over-determined, the least square solution is $\mathbf{x} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T \mathbf{b}$.
-    \item Investigate the advantages and disadvantages of the steepest descent method, Newton method, Gauss-Newton method, and Levenberg-Marquardt method. In addition to the Ceres library and g2o library we cited, what other commonly used optimization libraries are there? (You may find some libraries on MATLAB.)
-    \item Why the coefficient matrix of the Gauss-Newton method's incremental equation may not be positive definite? What is the geometric meaning of indefinite? Why is the solution unstable in this case?
-    \item What is DogLeg? What are the similarities and differences between it and the Gauss-Newton method and the Levenberg-Marquardt method? Please search for relevant materials \footnote{\mbox{e.g.}\url{http://www.numerical.rl.ac.uk/people/nimg/course/lectures/raphael/lectures/lec7slides.pdf}. }.
+    \item Prove that in the linear equation $\mathbf{A} \mathbf{x} = \mathbf{b}$, when the coefficient matrix $\mathbf{A}$ is over-determined, the least-square solution is $\mathbf{x} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T \mathbf{b}$.
+    \item Investigate the advantages and disadvantages of the steepest descent method, Newton method, Gauss-Newton method, and Levenberg-Marquardt method. In addition to the Ceres library and g2o library we cited, are there any commonly used optimization libraries? (You may find some libraries on MATLAB.)
+    \item Why does the coefficient matrix of the Gauss-Newton method's incremental equation may not be positive definite? What is the geometric meaning of indefinite? Why is the solution unstable in this case?
+    \item What is DogLeg? What are the similarities and differences between it and the Gauss-Newton method and the Levenberg-Marquardt method? Please search for relevant materials \footnote{\url{http://www.numerical.rl.ac.uk/people/nimg/course/lectures/raphael/lectures/lec7slides.pdf}. }.
     \item Read Ceres' tutorials (\url{http://ceres-solver.org/tutorial.html}) to better understand its usage.
-    \item Read the documentation that comes with g2o, can you understand it? If you still can't fully understand it, please come back after lectures 10 and 11.
-    \item[\optional] Please change the curve model in the curve fitting experiment, and use Ceres and g2o to optimize the experiment. For example, write an example with more parameters and more complex models.
+    \item Read the documentation that comes with g2o, can you understand it? If you still can't fully understand it, please come back after lectures \ref{cpt:backend1} and \ref{cpt:backend2}.
+    \item[\optional] Please change the curve model in the curve fitting experiment, and use Ceres and g2o to optimize it. For example, write an example with more parameters and more complex models.
 \end{enumerate}
