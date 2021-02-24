@@ -1,17 +1,18 @@
 % !Mode:: "TeX:UTF-8"
 \chapter{Backend: Part I}
 \label{cpt:backend1}
+\label{cpt:9}
 \begin{mdframed}  
-	\textbf{Goal of Study}
+	\textit{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item Learn how to formulate the backend problem into a filter or least square optimization problem.
-		\item Learn how to use the sparse structure in bundle adjustment problem. 
+		\item Learn how to formulate the backend problem into a filter or least-square optimization problem.
+		\item Learn how to use the sparse structure in the bundle adjustment problem. 
 		\item Solve a BA problem with g2o and Ceres.
 	\end{enumerate}
 \end{mdframed}
 
-From this lecture, we turn to another important module: back-end optimization.
-We see that the front-end visual odometry can give a short-term trajectory and map. Still, due to the inevitable accumulation of errors, this map is inaccurate for a long time. Therefore, based on visual odometry, we also hope to construct a larger-scale optimization problem to consider the optimal trajectory and map over a long time. However, considering the balance of accuracy and performance, there are many different approaches in practice.
+From this lecture, we turn to another important module: backend optimization.
+We see that the frontend visual odometry can give a short-term trajectory and map. Still, due to the inevitable accumulation of errors, this map is inaccurate for a long time. Therefore, based on visual odometry, we also hope to construct a larger-scale optimization problem to consider the optimal trajectory and map over a long time. However, considering the balance of accuracy and performance, there are many different approaches in practice.
 
 \newpage
 \includepdf{resources/other/ch10.pdf}
@@ -19,9 +20,9 @@ We see that the front-end visual odometry can give a short-term trajectory and m
 \newpage
 \section{Introduction}
 \subsection{State Estimation from Probabilistic Perspective}
-As mentioned in the second lecture, the visual odometry only has a short memory, but we hope that the system can maintain the entire motion trajectory in an optimal state for a long time. We may use the latest knowledge to update an old state. At that time, it seems that future information tells you, ``where you should be now.'' Therefore, in the back-end optimization, we usually consider the problem of state estimation for a longer period of time (or all-time), and not only use the past information to update our current state but also use future information to update ourselves. Such a method might be called ``Batch.'' Otherwise, if the current state is only determined by the past, or even only by the previous moment, it might also be called ``Incremental.''
+As mentioned in the lecture \ref{cpt:2}, the visual odometry only has a short memory, but we hope that the system can maintain the entire motion trajectory in an optimal state for a long time. We may use the latest knowledge to update an old state. At that time, it seems that future information tells you, ``where you should be now.'' Therefore, in the backend optimization, we usually consider the problem of state estimation for a longer time (or all-time) and not only use the past information to update our current state but also use future information to update ourselves. Such a method might be called ``batch.'' Otherwise, if the current state is only determined by the past, or even only by the last moment, it might also be called ``incremental.''
 
-We already know that the SLAM process can be described by the motion and observation equations. Suppose in the time from $t=0$ to $t=N$, we have the poses from $\mathbf{x}_0$ to $\mathbf{x}_N$ and observation $\mathbf{y}_1, \cdots, \mathbf{y}_M$. According to the equations in chapter 2, we write them as: 
+We already know that the SLAM process can be described by the motion and observation equations. Suppose in the time from $t=0$ to $t=N$, we have the poses from $\mathbf{x}_0$ to $\mathbf{x}_N$ and observation $\mathbf{y}_1, \cdots, \mathbf{y}_M$. According to the equations in chapter \ref{cpt:2}, we write them as: 
 \begin{equation}
 	\left\{ \begin{array}{l}
 		{\mathbf{x}_k} = f\left( {{\mathbf{x}_{k - 1}},{\mathbf{u}_k}} \right) + \mathbf{w}_k \\
@@ -29,30 +30,30 @@ We already know that the SLAM process can be described by the motion and observa
 	\end{array} \right. \quad k=1, \ldots, N, \  j=1, \ldots, M.
 \end{equation}
 
-Note that in the SLAM problem we have the following characteristics:
+Note that in the SLAM problem, we have the following characteristics:
 \begin{enumerate}
-	\item In the observation equation, only when $\mathbf{x}_k$ sees $\mathbf{y}_j$, we will have a real observation equation. In fact, we can usually see only a small part of the landmarks in one location. Moreover, due to a large number of visual SLAM feature points, the number of observation equations in practice will be much larger than that of motion equations.
+	\item In the observation equation, only when $\mathbf{x}_k$ sees $\mathbf{y}_j$ will we have a real observation equation. In fact, we can usually see only a small part of the landmarks in one location. Moreover, due to a large number of visual SLAM feature points, the number of observation equations in practice will be much larger than that of motion equations.
 	\item We may not have a device to measure the motion, so there may not be a motion equation. In this case, there are several ways to deal with it:
 	\begin{itemize}
 		\item Assume that there is really no motion equation.
 		\item Assume that the camera does not move.
 		\item Assume that the camera is moving at a constant speed.
 	\end{itemize}
-	These several methods are all feasible. In the absence of motion equations, the entire optimization problem consists of only observation equations. This is very similar to the SfM (Structure from Motion) problem, which is equivalent to restoring the motion and structure through a set of images. The difference with SfM is that the images in SLAM have a chronological order, while SfM allows the use of completely unrelated images.
+	These several methods are all feasible. In the absence of motion equations, the entire optimization problem consists of only observation equations. This is very similar to the SfM (Structure from Motion) problem, which is equivalent to restoring the motion and structure through a set of images. The difference with SfM is that the SLAM images have a chronological order, while SfM allows the use of completely unrelated images.
 \end{enumerate} 
 
-We know that every measurement is affected by noise, so the poses $\mathbf{x}$ and landmarks $\mathbf{y}$ here are regarded as \textbf{random variables that obey a certain probability distribution} instead of a single number. Therefore, the question becomes: when I have some motion data $\mathbf{u}$ and observation data $\mathbf{z}$, how to determine the state $\mathbf{x}$ and landmarks $\mathbf{y}$'s distribution? Furthermore, if new data is obtained, how to update our estimation? In more common and reasonable cases, we assume that the state quantity and noise terms obey Gaussian distribution-which means that only their mean and covariance matrix need to be stored in the program. The mean can be regarded as an estimate of the state variable's optimal value, and the covariance matrix measures its uncertainty. Then, the question becomes: when there are some motion and observation data, how do we estimate the Gaussian distribution of the states?
+We know that every measurement is affected by noise, so the poses $\mathbf{x}$ and landmarks $\mathbf{y}$ here are regarded as \textit{random variables that obey a certain probability distribution} instead of a single number. Therefore, the question becomes: when I have some motion data $\mathbf{u}$ and observation data $\mathbf{z}$, how to determine the state $\mathbf{x}$ and landmarks $\mathbf{y}$'s distribution? Furthermore, if new data is obtained, how to update our estimation? In more common and reasonable cases, we assume that the state quantity and noise terms obey Gaussian distribution-which means that only their mean and covariance matrix need to be stored in the program. The mean can be regarded as an estimate of the state variable's optimal value, and the covariance matrix measures its uncertainty. Then, the question becomes: when there are some motion and observation data, how do we estimate the Gaussian distribution of the states?
 
-We still put ourselves in the role of a robot. When there is only the equation of motion, it is equivalent to walking blindfolded in an unknown place. Although we know how far we have taken for each step, we will become more and more uncertain about where we are as time grows. This reflects that when the input data is affected by noise, the error is gradually accumulated, and our estimate of the position variance will become larger and larger. However, when we open our eyes, we will become more and more confident because we can continuously observe the external scene, making the uncertainty of position estimation smaller. If we use an ellipse to intuitively express the covariance matrix, then this process is a bit like walking in a mobile phone map software. Taking \autoref{fig:uncertainty}~ as an example, readers can imagine that when there is no observation data, the circle will become larger and larger with the movement; and if there are correct observations, the circle will shrink to a certain size and keep stable.
+We still put ourselves in the role of a robot. When there is only the equation of motion, it is equivalent to walking blindfolded in an unknown place. Although we know how far we have taken each step, we will become more and more uncertain about where we are as time grows. This reflects that when the input data is affected by noise, the error is gradually accumulated, and our estimate of the position variance will become larger and larger. However, when we open our eyes, we will become more confident because we can continuously observe the external scene, making the uncertainty of position estimation smaller. If we use an ellipse to express the covariance matrix intuitively, this process is a bit like walking in a mobile phone map software. Taking \autoref{fig:uncertainty}~ as an example, readers can imagine that when there is no observation data, the circle will become larger and larger with the movement, and if there are correct observations, the circle will shrink to a certain size and keep stable.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.66\textwidth]{backend1/uncertainty.pdf}
-	\caption{An intuitive description of uncertainty. Left: When there is only the motion equation, the pose at the next moment adds noise to the previous moment, so the uncertainty is getting bigger and bigger. Right: When there are road signs, the uncertainty will be significantly reduced. Please note that this is only an intuitive diagram, not actual data.}
+	\caption{An intuitive description of uncertainty. Left: When there is only the motion equation, the pose at the next moment adds noise to the previous moment, so the uncertainty is getting bigger and bigger. Right: When there are road signs, the uncertainty will be significantly reduced. Please note that this is only an intuitive diagram, not real data.}
 	\label{fig:uncertainty}
 \end{figure}
 
-The above statements explain the problem of state estimation in a metaphorical form. Below we will look at it in a quantitative way. In Lecture \ref{cpt:6}, we introduced the maximum likelihood estimation where we say that the problem of \textbf{batch state estimation} can be transformed into a \textbf{maximum likelihood estimation problem and solved by the least square method}. In this section, we will explore how to apply this conclusion to progressive problems and get some classic conclusions. At the same time, we will investigate the special structure of the least square method in visual SLAM.
+The above statements explain the problem of state estimation in a metaphorical form. Below we will look at it in a quantitative way. In lecture \ref{cpt:6}, we introduced the maximum likelihood estimation where we say that the problem of \textit{batch state estimation} can be transformed into a \textit{maximum likelihood estimation problem} and solved by the \textit{least-square method}. In this section, we will explore how to apply this conclusion to progressive problems and get some classic conclusions. At the same time, we will investigate the special structure of the least-square method in visual SLAM.
 
 First of all, since the poses and landmarks are all optimize variables, we change the notation a bit and let $\mathbf{x}_k$ be all the unknowns at the moment of $k$. It contains the current camera pose and $m$ landmarks. With a little abuse of the notation, we rewrite the equations into:
 \begin{equation}
@@ -80,16 +81,16 @@ Let's see how to do the state estimation. According to Bayes' rule, swap the pos
 	P\left( {{\mathbf{x}_k}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k}}} \right) \propto \underbrace{P\left( {{\mathbf{z}_k}|{\mathbf{x}_k}} \right)}_{\text{likelihood}} \underbrace{P\left( {{\mathbf{x}_k}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right)}_{\text{prior}}.
 \end{equation}
 
-You may think this is familiar with what we have discussed in the previous sections. Here the first term is called \textbf{likelihood}, and the second term is called \textbf{prior}. The observation equation gives the likelihood. For the prior part, we should know that the current state $\mathbf{x}_k$ is estimated based on all past states. Let's first consider the effect of $\mathbf{x}_{k-1}$. it is expanded according to the conditional probability of $\mathbf{x}_{k-1}$ moment:
+You may think this is familiar with what we have discussed in the previous sections. Here the first term is called \textit{likelihood}, and the second term is called \textit{prior}. The observation equation gives the likelihood. For the prior part, we should know that the current state $\mathbf{x}_k$ is estimated based on all past states. Let's first consider the effect of $\mathbf{x}_{k-1}$. It is expanded according to the conditional probability of $\mathbf{x}_{k-1}$ moment:
 \begin{equation}
 	\label{eq:bayes-estimator}
 	\small
 	P\left( {{\mathbf{x}_k}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right) = \int {P\left( {{\mathbf{x}_k}|{\mathbf{x}_{k - 1}},{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right)P\left( {{\mathbf{x}_{k - 1}}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right) \mathrm{d}\mathbf{x}_{k-1} }.
 \end{equation}
 
-There are generally some methodology differences for the next steps: (i) We assume the \textbf{Markov property}. The simple first-order Markov property holds that the state at time $k$ is only related to the state at time $k-1$ and is not related to the earlier states. If such an assumption is made, we will get a filter method represented by \textbf{Extended Kalman Filter} (EKF). In the filtering method, we estimate from the state at a specific moment and derive it to the next moment. (ii) Another technique is to keep the relationship between the state at $k$ and \textbf{all} the previous states (and also, the future states). At this time, we will obtain an optimization framework with \textbf{nonlinear optimization} as the main body. The basic knowledge of nonlinear optimization has been introduced in the previous sections. At present, the mainstream of visual SLAM is to use the nonlinear optimization method. However, in order to make this book more comprehensive, let's first introduce the principles of the Kalman filter and EKF.
+There are generally some methodology differences for the next steps: (i) We assume the \textit{Markov property}. The simple first-order Markov property assumes that the state at time $k$ is only related to the state at time $k-1$ and is not related to the earlier states. If such an assumption is made, we will get a filter method represented by \textit{Extended Kalman Filter} (EKF). In the filtering method, we estimate from the state at a specific moment and derive it to the next moment. (ii) Another technique is to keep the relationship between the state at $k$ and \textit{all} the previous states (and also, the future states). At this time, we will obtain an optimization framework with \textit{nonlinear optimization} as the main body. The basic knowledge of nonlinear optimization has been introduced in the previous sections. At present, the mainstream of visual SLAM is to use the nonlinear optimization method. However, in order to make this book more comprehensive, let's first introduce the principles of the Kalman filter and EKF.
 
-\subsection{Linear System and the Kalman Filter}
+\subsection{Linear Systems and the Kalman Filter}
 Let's look at the filter model first. When the Markov property is assumed, what changes will happen from a mathematical perspective? The current state is only related to the previous moment. The first part on the right side of the formula \eqref{eq:bayes-estimator} can be further simplified as:
 \begin{equation}
 	P\left( {{\mathbf{x}_k}|{\mathbf{x}_{k - 1}},{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right) = P\left( {{\mathbf{x}_k}|{\mathbf{x}_{k - 1}},{\mathbf{u}_k}} \right),
@@ -102,7 +103,7 @@ The second part can be simplified as:
 \end{equation}
 where we drop the $\mathbf{u}_k$ since it has nothing to do with $\mathbf{x}_{k-1}$. 
 
-It can be seen that this item is actually the state distribution at time $k-1$. Therefore, this series of equations shows that what we are actually doing is ``how to derive the state distribution from time $k-1$ to time $k$''. In other words, we only need to maintain the current state estimation and update it incrementally. Furthermore, if it is assumed that the state quantity obeys a Gaussian distribution, we only need to consider the state variable's mean and covariance. You can imagine that the robot's localization module has been outputting two information: the estimated pose (mean) and the uncertainty (covariance), which is exactly the common case in many practical localization libraries.
+It can be seen that this item is actually the state distribution at time $k-1$. Therefore, this series of equations shows that what we are actually doing is ``how to derive the state distribution from time $k-1$ to time $k$''. In other words, we only need to maintain the current state estimation and update it incrementally. Furthermore, if it is assumed that the state quantity obeys a Gaussian distribution, we only need to consider the state variable's mean and covariance. You can imagine that the robot's localization module has been outputting two pieces of information: the estimated pose (mean) and the uncertainty (covariance), which is exactly the common case in many practical localization libraries.
 
 We start from the simplest linear Gaussian system, and finally, we will reach the famous Kalman filter. A linear Gaussian system is such a system where the motion and observation equations are all linear so that we can write them in a matrix form:
 \begin{equation}
@@ -114,49 +115,49 @@ and we assume the states and noises are all Gaussian, so that:
 \begin{equation}
 	\mathbf{w}_k \sim N(\mathbf{0}, \mathbf{R}). \quad \mathbf{v}_k \sim N( \mathbf{0}, \mathbf{Q}),
 \end{equation}
-where we omit the subscripts of $\mathbf{R}$ and $\mathbf{Q}$ for brevity. Now, using the Markov property, suppose we know the posterior state estimation at time $k-1$ $\mathbf{\hat{x}}_{k-1} $ and its covariance $\mathbf{\hat{P}}_{k-1}$, now we want to determine the posterior distribution of $\mathbf{x}_k$ based on the input and the observation data at time $k$. In order to distinguish the priori and the posterior variables, we make a difference in the notation: we use the up hat $\mathbf{\hat{x}}_k$ represents the posterior, and use the down hat $\check{\mathbf{x}}_k $ to represent the prior distribution. 
+where we omit the subscripts of $\mathbf{R}$ and $\mathbf{Q}$ for brevity. Now, using the Markov property, suppose we know the posterior state estimation at time $k-1$ $\mathbf{\hat{x}}_{k-1} $ and its covariance $\mathbf{\hat{P}}_{k-1}$, now we want to determine the posterior distribution of $\mathbf{x}_k$ based on the input and the observation data at time $k$. In order to distinguish the prior and the posterior variables, we make a difference in the notation: we use the up hat $\mathbf{\hat{x}}_k$ represents the posterior, and use the down hat $\check{\mathbf{x}}_k $ to represent the prior distribution. 
 
-The first step of the Kalman filter is to determine the distribution of $\mathbf{x}_k$ through the equation of motion, which is called as the prior at time $k$. It is very easy to transform the Gaussians in a linear system: 
+The Kalman filter's first step is to determine the distribution of $\mathbf{x}_k$ through the equation of motion, which is called the prior at time $k$. It is very easy to transform the Gaussians in the linear system: 
 \begin{equation}
-	P\left( {{\mathbf{x}_k}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right) = N\left( {\mathbf{A}_k {{\hat{\mathbf{x}}}_{k - 1}} + {\mathbf{u}_k}, \mathbf{A}_k\hat{\mathbf{P}}_{k-1} {\mathbf{A}_k^\mathrm{T}} + \mathbf{R}} \right).
+	P\left( {{\mathbf{x}_k}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{1:k - 1}}} \right) = N\left( {\mathbf{A}_k {{\hat{\mathbf{x}}}_{k - 1}} + {\mathbf{u}_k}, \mathbf{A}_k\hat{\mathbf{P}}_{k-1} {\mathbf{A}_k^T} + \mathbf{R}} \right).
 \end{equation}
 
-This step is called the \textbf{prediction}. Please refer to the appendix \ref{sec:gauss-example} if you are not familiar with the linear transform here. It shows how to infer the current state distribution based on the noisy input from the previous state. Let's note it as:
+This step is called the \textit{prediction}. Please refer to the appendix \ref{sec:gauss-example} if you are not familiar with the linear transform here. It shows how to infer the current state distribution based on the noisy input from the previous state. Let's note it as:
 \begin{equation}
-	\check{\mathbf{x}}_k = {\mathbf{A}_k {{\hat{\mathbf{x}}}_{k - 1}} + {\mathbf{u}_k}}, \quad \check{\mathbf{P}}_k = {\mathbf{A}_k \hat{\mathbf{P}}_{k-1} { \mathbf{A}^\mathrm{T}_k} + \mathbf{R}},
+	\check{\mathbf{x}}_k = {\mathbf{A}_k {{\hat{\mathbf{x}}}_{k - 1}} + {\mathbf{u}_k}}, \quad \check{\mathbf{P}}_k = {\mathbf{A}_k \hat{\mathbf{P}}_{k-1} { \mathbf{A}^T_k} + \mathbf{R}},
 \end{equation}
-which is very natural. Obviously, the uncertainty of the state in this step will become larger, because the motion noise is added to our system. On the other hand, from the observation equation, we can calculate what kind of observation data should be generated in a certain state:
+which is very natural. Obviously, the state's uncertainty in this step will become larger because the motion noise is added to our system. On the other hand, from the observation equation, we can calculate what kind of observation data should be generated in a certain state:
 \begin{equation}
 	P\left( {{\mathbf{z}_k}|{\mathbf{x}_k}} \right) = N\left( {{\mathbf{C}_k}{\mathbf{x}_k},\mathbf{Q}} \right) ,
 \end{equation}
-which is exactly the likelihood we talked about before. Remember what we want to get is the posterior $P\left( {{\mathbf{x}_k}|{\mathbf{z}_k}} \right) $. In order to do that, we need to calculate the product of the prior and the likelihood according to the Bayesian formula \eqref{eq:10-5}. However, although we know that we will finally get a Gaussian distribution of $\mathbf{x}_k$ in the end, it is a little bit troublesome in calculation. Let's set the result as $\mathbf{x}_k \sim N(\mathbf{\hat{x}}_k, \mathbf{\hat{P}}_k )$, then:
+which is exactly the likelihood we talked about before. Remember what we want to get is the posterior $P\left( {{\mathbf{x}_k}|{\mathbf{z}_k}} \right) $. In order to do that, we need to calculate the product of the prior and the likelihood according to the Bayesian formula \eqref{eq:10-5}. However, although we know that we will finally get a Gaussian distribution of $\mathbf{x}_k$ in the end, it is a little bit troublesome in the calculation. Let's set the result as $\mathbf{x}_k \sim N(\mathbf{\hat{x}}_k, \mathbf{\hat{P}}_k )$, then:
 \begin{equation}
 	N(\mathbf{\hat{x}}_k, \mathbf{\hat{P}}_k ) = \eta N\left( {{\mathbf{C}_k}{\mathbf{x}_k},\mathbf{Q}} \right) \cdot N( \mathbf{\check{x}}_k, \mathbf{\check{P}}_k),
 \end{equation}
-where $\eta$ is a normalization factor to make the integral of the distribution equal to one. This is a little tricky method, please keep in mind that what we really want to know is the relationship between $\hat{\mathbf{x}}_k, \hat{\mathbf{P}}_k$ and $\check{\mathbf{x}}_k, \check{\mathbf{P}}_k$. 
+where $\eta$ is a normalization number to make the integral of the distribution equal to one. This is a little tricky method. Please keep in mind that what we really want to know is the relationship between $\hat{\mathbf{x}}_k, \hat{\mathbf{P}}_k$ and $\check{\mathbf{x}}_k, \check{\mathbf{P}}_k$. 
 
-Since we know that both sides of the equation are Gaussian distributions, we only need to compare the exponential part, and ignore the factor part in front because they can be merged to $\eta$. The exponential part is very similar to a quadratic form, and let's derive it. First, we expand the exponential part as \footnote{ The the equal sign is not strict here since we can put the variables that are not related to $\mathbf{x}_k$ into $\eta$. }:
+Since we know that both sides of the equation are Gaussian distributions, we only need to compare the exponential part and ignore the factor part in front because they can be merged to $\eta$. The exponential part is very similar to a quadratic form, and let's derive it. First, we expand the exponential part as \footnote{ The the equal sign is not strict here since we can put the variables that are not related to $\mathbf{x}_k$ into $\eta$. }:
 \begin{equation}
 	\small
-	{\left( {{\mathbf{x}_k} - {{\hat{\mathbf{x}}}_k}} \right)^\mathrm{T}}\hat{\mathbf{P}}_k^{ - 1}\left( {{\mathbf{x}_k} - {{\hat{\mathbf{x}}}_k}} \right) = {\left( {{\mathbf{z}_k} - {\mathbf{C}_k} {\mathbf{x}_k}} \right)^\mathrm{T}}{\mathbf{Q}^{ - 1}}\left( {{\mathbf{z}_k} - {\mathbf{C}_k}{\mathbf{x}_k}} \right) + {\left( {{\mathbf{x}_k} - {{\check{\mathbf{x}}}_k}} \right)^\mathrm{T}}\check{\mathbf{P}}_k^{ - 1}\left( {\mathbf{x}_k - {{\check{\mathbf{x}}}_k}} \right).
+	{\left( {{\mathbf{x}_k} - {{\hat{\mathbf{x}}}_k}} \right)^T}\hat{\mathbf{P}}_k^{ - 1}\left( {{\mathbf{x}_k} - {{\hat{\mathbf{x}}}_k}} \right) = {\left( {{\mathbf{z}_k} - {\mathbf{C}_k} {\mathbf{x}_k}} \right)^T}{\mathbf{Q}^{ - 1}}\left( {{\mathbf{z}_k} - {\mathbf{C}_k}{\mathbf{x}_k}} \right) + {\left( {{\mathbf{x}_k} - {{\check{\mathbf{x}}}_k}} \right)^T}\check{\mathbf{P}}_k^{ - 1}\left( {\mathbf{x}_k - {{\check{\mathbf{x}}}_k}} \right).
 \end{equation}
 
 In order to compute the $\hat{\mathbf{x}}_k$和$\mathbf{\hat{P}}_k$ on the left side, we expand the quadratics and compare their first-order and second-order coefficients of $\mathbf{x}_k$. For the second-order coefficients, we have: 
 \begin{equation}
 	\label{eq:kalman-cov}
-	\hat{\mathbf{P}}_k^{ - 1} = \mathbf{C}_k^\mathrm{T}{\mathbf{Q}^{ - 1}}{\mathbf{C}_k} + \check {\mathbf{P}}_k^{ - 1},
+	\hat{\mathbf{P}}_k^{ - 1} = \mathbf{C}_k^T{\mathbf{Q}^{ - 1}}{\mathbf{C}_k} + \check {\mathbf{P}}_k^{ - 1},
 \end{equation}
 which gives the relationship of the covariance matrix.
 
 We define an intermediate variable for convenience in the following derivation:
 \begin{equation}
 	\label{eq:kalman-K}
-	\mathbf{K} = \mathbf{\hat{P}}_k \mathbf{C}_k^\mathrm{T} \mathbf{Q}^{-1}.
+	\mathbf{K} = \mathbf{\hat{P}}_k \mathbf{C}_k^T \mathbf{Q}^{-1}.
 \end{equation}
 
-According to this definition, we multiply $\mathbf{\hat{P}}_k$ on both sides of equation \eqref{eq:kalman-cov}: 
+According to this definition, we multiply $\mathbf{\hat{P}}_k$ on both sides of the equation \eqref{eq:kalman-cov}: 
 \begin{equation}
-	\mathbf{I} = \mathbf{\hat{P}}_k \mathbf{C}_k^\mathrm{T} \mathbf{Q}^{-1} \mathbf{C}_k + \mathbf{\hat{P}}_k \mathbf{\check{P}}_k^{-1} = \mathbf{K} \mathbf{C}_k + \mathbf{\hat{P}}_k \mathbf{\check{P}}_k^{-1}.
+	\mathbf{I} = \mathbf{\hat{P}}_k \mathbf{C}_k^T \mathbf{Q}^{-1} \mathbf{C}_k + \mathbf{\hat{P}}_k \mathbf{\check{P}}_k^{-1} = \mathbf{K} \mathbf{C}_k + \mathbf{\hat{P}}_k \mathbf{\check{P}}_k^{-1}.
 \end{equation}
 
 Then we have \footnote{It seems to have a little circular definition here. We define the $\mathbf{K}$ by $\mathbf{\hat{P}}_k$, and then write $\mathbf{\hat{P}}_k$ as the expression of $\mathbf{K}$. However, $\mathbf{K}$ can also be calculated without relying on $\mathbf{\hat{P}}_k$, but this requires the introduction of the Sherman-Morrison-Woodbury identity \cite{Sherman1950}, see the exercises in this lecture. In practice, we can also simply calculate the $\mathbf{\hat{P}}_k$ first and then use the result to calculate $\mathbf{K}$. }:
@@ -166,32 +167,32 @@ Then we have \footnote{It seems to have a little circular definition here. We de
 
 Then we compare the first-order coefficients and get: 
 \begin{equation}
-	- 2\hat {\mathbf{x}}_k^\mathrm{T} \hat{\mathbf{P}}_k^{ - 1}{\mathbf{x}_k} =  - 2\mathbf{z}_k^\mathrm{T} {\mathbf{Q}^{ - 1}}{\mathbf{C}_k}{\mathbf{x}_k} - 2\mathbf{\check {x}}_k^\mathrm{T} \mathbf{\check {P}}_k^{ - 1}{\mathbf{x}_k}.
+	- 2\hat {\mathbf{x}}_k^T \hat{\mathbf{P}}_k^{ - 1}{\mathbf{x}_k} =  - 2\mathbf{z}_k^T {\mathbf{Q}^{ - 1}}{\mathbf{C}_k}{\mathbf{x}_k} - 2\mathbf{\check {x}}_k^T \mathbf{\check {P}}_k^{ - 1}{\mathbf{x}_k}.
 \end{equation}
 
 Reorganize it (take the coefficients and transpose them):
 \begin{equation}
-	\hat { \mathbf{P}}_k^{ - 1}{{\hat{\mathbf{x}}}_k} = \mathbf{C}_k^\mathrm{T} {\mathbf{Q}^{ - 1}}{\mathbf{z}_k} + \check{\mathbf{P}}_k^{ - 1}{{\mathbf{\check{x}}}_k}.
+	\hat { \mathbf{P}}_k^{ - 1}{{\hat{\mathbf{x}}}_k} = \mathbf{C}_k^T {\mathbf{Q}^{ - 1}}{\mathbf{z}_k} + \check{\mathbf{P}}_k^{ - 1}{{\mathbf{\check{x}}}_k}.
 \end{equation}
 
 Multiply $\mathbf{\hat{P}}_k$ on both sides and take \eqref{eq:kalman-K} into it:
 \begin{align}
-	{{\mathbf{\hat {x}}}_k} &= {{\hat {\mathbf{P}}}_k} \mathbf{C}_k^\mathrm{T} { \mathbf{Q}^{ - 1}}{\mathbf{z}_k} + {{\mathbf{\hat{ P}}}_k}\check {\mathbf{P}}_k^{ - 1}{{\check {\mathbf{x}}}_k}\\
+	{{\mathbf{\hat {x}}}_k} &= {{\hat {\mathbf{P}}}_k} \mathbf{C}_k^T { \mathbf{Q}^{ - 1}}{\mathbf{z}_k} + {{\mathbf{\hat{ P}}}_k}\check {\mathbf{P}}_k^{ - 1}{{\check {\mathbf{x}}}_k}\\
 	&= \mathbf{K} {\mathbf{z}_k} + \left( {\mathbf{I} - \mathbf{K}{\mathbf{C}_k}} \right){{\mathbf{\check {x}}}_k} = {{\check {\mathbf{x}}}_k} + \mathbf{K} \left( {\mathbf{z}_k - {\mathbf{C}_k}{\mathbf{\check{x}}_k}} \right).
 \end{align}
 
-So we get the expression of the posterior mean. In summary, the above two steps can be written into two steps:  the ``Predict'' and the ``Update'':
+So we get the expression of the posterior mean. In summary, the above two steps can be written into two steps:  the ``predict'' and the ``update'':
 \begin{mdframed}
 	\begin{enumerate}
-		\item \textbf{Predict}:
+		\item \textit{Predict}:
 		\begin{equation}
-			\check{\mathbf{x}}_k = {\mathbf{A}_k {{\hat{\mathbf{x}}}_{k - 1}} + {\mathbf{u}_k}}, \quad \check{\mathbf{P}}_k = {\mathbf{A}_k \hat{\mathbf{P}}_{k-1} { \mathbf{A}^\mathrm{T}_k} + \mathbf{R}}.
+			\check{\mathbf{x}}_k = {\mathbf{A}_k {{\hat{\mathbf{x}}}_{k - 1}} + {\mathbf{u}_k}}, \quad \check{\mathbf{P}}_k = {\mathbf{A}_k \hat{\mathbf{P}}_{k-1} { \mathbf{A}^T_k} + \mathbf{R}}.
 		\end{equation}
-		\item \textbf{Update}:
-		Calculate$\mathbf{K}$, which is the Kalman gain:
+		\item \textit{Update}:
+		Calculate $\mathbf{K}$, which is the Kalman gain:
 		\begin{equation}
 			\label{eq:kalman-K-another}
-			\mathbf{K} = {{\check {\mathbf{P}}}_k} \mathbf{C}_k^\mathrm{T} {\left( {{\mathbf{C}_k}{{\check {\mathbf{P}}}_k}\mathbf{C}_k^\mathrm{T} + {\mathbf{Q}_k}} \right)^{ - 1}},
+			\mathbf{K} = {{\check {\mathbf{P}}}_k} \mathbf{C}_k^T {\left( {{\mathbf{C}_k}{{\check {\mathbf{P}}}_k}\mathbf{C}_k^T + {\mathbf{Q}_k}} \right)^{ - 1}},
 		\end{equation}
 		and the posterior:
 		\begin{equation}
@@ -203,14 +204,14 @@ So we get the expression of the posterior mean. In summary, the above two steps 
 	\end{enumerate}
 \end{mdframed}
 
-So far, we have derived the entire process of the classic Kalman filter (to my knowledge, in the simplest way). In fact, the Kalman filter has several derivation methods, and we use the form of maximum posterior probability estimation from a probability perspective. We see that in a linear Gaussian system, the Kalman filter constitutes the maximum posterior probability estimate. Moreover, since the Gaussian distribution still obeys the Gaussian distribution after linear transformation, we did not perform any approximation in the whole process. The Kalman filter constitutes the optimal unbiased estimate of the linear system. If readers are interested in other derivation methods, please refer to the state estimation books like \cite{Barfoot2016}. 
+So far, we have derived the classic Kalman filter (to my knowledge, in the simplest way). The Kalman filter has several derivation methods, and we use the form of maximum posterior probability estimation from a probability perspective. We see that in a linear Gaussian system, the Kalman filter constitutes the maximum posterior probability estimate. Moreover, since the Gaussian distribution still obeys the Gaussian distribution after linear transformation, we did not perform any approximation in the whole process. The Kalman filter constitutes the optimal unbiased estimate of the linear system. If readers are interested in other derivation methods, please refer to the state estimation books like \cite{Barfoot2016}. 
 
 \subsection{Nonlinear systems and the EKF}
 After introducing the Kalman filter, we must clarify one point: the motion equation and observation equation in SLAM are usually nonlinear functions, especially the camera model in visual SLAM, which requires the camera projection model and the pose represented by $\mathrm{SE}(3)$.  A Gaussian distribution, after a nonlinear transformation, is often no longer Gaussian. Therefore, in a nonlinear system, we must take a certain approximation to transform the non-Gaussian distributions into Gaussians. 
 
 If we hope to extend the Kalman filter results to a nonlinear system, we will get an Extended Kalman Filter (EKF). The usual approach is to consider the first-order Taylor expansion of the motion equation and the observation equation near a certain point (working point), and only retain the first-order term, that is, the linear part, and then derive it according to the linear system. 
 
-Let's do the derivation just like for the Kalman filter. Let the mean and covariance matrix at time $k-1$ be $\mathbf{\hat{x}}_{k-1},\mathbf{\hat{P}}_{k-1}$. At the moment $k$, we put the motion equation and the observation equation at $\mathbf{\hat{x}}_{k-1},\mathbf{\hat{P}}_{k-1}$, and do the \textbf{linearization} (equivalent to first-order Taylor expansion):
+Let's do the derivation just like for the Kalman filter. Let the mean and covariance matrix at time $k-1$ be $\mathbf{\hat{x}}_{k-1},\mathbf{\hat{P}}_{k-1}$. At the moment $k$, we put the motion equation and the observation equation at $\mathbf{\hat{x}}_{k-1},\mathbf{\hat{P}}_{k-1}$, and do the \textit{linearization} (equivalent to first-order Taylor expansion):
 \begin{equation}
 	{\mathbf{x}_k} \approx f\left( {{{\mathbf{\hat x}}_{k - 1}},{\mathbf{u}_k}} \right) + {\left. {\frac{{\partial f}}{{\partial {\mathbf{x}_{k - 1}}}}} \right|_{{{\mathbf{\hat x}}_{k - 1}}}}\left( {{\mathbf{x}_{k - 1}} - {{\mathbf{\hat x}}_{k - 1}}} \right) + {\mathbf{w}_k}.
 \end{equation}
@@ -230,14 +231,14 @@ And note the partial derivative as:
 	\mathbf{H} = \left. {\frac{{\partial h}}{{\partial {\mathbf{x}_k}}}} \right|_{{{\mathbf{\check x}}_k}}.
 \end{equation}
 
-Then the \textbf{prediction} part becomes:
+Then the \textit{prediction} part becomes:
 \begin{equation}
 	P\left( {{\mathbf{x}_k}|{\mathbf{x}_0},{\mathbf{u}_{1:k}},{\mathbf{z}_{0:k - 1}}} \right)
-	= N(f\left( {{{\mathbf{\hat x}}_{k - 1}},{\mathbf{u}_k}} \right), \mathbf{F}\mathbf{\hat{P}}_{k-1} \mathbf{F}^\mathrm{T} + \mathbf{R}_k),
+	= N(f\left( {{{\mathbf{\hat x}}_{k - 1}},{\mathbf{u}_k}} \right), \mathbf{F}\mathbf{\hat{P}}_{k-1} \mathbf{F}^T + \mathbf{R}_k),
 \end{equation}
 which is almost same as the Kalman filter. We note the prior mean and covariance as:
 \begin{equation}
-	\mathbf{\check {x}}_k = f\left( {{{\mathbf{\hat x}}_{k - 1}},{\mathbf{u}_k}} \right), \quad \mathbf{\check{P}}_k = \mathbf{F}\mathbf{\hat{P}}_{k-1} \mathbf{F}^\mathrm{T} + \mathbf{R}_k.
+	\mathbf{\check {x}}_k = f\left( {{{\mathbf{\hat x}}_{k - 1}},{\mathbf{u}_k}} \right), \quad \mathbf{\check{P}}_k = \mathbf{F}\mathbf{\hat{P}}_{k-1} \mathbf{F}^T + \mathbf{R}_k.
 \end{equation}
 
 Then, for the observation part, we have: 
@@ -245,10 +246,10 @@ Then, for the observation part, we have:
 	P\left( {{\mathbf{z}_k}|{\mathbf{x}_k}} \right) = N( h\left( {{{\mathbf{\check x}}_k}} \right) + \mathbf{H} \left( {\mathbf{x}_k - {{\mathbf{\check x}}_k}} \right), \mathbf{Q}_k ).
 \end{equation}
 
-Finally, according to the Bayesian formula, the posterior probability form of $\mathbf{x}_k$ can be derived. We omit the intermediate derivation process and only introduce the results. Readers can imitate the Kalman filter to derive the EKF prediction and update equations. In short, we will first define a \textbf{Kalman gain} $\mathbf{K}_k$:
+Finally, according to the Bayesian formula, the posterior probability form of $\mathbf{x}_k$ can be derived. We omit the intermediate derivation process and only give the results. Readers can imitate the Kalman filter to derive the EKF prediction and update equations. In short, we will first define a \textit{Kalman gain} $\mathbf{K}_k$:
 
 \begin{equation}
-	\mathbf{K}_k = {\mathbf{\check{P}}_{k}}{\mathbf{H}^\mathrm{T}}{\left( {\mathbf{H}{\mathbf{\check P}_k}{\mathbf{H}^\mathrm{T}} + {\mathbf{Q}_k}} \right)^{ - 1}}.
+	\mathbf{K}_k = {\mathbf{\check{P}}_{k}}{\mathbf{H}^T}{\left( {\mathbf{H}{\mathbf{\check P}_k}{\mathbf{H}^T} + {\mathbf{Q}_k}} \right)^{ - 1}}.
 \end{equation}
 
 The posterior can be written out based on the $\mathbf{K}$: 
@@ -259,7 +260,7 @@ The posterior can be written out based on the $\mathbf{K}$:
 The EKF shows the change of the state variable distribution after linearization. In the linear system and Gaussian noise case, the Kalman filter gives an unbiased optimal estimate. In nonlinear systems like SLAM, it gives the maximum a posteriori estimate (MAP) under a single linearization step. 
 
 \subsection{Discussion about KF and EKF}
-EKF is known for its simple form and wide application. It may seem to be a bit complicated at first glance, but you find it is really very easy to implement (less than 20 lines in Python or MATLAB).  When we want to estimate a certain amount of uncertainty within a certain period of time, the first thing we think of is the EKF. In the early SLAM researches, EKF occupied a dominant position for a long time. Researchers implemented a lot of various filters in SLAM, such as IF (information filter)\textsuperscript{\cite{Sujan2005} }, IKF\textsuperscript{\cite{Janabi-Sharifi2010}} (Iterated KF), UKF\textsuperscript{\cite{Li2010}} (Unscented KF) and particle filter \textsuperscript{\cite{Sim2007, Lee2011, Gil2010a}} , SWF (Sliding Window \mbox{Filter)\textsuperscript{\cite{Sibley2010}}}, etc.\textsuperscript{\cite{Chen2012}} \footnote{The principle of particle filter is quite different from Kalman filter. }, or use divide and conquer to improve the efficiency of EKF\textsuperscript{\cite{Paz2008, Grasa2011}}. To this day, although we realize that nonlinear optimization has obvious advantages over filters, EKF is still an effective way when the computing resources are limited, or the state dimension is relatively small.
+EKF is known for its simple form and wide application. It may seem to be a bit complicated at first glance, but you find it is really very easy to implement (less than 20 lines in Python or MATLAB).  When we want to estimate a certain amount of uncertainty within a certain period of time, the first thing we think of is the EKF. In the early SLAM researches, EKF occupied a dominant position for a long time. Researchers implemented a lot of various filters in SLAM, such as IF (information filter) {\cite{Sujan2005} }, IKF {\cite{Janabi-Sharifi2010}} (Iterated KF), UKF {\cite{Li2010}} (Unscented KF) and particle filter  {\cite{Sim2007, Lee2011, Gil2010a}} , SWF (Sliding Window \mbox{Filter) {\cite{Sibley2010}}}, etc. {\cite{Chen2012}} \footnote{The principle of particle filter is quite different from Kalman filter. }, or use divide and conquer to improve the efficiency of EKF {\cite{Paz2008, Grasa2011}}. To this day, although we realize that nonlinear optimization has obvious advantages over filters, EKF is still an effective way when the computing resources are limited, or the state dimension is relatively small.
 
 So, is EKF enough for modern SLAM systems? Why are we using optimization approaches rather than the filters? The issues come from two aspects: the theoretical and practical. 
 
@@ -271,9 +272,9 @@ So, is EKF enough for modern SLAM systems? Why are we using optimization approac
 	The optimization methods tend to use longer or all historical data. It not limited feature points and trajectories at adjacent moments but also considers the long ago states, which is called the Full-SLAM. In this sense, nonlinear optimization methods use more information and, of course, require more calculations.
 	
 	\item 
-	Compared with the optimization method introduced in Lecture 6, the EKF filter is only linearized \textbf{once} at $\mathbf{\hat{x}}_{k-1}$. Then we calculated the posterior directly based on the linearization result at this time. This is equivalent to saying that we believe that the linear approximation is still valid at the posterior point. In fact, when we are far away from the operating point, the first-order Taylor expansion may not be able to approximate the entire function, which depends on the nonlinearity of the motion model and the observation model. If they have a strong nonlinearity, then the linear approximation is only valid in a small range, and we cannot consider that the linear approximation can still be used at a long distance. This is known as the \textbf{nonlinear error} of EKF and is also a major problem.
+	Compared with the optimization method introduced in Lecture 6, the EKF filter is only linearized \textit{once} at $\mathbf{\hat{x}}_{k-1}$. Then we calculated the posterior directly based on the linearization result at this time. This is equivalent to saying that we believe that the linear approximation is still valid at the posterior point. In fact, when we are far away from the operating point, the first-order Taylor expansion may not be able to approximate the entire function, which depends on the nonlinearity of the motion model and the observation model. If they have a strong nonlinearity, then the linear approximation is only valid in a small range, and we cannot consider that the linear approximation can still be used at a long distance. This is known as the \textit{nonlinear error} of EKF and is also a major problem.
 	
-	In the optimization problem, although we also make the first-order (fastest descent) or second-order (Gauss-Newton method or Levenberg-Marquardt method) approximation, after each iteration, we will re-do the Taylor expansion for the new estimated point, instead of only doing it once on a fixed point like EKF. This makes the optimization method applicable to a wider range, which can also be effective when the state changes greatly. So, in general, you can roughly think that \textbf{EKF is just one iteration of optimization}\footnote{Technically, it is better than one iteration because the linearization of the update step is based on prediction. If the motion and observation model is linearized simultaneously at the time of prediction, it is the same as an iteration in the optimization. }.
+	In the optimization problem, although we also make the first-order (fastest descent) or second-order (Gauss-Newton method or Levenberg-Marquardt method) approximation, after each iteration, we will re-do the Taylor expansion for the new estimated point, instead of only doing it once on a fixed point like EKF. This makes the optimization method applicable to a wider range, which can also be effective when the state changes greatly. So, in general, you can roughly think that \textit{EKF is just one iteration of optimization}\footnote{Technically, it is better than one iteration because the linearization of the update step is based on prediction. If the motion and observation model is linearized simultaneously at the time of prediction, it is the same as an iteration in the optimization. }.
 	
 	\item 
 	From the point of view of implementation, EKF needs to store the state variable's mean and variance in the memory and update them iteratively. If the landmarks are also put into the states, where the number of landmarks is significantly larger than that of the poses in visual SLAM, this storage amount is considerable, and it grows squarely with the state amount (because the covariance matrix is also ​​stored). Therefore, it is generally believed that EKF SLAM is not suitable for large-scale scenarios.
@@ -282,10 +283,10 @@ So, is EKF enough for modern SLAM systems? Why are we using optimization approac
 	Finally, filter methods such as EKF have no outlier detection mechanism, which causes the system to diverge when there are outliers. Outliers are very common in visual SLAM: regardless of feature matching or optical flow method, it is easy to track or match to the wrong point. Lack of an outlier detection mechanism will make the system very unstable in practice.
 \end{enumerate}
 
-Due to these obvious shortcomings of EKF, we usually think that with the same amount of calculation, nonlinear optimization can achieve better results than the filters in terms of accuracy and robustness \textsuperscript{\cite{Strasdat2012}}. Let's discuss the backend based on nonlinear optimization in the following sections. We will mainly introduce the graph optimization and demonstrate the backend optimization with g2o and Ceres.
+Due to these obvious shortcomings of EKF, we usually think that with the same amount of calculation, nonlinear optimization can achieve better results than the filters in terms of accuracy and robustness  {\cite{Strasdat2012}}. Let's discuss the backend based on nonlinear optimization in the following sections. We will mainly introduce the graph optimization and demonstrate the backend optimization with g2o and Ceres.
 
 \section{Bundle Adjustment and Graph Optimization}
-If you have been working on visual 3D reconstruction, you should be familiar with this concept. The so-called Bundle Adjustment refers to optimizing both camera parameters (intrinsic and extrinsic) and 3D landmarks with images. Consider the bundles of light rays emitted from 3D points. They are projected into the image planes of several cameras and then detected as feature points. The purpose of optimization can be explained as to \textbf{adjust} the camera poses and the 3D points, to ensure the projected 2D features (bundles) match the detected results {\cite{Triggs2000}}.
+If you have been working on visual 3D reconstruction, you should be familiar with this concept. The so-called Bundle Adjustment refers to optimizing both camera parameters (intrinsic and extrinsic) and 3D landmarks with images. Consider the bundles of light rays emitted from 3D points. They are projected into the image planes of several cameras and then detected as feature points. The purpose of optimization can be explained as to \textit{adjust} the camera poses and the 3D points, to ensure the projected 2D features (bundles) match the detected results {\cite{Triggs2000}}.
 
 We have briefly introduced the principles of BA in lectures \ref{cpt:5} and \ref{cpt:7}. This section aims to introduce the characteristics of its corresponding graph model structure and then introduce some general quick solutions.
 
@@ -295,11 +296,11 @@ First, let's review the entire projection process. Starting from a point $\mathb
 \begin{enumerate}
 	\item First, transform the world coordinates into the camera frame using extrinsics $(\mathbf{R}, \mathbf{t})$：
 	\begin{equation}
-		\mathbf{P}' = \mathbf{R} \mathbf{p} + \mathbf{t} = [X', Y', Z']^\mathrm{T}.
+		\mathbf{P}' = \mathbf{R} \mathbf{p} + \mathbf{t} = [X', Y', Z']^T.
 	\end{equation}
 	\item Then, project $\mathbf{P}'$ into the normalized plane and get the normalized coordinates: 
 	\begin{equation}
-		\mathbf{P}_c = [u_c, v_c, 1]^\mathrm{T} = [X'/Z', Y'/Z', 1]^\mathrm{T}.
+		\mathbf{P}_c = [u_c, v_c, 1]^T = [X'/Z', Y'/Z', 1]^T.
 	\end{equation}
 	\item Apply the distortion model. We only consider the radical distortion here: 
 	\begin{equation}
@@ -319,7 +320,7 @@ First, let's review the entire projection process. Starting from a point $\mathb
 	\end{equation}
 \end{enumerate}
 
-This series of calculation procedures seems a bit long for beginners. We use the process \autoref{fig:calculationflow}~ to visualize the entire process to help readers understand. Readers should be able to understand that this process is exactly the \textbf{observation equation} mentioned earlier, and we note it as:
+This series of calculation procedures seems a bit long for beginners. We use the process \autoref{fig:calculationflow}~ to visualize the entire process to help readers understand. Readers should be able to understand that this process is exactly the \textit{observation equation} mentioned earlier, and we note it as:
 \begin{equation}
 	\mathbf{z} = h(\mathbf{x}, \mathbf{y}).
 \end{equation}
@@ -332,12 +333,12 @@ This series of calculation procedures seems a bit long for beginners. We use the
 \end{figure}
 
 
-Now, we give its detailed parameterization process. Specifically, the $\mathbf{x}$ here refers to the pose of the camera. We may write it as $\mathbf{R}, \mathbf{t}$, or $\mathbf{T }$ in the corresponding Lie group, or the  Lie algebra $\mathbf{\xi}$. The landmark $\mathbf{y}$ is the three-dimensional point $\mathbf{p}$ here, and the observation data is the pixel coordinate $\mathbf{z} \buildrel \Delta \over = [u_s, v_s]^T $. Consider from the perspective of least squares, and we can write out the error of this observation:
+Now, we give its detailed parameterization process. Specifically, the $\mathbf{x}$ here refers to the pose of the camera. We may write it as $\mathbf{R}, \mathbf{t}$, or $\mathbf{T }$ in the corresponding Lie group, or the  Lie algebra $\mathbf{\xi}$. The landmark $\mathbf{y}$ is the three-dimensional point $\mathbf{p}$ here, and the observation data is the pixel coordinate $\mathbf{z} \buildrel \Delta \over = [u_s, v_s]^T $. Consider from the perspective of least-squares, and we can write out the error of this observation:
 \begin{equation}
 	\mathbf{e} = \mathbf{z} - h(\mathbf{T}, \mathbf{p}).
 \end{equation}
 
-Then, let's consider the observations at other moments by adding a subscript to the error. Suppose $\mathbf{z}_{ij}$ is the data generated by observing landmark $\mathbf{p}_j$ at the pose $\mathbf{T}_i$, then the overall \textbf{cost function} is:
+Then, let's consider the observations at other moments by adding a subscript to the error. Suppose $\mathbf{z}_{ij}$ is the data generated by observing landmark $\mathbf{p}_j$ at the pose $\mathbf{T}_i$, then the overall \textit{cost function} is:
 \begin{equation}
 	\label{eq:BAcostfunction}
 	\frac{1}{2}\sum_{i=1}^m \sum_{j=1}^n \| \mathbf{e}_{ij} \|^2 = \frac{1}{2}\sum_{i=1}^m\sum_{j=1}^n \|
@@ -345,12 +346,12 @@ Then, let's consider the observations at other moments by adding a subscript to 
 \end{equation}
 
 
-Solving this least squares is equivalent to adjusting the pose and road signs at the same time, which is the so-called BA. Next, we will gradually discuss the solution of the model based on the objective function and the nonlinear optimization content introduced in the lecture \ref{cpt:6}.
+Solving this least-squares is equivalent to adjusting the pose and road signs at the same time, which is the so-called BA. Next, we will gradually discuss the solution of the model based on the objective function and the nonlinear optimization content introduced in the lecture \ref{cpt:6}.
 
 \subsection{Solving Bundle Adjustment}
 Looking into the observation model $h(\mathbf{T}, \mathbf{p})$ in the previous section, it is easy to tell that the function is not a linear function. So we hope to use some nonlinear optimization methods introduced in section \ref{sec:6.2} to optimize it. According to the principle of nonlinear optimization, we should start from a certain initial value and continuously look for the descending direction $\Delta \mathbf{x}$ to find the optimal solution of the objective function, that is, continuously solve the incremental equation \eqref{eq:minimize-deltax} for the increment $\Delta \mathbf{x}$. Although a single error term is only for one pose and one landmark, the overall BA is about optimizing all variables together: 
 \begin{equation}
-	\mathbf{x} = [ \mathbf{T}_1, \ldots, \mathbf{T}_m, \mathbf{p}_1, \ldots, \mathbf{p}_n ]^\mathrm{T}.
+	\mathbf{x} = [ \mathbf{T}_1, \ldots, \mathbf{T}_m, \mathbf{p}_1, \ldots, \mathbf{p}_n ]^T.
 \end{equation}
 
 Correspondingly, the $\Delta \mathbf{x}$ in the increment equation is the increment of the overall variable. In this sense, when we give an increment to the optimization variable, the objective function becomes
@@ -360,11 +361,11 @@ Correspondingly, the $\Delta \mathbf{x}$ in the increment equation is the increm
 \end{equation}
 where $\mathbf{F}_{ij}$ is the partial derivative of the entire cost function to the $i$-th pose, and $\mathbf{E}_{ij}$ is the partial derivative of the function to the $j$-th landmark. We have introduced their specific forms in the ~\ref{sec:BA-vo1}~ section, so we will not expand the derivation here. Now, put the camera pose variables together:
 \begin{equation}
-	\mathbf{x}_c=[ \mathbf{\xi}_1, \mathbf{\xi}_2, \ldots, \mathbf{\xi}_m ]^\mathrm{T} \in \mathbb{R}^{6m},
+	\mathbf{x}_c=[ \mathbf{\xi}_1, \mathbf{\xi}_2, \ldots, \mathbf{\xi}_m ]^T \in \mathbb{R}^{6m},
 \end{equation}
 and also the landmarks together: 
 \begin{equation}
-	\mathbf{x}_p=[ \mathbf{p}_1, \mathbf{p}_2, \ldots , \mathbf{p}_n ]^\mathrm{T}\in \mathbb{R}^{3n},
+	\mathbf{x}_p=[ \mathbf{p}_1, \mathbf{p}_2, \ldots , \mathbf{p}_n ]^T\in \mathbb{R}^{3n},
 \end{equation}
 then the equation \eqref{eq:tangentbundleindetail} can be simplified as: 
 \begin{equation}
@@ -384,24 +385,24 @@ It should be noted that this formula has changed from a sum of many small quadra
 	\mathbf{H} \Delta \mathbf{x} = \mathbf{g}.
 \end{equation}
 
-According to the knowledge of \ref{cpt:6}, we know that the main difference between the Gauss Newton method and the Levenberg-Marquardt method is that the $\mathbf{H}$ here is taken from $\mathbf{J }^\mathrm{T}\mathbf{J}$ or $\mathbf{J}^\mathrm{T}\mathbf{J}+ \lambda \mathbf{I}$. Since we have categorized the variables into poses and landmarks, the Jacobian matrix can be divided into two parts:
+According to the knowledge of \ref{cpt:6}, we know that the main difference between the Gauss Newton method and the Levenberg-Marquardt method is that the $\mathbf{H}$ here is taken from $\mathbf{J }^T\mathbf{J}$ or $\mathbf{J}^T\mathbf{J}+ \lambda \mathbf{I}$. Since we have categorized the variables into poses and landmarks, the Jacobian matrix can be divided into two parts:
 \begin{equation}
 	\mathbf{J}=[\mathbf{F} \ \mathbf{E}].
 \end{equation}
 
 So the Hessian matrix will be (take Gauss-Newton as an example): 
 \begin{equation}\label{eq:HessianMatrix}
-	\mathbf{H} = \mathbf{J}^\mathrm{T}\mathbf{J} =
+	\mathbf{H} = \mathbf{J}^T\mathbf{J} =
 	\begin{bmatrix}
-		\mathbf{F}^\mathrm{T}\mathbf{F}   &   \mathbf{F}^\mathrm{T}\mathbf{E}   \\ 
-		\mathbf{E}^\mathrm{T}\mathbf{F}   &   \mathbf{E}^\mathrm{T}\mathbf{E}
+		\mathbf{F}^T\mathbf{F}   &   \mathbf{F}^T\mathbf{E}   \\ 
+		\mathbf{E}^T\mathbf{F}   &   \mathbf{E}^T\mathbf{E}
 	\end{bmatrix} .
 \end{equation}
 
-Of course, in the Levenberg-Marquardt method we also need to calculate this matrix. It is not difficult to find that the dimension of this linear equation will be very large because all optimization variables are considered, including all camera poses and landmarks. Especially in visual SLAM, a single image will contain hundreds of feature points, which greatly increases the dimension of this linear equation. If we directly invert $\mathbf{H}$ to solve the incremental equation, such a matrix inversion is an operation \textsuperscript{\cite{Sueli2003}} with $O(n^3)$ complexity, which is very expensive in computation. Fortunately, the $\mathbf{H}$ matrix here has a certain special structure. Using this special structure, we can speed up the solution process.
+Of course, in the Levenberg-Marquardt method we also need to calculate this matrix. It is not difficult to find that the dimension of this linear equation will be very large because all optimization variables are considered, including all camera poses and landmarks. Especially in visual SLAM, a single image will contain hundreds of feature points, which greatly increases the dimension of this linear equation. If we directly invert $\mathbf{H}$ to solve the incremental equation, such a matrix inversion is an operation  {\cite{Sueli2003}} with $O(n^3)$ complexity, which is very expensive in computation. Fortunately, the $\mathbf{H}$ matrix here has a certain special structure. Using this special structure, we can speed up the solution process.
 
 \subsection{Sparsity}
-An important development of visual SLAM in the 21st century is to recognize the sparse structure of the matrix $\mathbf{H}$, and find that this structure can be naturally and explicitly represent by a graph \textsuperscript{\cite{Kummerle2011, Polok2013}}. This section will discuss the matrix sparse structure in detail.
+An important development of visual SLAM in the 21st century is to recognize the sparse structure of the matrix $\mathbf{H}$, and find that this structure can be naturally and explicitly represent by a graph  {\cite{Kummerle2011, Polok2013}}. This section will discuss the matrix sparse structure in detail.
 
 The sparsity of the $\mathbf{H}$ matrix is caused by the Jacobian matrix $\mathbf{J}(\mathbf{x})$. Consider one of the error terms $\mathbf{e}_{ij}$. Note that this error term only describes the residual about $\mathbf{p}_j$ in $\mathbf{T}_i$, and only involves the $i$-th camera pose and the $j$-th landmark. The derivatives of the remaining variables are all 0. Therefore, the Jacobian matrix corresponding to the error term has the following form:
 \begin{equation}
@@ -428,7 +429,7 @@ where $\mathbf{0}_{2 \times 6}$ represents the $\mathbf{0}$ matrix with dimensio
 
 Let's look and the example of ~\autoref{fig:sparse}. Since $\mathbf{J}_{ij}$ only has non-zero blocks in column $i, j$, it will add four non-zero blocks into the overall Hessian matrix $\mathbf{H}$. The non-zero blocks are at $(i,i), (i,j), (j,i), (j,j)$: 
 \begin{equation}
-	\mathbf{H} = \sum_{i,j} \mathbf{J}_{ij}^\mathrm{T} \mathbf{J}_{ij},
+	\mathbf{H} = \sum_{i,j} \mathbf{J}_{ij}^T \mathbf{J}_{ij},
 \end{equation}
 
 Now let's divide $\mathbf{H}$ into blocks: 
@@ -502,7 +503,7 @@ In order to obtain the Jacobian matrix corresponding to the objective function, 
 	\label{fig:simplematrix}
 \end{figure}
 
-You may have noticed that the Hessian matrix in the \autoref{fig:simplegraph}~ has the same structure with the corresponding \textbf{adjacency matrix} of the graph \footnote{The adjacency matrix is such a matrix that, its $i,j$ element describes whether there is a connected edge at nodes $i$ and $j$. If this edge exists, we set this element to 1, otherwise set to 0.} The above $\mathbf{H}$ matrix has a total of $8 \times 8$ matrix blocks. For the non-diagonal matrix block in the $\mathbf{H}$ matrix, if the matrix block is non-zero, then There will be an edge in the graph between the variables corresponding to their positions. We can clearly see this from \autoref{fig:matrixandgraph}~. Therefore, the non-zero matrix block in the non-diagonal part of the $\mathbf{H}$ matrix can be understood as a connection between its corresponding two variables, or it can be called a constraint. Therefore, we found that the graph optimization structure is obviously related to the sparsity of the incremental equation.
+You may have noticed that the Hessian matrix in the \autoref{fig:simplegraph}~ has the same structure with the corresponding \textit{adjacency matrix} of the graph \footnote{The adjacency matrix is such a matrix that, its $i,j$ element describes whether there is a connected edge at nodes $i$ and $j$. If this edge exists, we set this element to 1, otherwise set to 0.} The above $\mathbf{H}$ matrix has a total of $8 \times 8$ matrix blocks. For the non-diagonal matrix block in the $\mathbf{H}$ matrix, if the matrix block is non-zero, then There will be an edge in the graph between the variables corresponding to their positions. We can clearly see this from \autoref{fig:matrixandgraph}~. Therefore, the non-zero matrix block in the non-diagonal part of the $\mathbf{H}$ matrix can be understood as a connection between its corresponding two variables, or it can be called a constraint. Therefore, we found that the graph optimization structure is obviously related to the sparsity of the incremental equation.
 
 \begin{figure}[!htp]
 	\centering
@@ -521,9 +522,9 @@ Now consider the more general situation, suppose we have $m$ camera poses and $n
 \end{figure}
 
 \subsection{Schur Trick}
-For $\mathbf{H}$ with this sparse structure, what is the difference in the solution of the linear equation $\mathbf{H} \Delta \mathbf{x}= \mathbf{g}$? In fact, there are several ways to use the sparsity of $\mathbf{H}$ to accelerate the calculations. This section introduces one of the most commonly used methods in visual SLAM: Schur elimination, also known as \textbf{marginalization} in SLAM research.
+For $\mathbf{H}$ with this sparse structure, what is the difference in the solution of the linear equation $\mathbf{H} \Delta \mathbf{x}= \mathbf{g}$? In fact, there are several ways to use the sparsity of $\mathbf{H}$ to accelerate the calculations. This section introduces one of the most commonly used methods in visual SLAM: Schur elimination, also known as \textit{marginalization} in SLAM research.
 
-Take a closer look at \autoref{fig:BigHmatrix}, we can easily find that this matrix can be divided into 4 blocks, which is consistent with \eqref{eq:H-blocks}. The upper left corner is a block-diagonal matrix, and the dimension of each block is the same as the dimension of the camera pose. The bottom-right corner is also a diagonal block matrix, and the dimension of each diagonal block is same as the dimension of the landmark. The structure of the off-diagonal block is related to the specific observation data. We first divide this matrix into regions as shown in \autoref{fig:MatrixSegmentation}. Readers can easily find that these 4 regions correspond to the 4 matrix blocks in the formula \eqref{eq:HessianMatrix}. For the convenience of subsequent analysis, we note these 4 blocks as $\mathbf{B}, \mathbf{E}, \mathbf{E}^\mathrm{T}, \mathbf{C}$.
+Take a closer look at \autoref{fig:BigHmatrix}, we can easily find that this matrix can be divided into 4 blocks, which is consistent with \eqref{eq:H-blocks}. The upper left corner is a block-diagonal matrix, and the dimension of each block is the same as the dimension of the camera pose. The bottom-right corner is also a diagonal block matrix, and the dimension of each diagonal block is same as the dimension of the landmark. The structure of the off-diagonal block is related to the specific observation data. We first divide this matrix into regions as shown in \autoref{fig:MatrixSegmentation}. Readers can easily find that these 4 regions correspond to the 4 matrix blocks in the formula \eqref{eq:HessianMatrix}. For the convenience of subsequent analysis, we note these 4 blocks as $\mathbf{B}, \mathbf{E}, \mathbf{E}^T, \mathbf{C}$.
 
 \begin{figure}[!ht]
 	\centering
@@ -537,7 +538,7 @@ The linear equations $\mathbf{H\Delta x} = \mathbf{g}$ can be rewritten as:
 	\label{eq:linearequations}
 	\left[ \begin{matrix}
 		\mathbf{B}   &   \mathbf{E} \\
-		\mathbf{E^\mathrm{T}} &   \mathbf{C}
+		\mathbf{E^T} &   \mathbf{C}
 	\end{matrix}\right] 
 	\left[ \begin{array}{l}
 		\Delta \mathbf{x}_c \\
@@ -556,7 +557,7 @@ where $\mathbf{B}$ is a block-diagonal matrix. The dimension of each diagonal bl
 	\end{matrix}\right]
 	\left[ \begin{matrix}
 		\mathbf{B}   &   \mathbf{E} \\
-		\mathbf{E^\mathrm{T}} &   \mathbf{C}
+		\mathbf{E^T} &   \mathbf{C}
 	\end{matrix}\right] 
 	\left[ \begin{array}{l}
 		\Delta \mathbf{x}_c \\
@@ -576,8 +577,8 @@ where $\mathbf{B}$ is a block-diagonal matrix. The dimension of each diagonal bl
 Rearrange it: 
 \begin{equation}
 	\left[ \begin{matrix}
-		\mathbf{B} - \mathbf{E}\mathbf{C}^{-1}\mathbf{E}^\mathrm{T}	& 	\mathbf{0} \\
-		\mathbf{E}^\mathrm{T}							& 	\mathbf{C}
+		\mathbf{B} - \mathbf{E}\mathbf{C}^{-1}\mathbf{E}^T	& 	\mathbf{0} \\
+		\mathbf{E}^T							& 	\mathbf{C}
 	\end{matrix} \right]
 	\left[ \begin{array}{l}
 		\Delta \mathbf{x}_c \\
@@ -592,17 +593,17 @@ Rearrange it:
 After the elimination, the first line of the equations becomes a term that has nothing to do with $\Delta \mathbf{x}_p$. Take it out separately and get the incremental equation about the pose part:
 \begin{equation}\label{eq:marginalization}
 	\left[ 
-	\mathbf{B} - \mathbf{E}\mathbf{C}^{-1}\mathbf{E}^\mathrm{T}
+	\mathbf{B} - \mathbf{E}\mathbf{C}^{-1}\mathbf{E}^T
 	\right]
 	\Delta \mathbf{x}_c  = 
 	\mathbf{v} - \mathbf{E}\mathbf{C}^{-1}\mathbf{w} .
 \end{equation}
 
-The dimension of this linear equation is the same as the $\mathbf{B}$ matrix, and is much smaller than the overall equations. The Schur trick is to solve this equation first, then substitute the solved $\Delta \mathbf{x}_c$ into the original equation, and then solve $\Delta \mathbf{x}_p$. This process is called \textbf{marginalization} {\cite{Sibley2010}}, or \textbf{Schur elimination} (Schur trick). Compared with the method of directly solving linear equations, it have several obvious advantages:
+The dimension of this linear equation is the same as the $\mathbf{B}$ matrix, and is much smaller than the overall equations. The Schur trick is to solve this equation first, then substitute the solved $\Delta \mathbf{x}_c$ into the original equation, and then solve $\Delta \mathbf{x}_p$. This process is called \textit{marginalization} {\cite{Sibley2010}}, or \textit{Schur elimination} (Schur trick). Compared with the method of directly solving linear equations, it have several obvious advantages:
 
 \begin{enumerate}
 	\item Since $\mathbf{C}$ is a block diagonal matrix, $\mathbf{C}^{-1}$ is easy to solve.
-	\item After solving $\Delta \mathbf{x}_c$, the incremental equation of the landmark part is given by $\Delta \mathbf{x}_p = \mathbf{C}^{-1} (\mathbf{w}-\mathbf {E}^\mathrm{T} \Delta \mathbf{x}_c)$. This still uses the easy-to-solve feature of $\mathbf{C}^{-1}$.
+	\item After solving $\Delta \mathbf{x}_c$, the incremental equation of the landmark part is given by $\Delta \mathbf{x}_p = \mathbf{C}^{-1} (\mathbf{w}-\mathbf {E}^T \Delta \mathbf{x}_c)$. This still uses the easy-to-solve feature of $\mathbf{C}^{-1}$.
 \end{enumerate}
 
 Therefore, the main amount of calculation for marginalization is to solve the equation \eqref{eq:marginalization}. There is not much we can say about this equation. It is just an ordinary linear equation, no special structure can be used. Let us denote the coefficient of this equation as $\mathbf{S}$. How about its sparsity? \autoref{fig:marginalization} shows an instance of $\mathbf{S}$ after Schur elimination. It can be seen that its sparsity is somehow irregular.
@@ -614,7 +615,7 @@ Therefore, the main amount of calculation for marginalization is to solve the eq
 	\label{fig:marginalization}
 \end{figure}
 
-As mentioned earlier, the non-zero elements at the non-diagonal blocks of the $\mathbf{H}$ matrix correspond to the association between the camera and the landmark. Then, do the sparsity of $\mathbf{S}$ have physical meaning after Schur elimination? The answer is yes. Here we say without proof that the non-zero matrix block on the off-diagonal line of the $\mathbf{S}$ matrix indicates that there is a co-observation between the two camera variables. It is called \textbf{co-visibility}. Conversely, if the block is zero, it means that the two cameras do not share any observation. For example, in the sparse matrix shown in \autoref{fig:marginalizationanalysis}~, the first $4 \times 4$ matrix blocks in the upper left corner can indicate that there are common observations between the corresponding camera variables $C_1, C_2, C_3$, and $C_4$.
+As mentioned earlier, the non-zero elements at the non-diagonal blocks of the $\mathbf{H}$ matrix correspond to the association between the camera and the landmark. Then, do the sparsity of $\mathbf{S}$ have physical meaning after Schur elimination? The answer is yes. Here we say without proof that the non-zero matrix block on the off-diagonal line of the $\mathbf{S}$ matrix indicates that there is a co-observation between the two camera variables. It is called \textit{co-visibility}. Conversely, if the block is zero, it means that the two cameras do not share any observation. For example, in the sparse matrix shown in \autoref{fig:marginalizationanalysis}~, the first $4 \times 4$ matrix blocks in the upper left corner can indicate that there are common observations between the corresponding camera variables $C_1, C_2, C_3$, and $C_4$.
 
 \begin{figure}[!htp]
 	\centering
@@ -623,9 +624,9 @@ As mentioned earlier, the non-zero elements at the non-diagonal blocks of the $\
 	\label{fig:marginalizationanalysis}
 \end{figure}
 
-Therefore, the sparsity structure of the $\mathbf{S}$ matrix depends on the actual observation results, which we cannot predict in advance. In practice, for example, in the local mapping module of ORB-SLAM {\cite{Mur-Artal2015}}, we may deliberately select those frames with co-observations as keyframes, in this case the resulting $\mathbf{S}$ is a dense matrix. However, since this module is not executed in real time (normally runs in a separate thread in the backend), this approach is also acceptable. But in other methods, such as DSO\textsuperscript{\cite{Engel2016}}, OKVIS\textsuperscript{\cite{Leutenegger2015}}, etc., they use the sliding window method. Such methods will use the previous $\mathbf{S}$ matrix as a prior constraint in the following BA steps, so they must use some techniques to maintain the sparsity of the $\mathbf{S}$ matrix by discarding some observations. Readers who want to go deeper into this area can refer to their papers. I won't talk about these detailed things here.
+Therefore, the sparsity structure of the $\mathbf{S}$ matrix depends on the actual observation results, which we cannot predict in advance. In practice, for example, in the local mapping module of ORB-SLAM {\cite{Mur-Artal2015}}, we may deliberately select those frames with co-observations as keyframes, in this case the resulting $\mathbf{S}$ is a dense matrix. However, since this module is not executed in real time (normally runs in a separate thread in the backend), this approach is also acceptable. But in other methods, such as DSO {\cite{Engel2016}}, OKVIS {\cite{Leutenegger2015}}, etc., they use the sliding window method. Such methods will use the previous $\mathbf{S}$ matrix as a prior constraint in the following BA steps, so they must use some techniques to maintain the sparsity of the $\mathbf{S}$ matrix by discarding some observations. Readers who want to go deeper into this area can refer to their papers. I won't talk about these detailed things here.
 
-From a probabilistic persepctive, we call this step as \textbf{marginalization} because we actually converted the problem of seeking $(\Delta \mathbf{x}_c, \Delta \mathbf{x}_p)$ into fixing  $\Delta \mathbf{x}_p$ first, and finding $\Delta \mathbf{x}_c$, and then finding $\Delta \mathbf{x}_p$. This step is equivalent to the conditional probability expansion:
+From a probabilistic persepctive, we call this step as \textit{marginalization} because we actually converted the problem of seeking $(\Delta \mathbf{x}_c, \Delta \mathbf{x}_p)$ into fixing  $\Delta \mathbf{x}_p$ first, and finding $\Delta \mathbf{x}_c$, and then finding $\Delta \mathbf{x}_p$. This step is equivalent to the conditional probability expansion:
 \begin{equation}
 	\underbrace{P( \mathbf{x}_c, \mathbf{x}_p )}_{\text{joint}} = \underbrace{P(\mathbf{x}_c | \mathbf{x}_p )}_{\text{conditional}} \underbrace{P( \mathbf{x}_p )}_{\text{marginal}} ,
 \end{equation}
