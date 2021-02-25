@@ -5786,14 +5786,24 @@ organization={IEEE}
   organization = {IEEE},
   pages        = {2238--2245},
 }
-@article{cascianelli2017robust,
-  title={Robust visual semi-semantic loop closure detection by a covisibility graph and CNN features},
-  author={Cascianelli, Silvia and Costante, Gabriele and Bellocchio, Enrico and Valigi, Paolo and Fravolini, Mario L and Ciarfuglia, Thomas A},
-  journal={Robotics and Autonomous Systems},
-  volume={92},
-  pages={53--65},
-  year={2017},
-  publisher={Elsevier}
+
+@Article{Cascianelli2017,
+  author    = {Cascianelli, Silvia and Costante, Gabriele and Bellocchio, Enrico and Valigi, Paolo and Fravolini, Mario L and Ciarfuglia, Thomas A},
+  journal   = {Robotics and Autonomous Systems},
+  title     = {Robust visual semi-semantic loop closure detection by a covisibility graph and CNN features},
+  year      = {2017},
+  pages     = {53--65},
+  volume    = {92},
+  publisher = {Elsevier},
+}
+
+@InProceedings{handa:etal:ICRA2014,
+author = {A. Handa and T. Whelan and J.B. McDonald and A.J. Davison},
+title = {A Benchmark for {RGB-D} Visual Odometry, {3D} Reconstruction and {SLAM}},
+booktitle = {IEEE Intl. Conf. on Robotics and Automation, ICRA},
+address = {Hong Kong, China},
+month = {May},
+year = {2014}
 }
 @Comment{jabref-meta: databaseType:bibtex;}
 

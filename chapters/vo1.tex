@@ -775,6 +775,7 @@ For the eight-point method, the size of $\mathbf{A}$ is $8 \times 9$. If the giv
 So the $\mathbf{E}$ matrix in the sense of least squares is obtained. However, due to potential mismatches, we prefer to use \textbf{Random Sample Concensus (RANSAC)} instead of least squares to solve the above problem. RANSAC is general, applicable to many cases with incorrect data, and can handle data with incorrect matching.
 
 \section{Triangulation}
+\label{sec:7.5}
 In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of \textbf{Triangulation}, shown in \autoref{fig: triangluar}.
 
 \begin{figure}[!ht]

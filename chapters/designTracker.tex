@@ -8,13 +8,13 @@
 	\end{enumerate}
 \end{mdframed}
 
-This lecture is the concluding part of the book. We will use the knowledge we learned before to actually write a visual odometry program. You will manage local robot trajectories and landmarks, and experience how a software framework is composed. During the operation, we will encounter many practical problems: how to continuously track the image, how to control the scale of BA, and so on. In order to make the program run stably, we need to deal with the above situations, which will bring about many useful discussions on engineering realization.
+This lecture is the concluding part of the book. We will use the knowledge we learned before to actually write a visual odometry program. You will manage local robot trajectories and landmarks and experience how a software framework is composed. During the operation, we will encounter many practical problems: how to continuously track the image, control the scale of BA, and so on. To make the program run stably, we need to deal with the above situations, which will bring about many useful discussions on engineering realization.
 
 \newpage
 \section{Why do We Have a Separate Engineering Chapter?}
-Knowing the principles of bricks and cement does not mean that you can build a great palace.
+Knowing the principles of bricks and cement does not mean that you can build a grand palace.
 
-In the Minecraft game, all the players have are some blocks with different colors and textures. Its nature is extremely simple, and all the player has to do is place these blocks on a plane. Understanding a block is also extremely simple, but when actually picking them up, the beginners often can only build simple matchbox houses, while experienced and creative players can use these simple blocks to build houses, gardens, terraces and pavilions, even the big cities (\autoref{fig:mcarchitecture}~) \footnote{The lower left is my practice work. The bottom right is from the work of the Epicwork team: "Old Summer Palace". I used to study in Epicwork for a while, and the creativity of the young people and even the children there left a deep impression on me. }.
+In the Minecraft game, all the players have are some blocks with different colors and textures. All the player needs to do is place these blocks on a plane and stack them together. Understanding a block is also extremely simple, but most beginners can only make simple matchbox houses when really starting to build the architectures. Experienced and creative players can use these simple blocks to build houses, gardens, terraces, and pavilions, even the big cities (\autoref{fig:mcarchitecture}~) \footnote{The lower left is my practice work. The bottom right is from the work of the Epicwork team: "Old Summer Palace." I used to study in Epicwork for a while. The creativity of the young people and even the children there left a deep impression on me. }.
 
 \begin{figure}[!htp]
 	\centering    
@@ -23,27 +23,27 @@ In the Minecraft game, all the players have are some blocks with different color
 	\label{fig:mcarchitecture}
 \end{figure}
 
-In SLAM, we believe that engineering implementation and understanding of algorithm principles should be at least as important, and even more emphasis should be placed on how to write practical programs. The principles of algorithms are like blocks. We can discuss their principles and properties clearly and clearly, but just understanding the blocks will not enable you to build real buildings: they require a lot of trial, time and experience. We Encourage readers to work in a more practical direction-of course this is often very complicated. Just like in Minecraft, you need to master the structure of various columns, walls, and roofs, wall carvings, and calculation of geometric angles. These are far less simple than discussing the nature of each block.
+In SLAM, we believe that engineering implementation and understanding of algorithm principles should be at least the same important, or even more, as the algorithm principles. The algorithms are like blocks in the building. We can discuss their properties clearly, but just understanding the basic units will not enable you to build an entire building. They require a lot of trials, time, and experience. We encourage readers to work in a more practical direction. Of course, this is often very complicated. Just like in Minecraft, you need to master the structure of various columns, walls, and roofs, wall carvings, and calculation of geometric angles. There are far more contents than discussing the nature of each block.
 
-The same is true for the specific implementation of SLAM. A practical program has a lot of engineering design and skills (Trick), and it is necessary to discuss how to deal with problems after each step. In principle, the SLAM implemented by everyone will be different, and most of the time we cannot say which implementation method is the best. However, we usually encounter some common problems: "how to manage map points", "how to deal with mismatches", "how to select keyframes", and so on. We hope that readers can have some intuitive feelings about these possible problems-we think this feeling is very important.
+The same is true for the specific implementation of SLAM. A practical program has a lot of engineering design and skills (tricks), and it is necessary to discuss how to deal with problems after each step. In principle, each SLAM implementation is different. Most of the time, we cannot say which implementation method is the best. However, we usually encounter some common problems like managing map points, dealing with mismatches, selecting keyframes, and so on. We hope that readers can have some intuitive feelings about these possible problems. We think this feeling is vital.
 
-Therefore, out of the emphasis on practice, in this lecture, we will lead the readers through the process of building a SLAM framework. Just like architecture, we have to discuss trivial but important issues such as column spacing and facade aspect ratio. SLAM engineering is complicated. Even if we only keep the core part, it will take up a lot of space and make this book too verbose. However, please note that although the project after completion is complicated, the middle "from simple to complex" process is worthy of detailed discussion and learning value. Therefore, we have to start from a simple data structure, first make a simple visual odometer, and then slowly add some additional functions. In other words, we have to show the reader the process of \textbf{from simple to complex}, so that you can understand how a library is slowly piled up like a snowman.
+Therefore, out of the emphasis on practice, in this lecture, we will lead the readers through the process of building a SLAM framework. Just like the architecture, we have to discuss trivial but essential issues such as column spacing and facade aspect ratio. SLAM engineering is complicated. Even if we only keep the core part, it will take up a lot of space and make this book too verbose. However, please note that although the final completed project may be complicated, the process of being simple to complex is worthy of detailed discussion. Therefore, we have to start from a simple data structure first, make simple visual odometry, and then slowly add some additional functions. 
 
-The code for this lecture is in slambook2/ch13. We will implement a simplified version of the binocular VO, and then see its running effect in the Kitti data set. This VO consists of a front end for optical flow tracking and a back end for partial BA. Why choose binocular VO? One is that the binocular is relatively simple to implement, and initialization can be completed in a single frame; the second is that the binocular has 3D observation, and the realization effect will be better than that of the monocular.
+The code for this lecture is in \textit{slambook2/ch13}. We will implement a simplified version of stereo VO and then see its running effect in the Kitti dataset. This VO consists of a frontend of optical flow tracking and a backend of sliding window BA. Why choose stereo VO? One reason is that the stereo vision is relatively simple to implement, and initialization can be completed in a single frame. The second is that the stereo camera has 3D observation, and the realization effect will be better than that of the monocular.
 
 \section{Framework}
-We are discussing a project realization, and the project usually has the concept of a framework. Most Linux libraries will classify and store algorithm code files according to modules. For example, the header files will be placed in the header file directory, and the source code will be placed in the source code directory. In addition, there may be configuration files, test files, third-party libraries, and so on. Now we come to classify our files according to the common practice of small algorithm libraries:
+We are discussing a project realization, and the project usually has the concept of a framework. Most Linux libraries will classify and store algorithm code files according to modules. For example, the header files will be placed in the header file directory, and the source code will be placed in the source code directory. Also, there may be configuration files, test files, third-party libraries, and so on. Now we come to classify our files according to the common practice of small algorithm libraries:
 
 \begin{enumerate}
 	\item \textit{bin} stores the compiled binary file;
-	\item \textit{include/myslam} stores the header files of the SLAM module. The reason for this approach is that when you set the include directory to include and quote your own header files, you need to write include \texttt{"}myslam/xxx.h\texttt{"}, so that it is not easy to be confused with other libraries.
-	\item \textit{src} stores source code files, mainly .cpp files.
+	\item \textit{include/myslam} stores the header files of the SLAM module. 
+	\item \textit{src} stores the source code files, mainly .cpp files.
 	\item \textit{test} stores the files used for testing, which are also .cpp files.
-	\item \textit{config} stores configuration files.
-	\item \textit{cmake\_modules} saves the cmake files of third-party libraries, which are used by  libraries such as g2o.
+	\item \textit{config} stores the configuration files.
+	\item \textit{cmake\_modules} saves the cmake files of third-party libraries, which are used by libraries such as g2o.
 \end{enumerate}
 
-In this way, we have determined the location of the code file. Press down we will discuss the basic data structure involved in VO.
+In this way, we have determined the location of the code file. Now let's discuss the basic data structure involved in VO.
 
 \subsection{Data Structure}
 Before writing code, we should be clear about what we want to write. A long time ago, there was an old view that a program is \textbf{data structure+algorithm}, so for VO, we have to ask: What kind of data does VO need to process? What are the key algorithms involved? What is the relationship between them?
@@ -65,14 +65,14 @@ Obviously, \textbf{image}, \textbf{features}, and \textbf{landmarks} are the mos
 \end{figure}
 
 \subsection{Pipeline}
-Well, next we have to ask, which algorithms are responsible for feature extraction, which algorithms are responsible for triangulation, and which algorithms are there to deal with optimization problems? According to the previous introduction in this book, we believe that SLAM consists of front and back ends. The front end is responsible for calculating the feature matching of adjacent images, and the back end is responsible for optimizing the entire problem. In a typical implementation, the two should have their own threads. The front-end fast processing ensures real-time performance, and the back-end optimizes keyframes to ensure good results. So overall, our program has two important modules:
+Well, next we have to ask, which algorithms are responsible for feature extraction, which algorithms are responsible for triangulation, and which algorithms are there to deal with optimization problems? According to the previous introduction in this book, we believe that SLAM consists of front and backends. The frontend is responsible for calculating the feature matching of adjacent images, and the backend is responsible for optimizing the entire problem. In a typical implementation, the two should have their own threads. The frontend fast processing ensures real-time performance, and the backend optimizes keyframes to ensure good results. So overall, our program has two important modules:
 
 \begin{itemize}
-	\item Frontend. We insert an image frame into the front end, and the front end is responsible for extracting the features in the image, and then perform optical flow tracking with the previous frame, and calculate the position of the frame based on the optical flow result. When necessary, new feature points should be added and triangulated. The result of the front-end processing will be used as the initial value of the back-end optimization.
-	\item Backend. The backend is a slower thread. It gets the processed keyframes and landmark points, optimizes them, and then returns the optimized results. The back-end should control the scale of the optimization problem within a certain range and cannot keep growing over time.
+	\item Frontend. We insert an image frame into the frontend, and the frontend is responsible for extracting the features in the image, and then perform optical flow tracking with the previous frame, and calculate the position of the frame based on the optical flow result. When necessary, new feature points should be added and triangulated. The result of the frontend processing will be used as the initial value of the backend optimization.
+	\item Backend. The backend is a slower thread. It gets the processed keyframes and landmark points, optimizes them, and then returns the optimized results. The backend should control the scale of the optimization problem within a certain range and cannot keep growing over time.
 \end{itemize}
 
-Through this analysis, we can determine the framework of the entire algorithm, and then express it in a popular pipeline diagram, such as \autoref{fig:pipeline}. We put a \textbf{map} module between the front and back ends to handle the data flow between them. Since the front and back ends process data in separate threads, our envisioned process should be to add new data to the map after the front end has extracted the keyframes; when the back end detects that the map is updated, it runs an optimization, and then puts the old in the map. The keyframes and map points are removed to maintain the optimized scale.
+Through this analysis, we can determine the framework of the entire algorithm, and then express it in a popular pipeline diagram, such as \autoref{fig:pipeline}. We put a \textbf{map} module between the front and backends to handle the data flow between them. Since the front and backends process data in separate threads, our envisioned process should be to add new data to the map after the frontend has extracted the keyframes; when the backend detects that the map is updated, it runs an optimization, and then puts the old in the map. The keyframes and map points are removed to maintain the optimized scale.
 
 \begin{figure}[!htp]
 	\centering
@@ -140,7 +140,7 @@ public:
 };
 \end{lstlisting}
 
-We define Frame to contain id, pose, image, and features in the left and right images. Among them, Pose will be set or accessed by the front and back ends at the same time, so we define its set and get functions, and lock the data in the function. At the same time, Frame can be constructed by static functions, and its id can be automatically assigned in static functions.
+We define Frame to contain id, pose, image, and features in the left and right images. Among them, Pose will be set or accessed by the front and backends at the same time, so we define its set and get functions, and lock the data in the function. At the same time, Frame can be constructed by static functions, and its id can be automatically assigned in static functions.
 
 Next, the feature struct:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/include/myslam/feature.h]
@@ -255,8 +255,8 @@ class Map {
 	std::mutex data_mutex_;
 	LandmarksType landmarks_;         // all landmarks
 	LandmarksType active_landmarks_;  // active landmarks
-	KeyframesType keyframes_;         // all key-frames
-	KeyframesType active_keyframes_;  // all key-frames
+	KeyframesType keyframes_;         // all keyframes
+	KeyframesType active_keyframes_;  // all keyframes
 	
 	Frame::Ptr current_frame_ = nullptr;
 	
@@ -268,24 +268,24 @@ class Map {
 The map records all keyframes and corresponding landmark in a hash form, and maintains an activated keyframe and map point at the same time. Here the concept of \textbf{activation} is what we call \textbf{sliding window}, which will move forward over time. The backend will extract the activated keyframes and landmark points from the map for optimization, and ignore the rest to achieve the effect of controlling the optimization scale. Of course, the activation strategy is defined by ourselves. The simple activation strategy is to remove the oldest keyframe and keep the latest keyframes in time. We only keep the latest 7 keyframes in this demo.
 
 \subsection{Implement the Frontend}
-After defining the basic data structure, let's consider the front-end functions. The front end needs to determine the pose of the frame based on the binocular image, but there are some different methods in actual implementation. For example, how should we use the right-hand image? Does it compare each frame with the left and right eye, or just compare one of the left and right eye? When we triangulate, should we consider the triangulation of the left and right images, or should we consider the triangulation of the front and back frames in time? In fact, any two images can be triangulated (for example, the left image of the previous frame vs. the right image of the next frame), so everyone's realization will be different.
+After defining the basic data structure, let's consider the frontend functions. The frontend needs to determine the pose of the frame based on the binocular image, but there are some different methods in actual implementation. For example, how should we use the right-hand image? Does it compare each frame with the left and right eye, or just compare one of the left and right eye? When we triangulate, should we consider the triangulation of the left and right images, or should we consider the triangulation of the front and back frames in time? In fact, any two images can be triangulated (for example, the left image of the previous frame vs. the right image of the next frame), so everyone's realization will be different.
 
-For simplicity, we first determine the front-end processing logic:
+For simplicity, we first determine the frontend processing logic:
 \begin{enumerate}
 	\item The frontend has three states: \textbf{initialization}, \textbf{normal tracking}, and \textbf{tracking lost}.
 	\item In the initialization state, according to the optical flow matching between the left and right eyes, find the map points that can be triangulated, and establish the initial map when successful.
-	\item In the tracking phase, the front end calculates the optical flow from the feature point of the previous frame to the current frame, and calculates the image pose based on the optical flow result. This calculation uses only the left eye image, not the right eye.
+	\item In the tracking phase, the frontend calculates the optical flow from the feature point of the previous frame to the current frame, and calculates the image pose based on the optical flow result. This calculation uses only the left eye image, not the right eye.
 	\item If fewer points are tracked, the current frame is judged to be a keyframe. For keyframes, do the following things:
 	
 	\begin{itemize}
 		\item Extract new feature points;
 		\item Find the corresponding points of these points on the right, and use triangulation to create new landmarks;
-		\item Add new keyframes and landmarks to the map and trigger a back-end optimization.
-		\item If the tracking is lost, reset the front-end system and reinitialize it.
+		\item Add new keyframes and landmarks to the map and trigger a backend optimization.
+		\item If the tracking is lost, reset the frontend system and reinitialize it.
 	\end{itemize}
 \end{enumerate}
 
-According to this logic, the front-end processing flow is roughly as follows:
+According to this logic, the frontend processing flow is roughly as follows:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/src/frontend.cpp]
 bool Frontend::AddFrame(myslam::Frame::Ptr frame) {
 	current_frame_ = frame;
@@ -380,10 +380,10 @@ int Frontend::TrackLastFrame() {
 }
 \end{lstlisting}
 
-In the implementation, we often split the complex functions into some short functions, until the underlying functions call OpenCV or g2o to achieve specific calculation. In this way, the readability and reusability of the program can be improved. For example, the same feature extraction function can be used for initialization phase and the new feature detection part of the keyframe. We recommend that readers go through this code by yourself (in fact, the front-end is less than 400 lines of code).
+In the implementation, we often split the complex functions into some short functions, until the underlying functions call OpenCV or g2o to achieve specific calculation. In this way, the readability and reusability of the program can be improved. For example, the same feature extraction function can be used for initialization phase and the new feature detection part of the keyframe. We recommend that readers go through this code by yourself (in fact, the frontend is less than 400 lines of code).
 
 \subsection{Implement the Backend}
-Compared with the front-end, the logic of the back-end implementation will be more complicated. The overall back-end implementation is as follows:
+Compared with the frontend, the logic of the backend implementation will be more complicated. The overall backend implementation is as follows:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/include/myslam/backend.h]
 class Backend {
 public:
