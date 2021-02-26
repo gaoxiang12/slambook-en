@@ -1,7 +1,7 @@
 % !Mode:: "TeX:UTF-8"
 \chapter{Practice: Stereo Visual SLAM}
 \begin{mdframed}  
-	\textbf{Goal of Study}
+	\textit{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
 	\item Implement a stereo visual SLAM from scratch.
 	\item Understand the problems that are prone to occur in VO and how to fix them.
@@ -46,16 +46,15 @@ We are discussing a project realization, and the project usually has the concept
 In this way, we have determined the location of the code file. Now let's discuss the basic data structure involved in VO.
 
 \subsection{Data Structure}
-Before writing code, we should be clear about what we want to write. A long time ago, there was an old view that a program is \textbf{data structure+algorithm}, so for VO, we have to ask: What kind of data does VO need to process? What are the key algorithms involved? What is the relationship between them?
+Before writing code, we should clarify what we want to write. A long time ago, there was a classic sentence that \textit{a program is data structure plus algorithm}. For VO, we have to ask: What kind of data does VO need to process? What are the critical algorithms involved? What is the relationship between them?
 
-After simple thinking, we can easily conclude:
 \begin{itemize}
-	\item The most basic unit we deal with is \textbf{image}. In stereo VO, that is \textbf{a pair of images}, we might as well call it a \textbf{frame}.
-	\item We will mention \textbf{features} for the frame. These features are many 2D points.
-	\item We look for the association of features between images. If you can see a feature multiple times, you can use the triangulation method to calculate its 3D position, that is, \textbf{landmarks}.
+	\item The most basic unit we deal with is the image. In stereo VO, that is a pair of images. We might as well call it a \textit{frame}.
+	\item We will detect visual \textit{features} on the frame. These features are many 2D pixels.
+	\item We look for the association of features between images. If we see a feature multiple times, we use the triangulation method to calculate its 3D position, which forms the \textit{landmarks or map points}.
 \end{itemize}
 
-Obviously, \textbf{image}, \textbf{features}, and \textbf{landmarks} are the most basic structures in our system. The relationship between them is shown in \autoref{fig:frame-feature-landmark}. In the following description, \textbf{landmarks} and \textbf{map points} refer to points in 3D space, and their semantics are the same.
+Obviously, \textit{images}, \textit{features}, and \textit{landmarks} are the most basic elements in our system. The relationship between them is shown in \autoref{fig:frame-feature-landmark}. In the following description, we use terms landmarks and map points for points in 3D space, and their semantics are the same.
 
 \begin{figure}[!htp]
 	\centering
@@ -65,14 +64,14 @@ Obviously, \textbf{image}, \textbf{features}, and \textbf{landmarks} are the mos
 \end{figure}
 
 \subsection{Pipeline}
-Well, next we have to ask, which algorithms are responsible for feature extraction, which algorithms are responsible for triangulation, and which algorithms are there to deal with optimization problems? According to the previous introduction in this book, we believe that SLAM consists of front and backends. The frontend is responsible for calculating the feature matching of adjacent images, and the backend is responsible for optimizing the entire problem. In a typical implementation, the two should have their own threads. The frontend fast processing ensures real-time performance, and the backend optimizes keyframes to ensure good results. So overall, our program has two important modules:
+Next, we have to ask, which algorithms are responsible for feature extraction, which algorithms are accountable for triangulation, and which algorithms to deal with optimization problems? According to the previous contents of this book, the SLAM system consists of front and backends. The frontend is responsible for calculating the feature matching of adjacent images, and the backend is responsible for optimizing the entire problem. In a typical implementation, they should run in separate threads. The frontend ensures real-time performance, and the backend optimizes keyframes to ensure good results. So overall, our program has two essential modules:
 
 \begin{itemize}
-	\item Frontend. We insert an image frame into the frontend, and the frontend is responsible for extracting the features in the image, and then perform optical flow tracking with the previous frame, and calculate the position of the frame based on the optical flow result. When necessary, new feature points should be added and triangulated. The result of the frontend processing will be used as the initial value of the backend optimization.
-	\item Backend. The backend is a slower thread. It gets the processed keyframes and landmark points, optimizes them, and then returns the optimized results. The backend should control the scale of the optimization problem within a certain range and cannot keep growing over time.
+	\item \textbf{Frontend}. We get an image frame from the sensor, and the frontend is responsible for extracting the features in the image. It then performs optical flow tracking or feature matching with the previous frame and calculates the frame's position based on the optical flow result. If necessary, new feature points should be added and triangulated. The result of the frontend processing will be used as the initial value of the backend optimization.
+	\item \textbf{Backend}. The backend is a slower thread. It gets the processed keyframes and landmark points, optimizes them, and then returns the optimized results. The backend should control the optimization problem's scale within a certain range and cannot keep growing over time.
 \end{itemize}
 
-Through this analysis, we can determine the framework of the entire algorithm, and then express it in a popular pipeline diagram, such as \autoref{fig:pipeline}. We put a \textbf{map} module between the front and backends to handle the data flow between them. Since the front and backends process data in separate threads, our envisioned process should be to add new data to the map after the frontend has extracted the keyframes; when the backend detects that the map is updated, it runs an optimization, and then puts the old in the map. The keyframes and map points are removed to maintain the optimized scale.
+We can determine the framework of the entire algorithm through this analysis and then draw it in a pipeline diagram, such as \autoref{fig:pipeline}. We put a map module between the front and backends to handle the data flow between them. Since the front and backends process data in separate threads, the interaction process should be: (1) The frontend adds new data to the map after finding a new keyframe. (2) When the backend detects that the map has new data, it runs an optimization routine and then resets the map scale. The old keyframes and map points are removed if necessary.
 
 \begin{figure}[!htp]
 	\centering
@@ -83,19 +82,19 @@ Through this analysis, we can determine the framework of the entire algorithm, a
 
 In this way, we have determined the general system flow, which will help the subsequent coding realization. Of course, in addition to the core algorithm, we also need some small peripheral modules to make the system more convenient, such as:
 \begin{itemize}
-	\item We should have a camera class to manage the internal and external parameters and projection functions of the camera.
-	\item We need a configuration file management class to facilitate reading content from configuration files. Some important parameters can be recorded in the configuration file to facilitate our adjustment;
-	\item Because the final algorithm runs on the Kitti dataset, we need to read the image data according to Kitti's storage format, which should also be handled by a separate class.
-	\item We need a visualization module to observe the running status of the system, otherwise we have to scratch our heads against a series of values。
+	\item We should have a camera class to manage the intrinsic and extrinsics as well as the projection functions.
+	\item We need a configuration file management class to facilitate reading content from configuration files. Some critical parameters can be store in the configuration file for quick debugging;
+	\item Because the algorithm runs on the Kitti dataset, we need to read the image data according to Kitti's storage format, which should also be handled by a separate class.
+	\item We need a visualization module to observe the running status of the system. Otherwise, we have to scratch our heads against a series of numeric values.
 \end{itemize}
 
-Although these modules are not the core, they are indispensable. Due to space limitations, we leave the peripheral code to readers to read by themselves, and only the core parts are introduced in the book.
+Although these modules are not the core parts, they are indispensable for implementation. Due to space limitations, we leave the peripheral code to readers.
 
 \section{Implementation}
 \subsection{Implement the Basic Data Structure}
-Based on the discussion in the previous lecture, let's first implement the three categories of frame, feature, and landmark. For basic data structures, it is usually recommended to set them as \textit{structs} without the need to define complex private variables and interfaces. Considering that these data may be accessed and modified by multiple threads, we need to add thread locks in key parts.
+Let's first implement the frame, feature, and landmark classes. It is usually recommended to set them as structs without defining complex private variables and interfaces. Considering that these data may be accessed and modified by multiple threads, we need to set thread locks in those parts.
 
-We write the frame \textit{struct} as:
+The frame struct is:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/include/myslam/frame.h]
 struct Frame {
 public:
@@ -115,11 +114,11 @@ public:
 	// corresponding features in right image, set to nullptr if no corresponding
 	std::vector<std::shared_ptr<Feature>> features_right_;
 	
-	public:  // data members
+public:  // data members
 	Frame() {}
 	
 	Frame(long id, double time_stamp, const SE3 &pose, const Mat &left,
-	const Mat &right);
+		const Mat &right);
 	
 	// set and get pose, thread safe
 	SE3 Pose() {
@@ -140,7 +139,7 @@ public:
 };
 \end{lstlisting}
 
-We define Frame to contain id, pose, image, and features in the left and right images. Among them, Pose will be set or accessed by the front and backends at the same time, so we define its set and get functions, and lock the data in the function. At the same time, Frame can be constructed by static functions, and its id can be automatically assigned in static functions.
+We define the frame struct to contain id, pose, image, and features in the left and right images. Among them, the pose will be set or accessed by the front and backends simultaneously, so we define its set and get functions and lock the data in them. Meanwhile, a frame can be constructed by a static function, and we can automatically set its id in the static create function.
 
 Next, the feature struct:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/include/myslam/feature.h]
@@ -162,9 +161,9 @@ struct Feature {
 };
 \end{lstlisting}
 
-The main information of Feature is its 2D position and several flags describing whether it is an abnormal point and whether it is extracted in the left camera. We can access the Frame holding it and its corresponding map point through a Feature object. However, the actual ownership rights of Frame and MapPoint belong to the map. In order to avoid the circular reference generated by shared\_ptr \footnote{In short, Frame holds the shared\_ptr of Feature, so you should avoid Feature holding Frame's  shared\_ptr again, otherwise the two struct refer to each other, which will cause the smart pointer to fail to be automatically destructed. }, weak\_ptr is used here.
+The feature's main information is its 2D position and several flags describing whether it is an abnormal point and whether it is extracted in the left camera. We can access the host frame and its corresponding map point through a feature object. However, the real ownership of frame and map point objects belongs to the map. In order to avoid the circular reference generated by shared\_ptr, the weak\_ptr is used here \footnote{In short, the frame holds the shared\_ptr of feature, so we should avoid the feature holding frame's shared\_ptr again. Otherwise, the two structs refer to each other, which will cause the smart pointer to fail to be automatically destructed. }.
 
-Finally the map point, or landmark:
+Finally the map point, or the landmark:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/include/myslam/mappoint.h]
 struct MapPoint {
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -208,13 +207,13 @@ struct MapPoint {
 };
 \end{lstlisting}
 
-The most important thing about MapPoint is its 3D position, which is the pos\_ variable, also needs to be locked. Its observation\_ variable records the features that observed this map point. Because Feature may be judged as outlier, it needs to be locked when the observation part is changed.
+The most important thing about MapPoint is its 3D position, which is the pos\_ variable, also needs to be locked. Its observation\_ variable records the features that observed this map point. Because the feature may be judged as an outlier, it needs to be locked when the observation part is changed.
 
-So far we have realized the basic data structure. In the framework, we let the map class actually hold these Frame and MapPoint objects, so we also need to define a map class:
+So far, we have realized the basic data structure. In the framework, we let the map class actually hold these frame and map point objects, so we also need to define a map class:
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/include/myslam/map.h]
 class Map {
-	public:
+public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	typedef std::shared_ptr<Map> Ptr;
 	typedef std::unordered_map<unsigned long, MapPoint::Ptr> LandmarksType;
@@ -248,7 +247,7 @@ class Map {
 	
 	void CleanMap();
 	
-	private:
+private:
 
 	void RemoveOldKeyframe();
 	
@@ -256,7 +255,7 @@ class Map {
 	LandmarksType landmarks_;         // all landmarks
 	LandmarksType active_landmarks_;  // active landmarks
 	KeyframesType keyframes_;         // all keyframes
-	KeyframesType active_keyframes_;  // all keyframes
+	KeyframesType active_keyframes_;  // active keyframes
 	
 	Frame::Ptr current_frame_ = nullptr;
 	
@@ -264,18 +263,17 @@ class Map {
 	int num_active_keyframes_ = 7;  
 };
 \end{lstlisting}
-
-The map records all keyframes and corresponding landmark in a hash form, and maintains an activated keyframe and map point at the same time. Here the concept of \textbf{activation} is what we call \textbf{sliding window}, which will move forward over time. The backend will extract the activated keyframes and landmark points from the map for optimization, and ignore the rest to achieve the effect of controlling the optimization scale. Of course, the activation strategy is defined by ourselves. The simple activation strategy is to remove the oldest keyframe and keep the latest keyframes in time. We only keep the latest 7 keyframes in this demo.
+The map stores all keyframes and corresponding landmarks in a hash form and maintains an activated keyframe and map point set. Here the concept of activation is what we call the sliding window before. The backend will optimize the activated keyframes and landmark points and fix the rest to control the optimization scale. Of course, the activation strategy is defined by ourselves. The simple activation strategy is to remove the oldest keyframe and keep the latest keyframes in time. We only keep the latest 7 keyframes in this demo.
 
 \subsection{Implement the Frontend}
-After defining the basic data structure, let's consider the frontend functions. The frontend needs to determine the pose of the frame based on the binocular image, but there are some different methods in actual implementation. For example, how should we use the right-hand image? Does it compare each frame with the left and right eye, or just compare one of the left and right eye? When we triangulate, should we consider the triangulation of the left and right images, or should we consider the triangulation of the front and back frames in time? In fact, any two images can be triangulated (for example, the left image of the previous frame vs. the right image of the next frame), so everyone's realization will be different.
+After defining the basic data structure, let's consider the frontend functions. The frontend needs to determine the frame's pose based on the binocular image, but there are many alternative implementation choices. For example, how should we use the right eye's image? Do we track the feature in both left and right eyes or just one of them? When computing triangulation, should we consider the left and right images in the same frame or chronological order? In fact, any two images can be triangulated (for example, the left image of the previous frame vs. the right image of the next frame), so everyone's realization will be different.
 
 For simplicity, we first determine the frontend processing logic:
 \begin{enumerate}
-	\item The frontend has three states: \textbf{initialization}, \textbf{normal tracking}, and \textbf{tracking lost}.
-	\item In the initialization state, according to the optical flow matching between the left and right eyes, find the map points that can be triangulated, and establish the initial map when successful.
-	\item In the tracking phase, the frontend calculates the optical flow from the feature point of the previous frame to the current frame, and calculates the image pose based on the optical flow result. This calculation uses only the left eye image, not the right eye.
-	\item If fewer points are tracked, the current frame is judged to be a keyframe. For keyframes, do the following things:
+	\item The frontend has three states: \textit{initialization}, \textit{normal tracking}, and \textit{tracking lost}.
+	\item In the initialization state, we do the triangulation according to the optical flow matching between the left and right eyes. We will establish the initial map when successful.
+	\item In the tracking phase, the front end calculates the optical flow from the previous frame to the current frame and estimates the image pose based on the optical flow result. This optical flow is used only for the left eye image to save the computation resource.
+	\item If the tracked features are fewer than a threshold, we set the current frame as a keyframe. For keyframes, do the following things:
 	
 	\begin{itemize}
 		\item Extract new feature points;
@@ -285,7 +283,7 @@ For simplicity, we first determine the frontend processing logic:
 	\end{itemize}
 \end{enumerate}
 
-According to this logic, the frontend processing flow is roughly as follows:
+According to this logic, the frontend processing flow is written as follows:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/src/frontend.cpp]
 bool Frontend::AddFrame(myslam::Frame::Ptr frame) {
 	current_frame_ = frame;
@@ -307,7 +305,7 @@ bool Frontend::AddFrame(myslam::Frame::Ptr frame) {
 }
 \end{lstlisting}
 
-The Track() is implemented as:
+The \textit{Track()} is implemented as:
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/src/frontend.cpp]
 bool Frontend::Track() {
 	if (last_frame_) {
@@ -336,7 +334,7 @@ bool Frontend::Track() {
 }
 \end{lstlisting}
 
-In the TrackLastFrame(), we call the optical flow of OpenCV to track the feature points：
+In the \textit{TrackLastFrame()}, we call the optical flow of OpenCV to track the feature points：
 \begin{lstlisting}[language=c++,caption=slambook2/ch13/src/frontend.cpp]
 int Frontend::TrackLastFrame() {
 	// use LK flow to estimate points in the right image
@@ -380,7 +378,7 @@ int Frontend::TrackLastFrame() {
 }
 \end{lstlisting}
 
-In the implementation, we often split the complex functions into some short functions, until the underlying functions call OpenCV or g2o to achieve specific calculation. In this way, the readability and reusability of the program can be improved. For example, the same feature extraction function can be used for initialization phase and the new feature detection part of the keyframe. We recommend that readers go through this code by yourself (in fact, the frontend is less than 400 lines of code).
+In the implementation, we often split the complex functions into some short functions until the underlying functions call OpenCV or g2o to achieve specific calculations. The readability and reusability of the program can be improved in this way. For example, the same feature extraction function can be used for both the initialization phase and the keyframe's new feature detection part. We recommend that readers go through this code by themselves (the frontend is less than 400 lines).
 
 \subsection{Implement the Backend}
 Compared with the frontend, the logic of the backend implementation will be more complicated. The overall backend implementation is as follows:
@@ -425,14 +423,168 @@ private:
 };
 \end{lstlisting}
 
-Finally, we look at the running effect of this visual odometry. First we need to download the Kitti dataset from: \url{http://www.cvlibs.net/datasets/kitti/eval_odometry.php}. Its odometry data is about 22GB. After downloading, we decompress it and get several video segments. Let's take segment 0 as an example. After compiling the program in this section, fill in the path corresponding to the data in the configuration file config/default.yaml. In my machine it looks like:
+After the backend is started, it will wait for the condition variable of map\_update\_. When the map update is triggered, take the activated keyframes and map points from the map and perform optimization:
+\begin{lstlisting}[language=c++,caption=slambook2/ch13/src/backend.cpp]
+void Backend::BackendLoop() {
+	while (backend_running_.load()) {
+		std::unique_lock<std::mutex> lock(data_mutex_);
+		map_update_.wait(lock);
+		
+		/// optimize the active frames and landmarks
+		Map::KeyframesType active_kfs = map_->GetActiveKeyFrames();
+		Map::LandmarksType active_landmarks = map_->GetActiveMapPoints();
+		Optimize(active_kfs, active_landmarks);
+	}
+}
+\end{lstlisting}
+
+The optimization function is similar to the BA we used before, except that the data needs to be obtained from the frame and map point objects:
+\begin{lstlisting}[language=c++,caption=slambook2/ch13/src/backend.cpp]
+void Backend::Optimize(Map::KeyframesType &keyframes,
+Map::LandmarksType &landmarks) {
+	// setup g2o
+	typedef g2o::BlockSolver_6_3 BlockSolverType;
+	typedef g2o::LinearSolverCSparse<BlockSolverType::PoseMatrixType>
+	LinearSolverType;
+	auto solver = new g2o::OptimizationAlgorithmLevenberg(
+	g2o::make_unique<BlockSolverType>(
+	g2o::make_unique<LinearSolverType>()));
+	g2o::SparseOptimizer optimizer;
+	optimizer.setAlgorithm(solver);
+	
+	// pose vertices, use keyframe id
+	std::map<unsigned long, VertexPose *> vertices;
+	unsigned long max_kf_id = 0;
+	for (auto &keyframe : keyframes) {
+		auto kf = keyframe.second;
+		VertexPose *vertex_pose = new VertexPose();  // camera vertex_pose
+		vertex_pose->setId(kf->keyframe_id_);
+		vertex_pose->setEstimate(kf->Pose());
+		optimizer.addVertex(vertex_pose);
+		if (kf->keyframe_id_ > max_kf_id) {
+			max_kf_id = kf->keyframe_id_;
+		}
+		
+		vertices.insert({kf->keyframe_id_, vertex_pose});
+	}
+	
+	// landmark vertices, use landmark id
+	std::map<unsigned long, VertexXYZ *> vertices_landmarks;
+	
+	// K and extrinsics
+	Mat33 K = cam_left_->K();
+	SE3 left_ext = cam_left_->pose();
+	SE3 right_ext = cam_right_->pose();
+	
+	// edges
+	int index = 1;
+	double chi2_th = 5.991;  // robust kernel th
+	std::map<EdgeProjection *, Feature::Ptr> edges_and_features;
+	
+	for (auto &landmark : landmarks) {
+		if (landmark.second->is_outlier_) continue;
+		unsigned long landmark_id = landmark.second->id_;
+		auto observations = landmark.second->GetObs();
+		for (auto &obs : observations) {
+			if (obs.lock() == nullptr) continue;
+			auto feat = obs.lock();
+			if (feat->is_outlier_ || feat->frame_.lock() == nullptr) continue;
+			
+			auto frame = feat->frame_.lock();
+			EdgeProjection *edge = nullptr;
+			if (feat->is_on_left_image_) {
+				edge = new EdgeProjection(K, left_ext);
+			} else {
+				edge = new EdgeProjection(K, right_ext);
+			}
+			
+			// add landmark verices if not contained
+			if (vertices_landmarks.find(landmark_id) ==
+				vertices_landmarks.end()) {
+				VertexXYZ *v = new VertexXYZ;
+				v->setEstimate(landmark.second->Pos());
+				v->setId(landmark_id + max_kf_id + 1);
+				v->setMarginalized(true);
+				vertices_landmarks.insert({landmark_id, v});
+				optimizer.addVertex(v);
+			}
+			
+			edge->setId(index);
+			edge->setVertex(0, vertices.at(frame->keyframe_id_));    // pose
+			edge->setVertex(1, vertices_landmarks.at(landmark_id));  // landmark
+			edge->setMeasurement(toVec2(feat->position_.pt));
+			edge->setInformation(Mat22::Identity());
+			auto rk = new g2o::RobustKernelHuber();
+			rk->setDelta(chi2_th);
+			edge->setRobustKernel(rk);
+			edges_and_features.insert({edge, feat});
+			
+			optimizer.addEdge(edge);
+			
+			index++;
+		}
+	}
+	
+	// do optimization and eliminate the outliers
+	optimizer.initializeOptimization();
+	optimizer.optimize(10);
+	
+	int cnt_outlier = 0, cnt_inlier = 0;
+	int iteration = 0;
+	while (iteration < 5) {
+		cnt_outlier = 0;
+		cnt_inlier = 0;
+		// determine if we want to adjust the outlier threshold
+		for (auto &ef : edges_and_features) {
+			if (ef.first->chi2() > chi2_th) {
+				cnt_outlier++;
+			} else {
+				cnt_inlier++;
+			}
+		}
+		double inlier_ratio = cnt_inlier / double(cnt_inlier + cnt_outlier);
+		if (inlier_ratio > 0.5) {
+			break;
+		} else {
+			chi2_th *= 2;
+			iteration++;
+		}
+	}
+	
+	for (auto &ef : edges_and_features) {
+		if (ef.first->chi2() > chi2_th) {
+			ef.second->is_outlier_ = true;
+			// remove the observation
+			ef.second->map_point_.lock()->RemoveObservation(ef.second);
+		} else {
+			ef.second->is_outlier_ = false;
+		}
+	}
+	
+	LOG(INFO) << "Outlier/Inlier in optimization: " << cnt_outlier << "/"
+		<< cnt_inlier;
+	
+	// Set pose and lanrmark position
+	for (auto &v : vertices) {
+		keyframes.at(v.first)->SetPose(v.second->estimate());
+	}
+	for (auto &v : vertices_landmarks) {
+		landmarks.at(v.first)->SetPos(v.second->estimate());
+	}
+}
+\end{lstlisting}
+
+The back end is shorter than the front end, with less than 200 lines.
+
+\section{Experiment Results}
+Finally, we look at the running effect of this visual odometry. First, we need to download the Kitti dataset from \url{http://www.cvlibs.net/datasets/kitti/eval_odometry.php}. Its odometry data is about 22GB. After downloading, we decompress it and get several video segments. Let's take segment 0 as an example. After compiling the program in this section, fill in the path corresponding to the configuration file config/default.yaml. In my machine, it looks like this:
 $$\text{dataset_dir: /media/xiang/Data/Dataset/Kitti/dataset/sequences/00}.$$
 
 Then we run it with:
 \begin{lstlisting}[language=sh,caption=Terminal input:]
-	bin/run_kitti_stereo
+bin/run_kitti_stereo
 \end{lstlisting}
-Then you can see the positioning output, as shown in \autoref{fig:snapshot-vo}. During operation, the program will display the activated keyframes and maps, which should continue to grow and disappear as the camera moves.
+Then you can see the SLAM output, as shown in \autoref{fig:snapshot-vo}. During operation, the program will display the activated keyframes and maps, which should continue to grow and disappear as the camera moves.
 
 \begin{figure}[!htp]
 	\centering    
@@ -441,13 +593,13 @@ Then you can see the positioning output, as shown in \autoref{fig:snapshot-vo}. 
 	\label{fig:snapshot-vo}
 \end{figure}
 
-We output the run time it takes for a single frame. When dealing with non-keyframes, the time is about 16ms. When processing keyframes, the time-consuming will increase due to the addition of a new step to extract feature points and find the right image matching. Moreover, since our map currently stores all keyframes and map points, it will cause memory growth after running for a period of time. If readers do not need all maps, they can keep only the active part.
+We print the run time it takes for a single frame. When dealing with non-keyframes, the time is about 16ms. When processing keyframes, the time-consuming will increase due to the additional steps of extracting features and the right eye matching. Moreover, since our map currently stores all keyframes and map points, it will cause memory growth after running for a while. If readers do not need all maps, they can keep only the active part.
 
 \section*{Exercises}
 \begin{enumerate}
-	\item Do you understand all the C++ techniques used in this book? If there is something you are not familiar, use search engines to learn related knowledge, including: range-based for loops, smart pointers, singleton patterns in design patterns, and so on.
-	\item Consider optimizing the system introduced in this lecture. For example, use a faster method of extracting feature points (this demo uses GFTT, which is not fast), use a 1-dimensional search instead of two-dimensional optical flow when matching left and right images, and use the direct method to estimate the pose and features at the same time, etc.
-	\item* Add a loop detection thread to the demo, and use pose graph to optimize when a loop is detected to eliminate accumulated errors.
+	\item Do you understand all the C++ techniques used in this book? If there is something you are not familiar with, use search engines to learn the related knowledge, including range-based for loops, smart pointers, singleton patterns in design patterns, threads and locks, and so on.
+	\item Consider optimizing the system introduced in this lecture. For example, use a faster method of extracting feature points (this demo uses GFTT, which is not fast), use a 1-d search instead of 2d optical flow when matching left and right images, and use the direct method to estimate the pose and features at the same time, etc.
+	\item* Add a loop detection thread to the demo, and use a pose graph to optimize when a loop is detected to eliminate accumulated errors.
 \end{enumerate}
 
 
