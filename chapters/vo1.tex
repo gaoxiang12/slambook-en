@@ -1,96 +1,94 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{Visual Odometry: Part 1}
+\chapter{Visual Odometry: Part I}
 \label{cpt:7}
 \thispagestyle{empty}
 
 \begin{mdframed}  
 	\textbf{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item Understand the meaning of image feature points, and learn how to extract feature points from a single image and match feature points in multiple images.
-		\item Understand the principle of epipolar geometry and use epipolar constraints to recover the camera's 3D motion between two images.
+		\item Study how to extract feature points from images and match feature points in multiple images.
+		\item Learn the principle of epipolar geometry and use epipolar constraints to recover the camera's 3D motion between two images.
 		\item Study how to solve the PNP problem and use the known correspondence between the 3D structure and the 2D image to solve the camera's 3D motion.	
-		\item Understand the ICP problem and use the point clouds matching to solve the three-dimensional motion of the camera.
-		\item Understand how to obtain the three-dimensional structure of corresponding points on the two-dimensional image through triangulation.
+		\item Study the ICP algorithm and use the point clouds matching to estimate 3D motion.
+		\item Study how to obtain the 3D structure of corresponding points on the 2D image through triangulation.
 	\end{enumerate}
 \end{mdframed}
 
-In the previous chapters, we introduced the details of motion and observation equations, and explained nonlinear optimization methods to solve those equations. From this chapter, we finish the introduction to the fundamental knowledge and move on to the main topic: in the order of Chapter 2, we will introduce visual odometry, optimization of backend, loop detection, and map reconstruction. This chapter and the next chapter mainly focus on two commonly used methods in visual odometry: feature point method and optical flow method. In this chapter, we will introduce what feature points are, how to extract and match them, and how to estimate camera motion based on matched feature points.
+In the previous chapters, we introduced the details of motion and observation equations and explained how nonlinear optimization is used to solve those equations. From this chapter, we finish introducing the fundamental knowledge and moving on to the next topic. Starting from chapter \ref{cpt:2}, we will investigate visual odometry, backend optimization, loop detection, and map reconstruction. This chapter and the next chapter mainly focus on two commonly used visual odometry methods: the feature and direct methods. This chapter will introduce what feature points are, how to extract and match them, and how to estimate camera motion based on matched feature points.
 
 \newpage
 \includepdf{resources/other/ch7.pdf}
 
 \newpage
 
-\section{Feature Point Method}
-In the chapter 2, we said that a SLAM system can be divided into front-end and back-end, where the front-end is also called visual odometry (VO). VO estimates the rough camera movement based on the information of the consecutive images, and provides a good initial value for the back end. VO algorithms are mainly divided into two categories: \textbf{feature point method} and \textbf{direct method}. The front end based on the feature point method has been considered the mainstream method of visual odometry for a long time (even until now). It performs well thanks to its stability and insensitivity to lighting and dynamic objects. It is relatively mature at present. In this chapter, we will start with the feature point method, learn how to extract and match image feature points, and then estimate the camera motion and scene structure between two frames to realize a visual odometer between two frames. This type of algorithm is sometimes called Two-View geometry.
+\section{Feature Method}
+In chapter \ref{cpt:2}, we said that a SLAM system can be divided into frontend and backend, where the frontend is also called visual odometry (VO). VO estimates the rough camera movement based on the consecutive images' information and provides a good initial value for the backend. VO algorithms are mainly divided into two categories: feature method and direct method. The frontend based on the features has been considered the mainstream of VO for a long time (even until now). It performs well thanks to its stability and insensitivity to lighting and dynamic objects. The feature method is relatively mature at present. This chapter will start with the feature method, learn how to extract and match image feature points, and then estimate the camera motion and scene structure between two frames to realize visual odometry between two frames. This type of algorithm is sometimes called two-view geometry.
 
-\subsection{Feature Point}
+The core problem of VO is how to estimate camera motion based on adjacent images. However, the image itself is a numerical matrix encoding brightness and color. The numbers in the matrix are abstract, and it is very difficult to compute the motion directly from the pixel level. Therefore, it is more convenient to do this: First, select some representative features from the image. These points will remain the same after a small change in the camera's angle of view. So we are able to find the same points in each image. Then, based on these points, we can investigate the problem of camera pose estimation and the 3D positions of these points. In the classic SLAM model, we call these points the landmarks. In visual SLAM, they are referred to as image features.
 
-The core problem of VO is \textbf{how to estimate camera motion based on images}. However, the image itself is a numerical matrix encoding brightness and color. It is abstract and very difficult to consider motion estimation directly from the matrix level. Therefore, it is more convenient to do this: First, select some \textbf{representative (feature)} \textbf{points} from the image. These points will remain the same after a small change in the camera's angle of view, so that we can find the same points in each image. Then, on the basis of these points, the problem of camera pose estimation and the positioning of these points are discussed. In the classic SLAM model, we call these points \textbf{landmark}. In visual SLAM, they are always referred as image features.
+On Wikipedia, image features are defined as a set of information related to computing tasks. The computing tasks depend on the specific application {\cite{wiki:featurecv}}. Briefly speaking, the feature is another digital expression of image information. A good set of features is crucial to the final performance on the specified task, so researchers have comprehensive work on the features for many years. Digital images are stored in a computer as a gray value matrix, so at the simplest, a single image pixel can also be considered a feature. However, in visual odometry, we hope that feature points remain stable after the camera moves, and the gray value is severely affected by illumination, deformation, and object material. It varies significantly between different images and is not stable enough. Ideally, when the scene and camera angle of view changes slightly, the algorithm can also determine from the images which places refer to the same point. Therefore, the gray value alone is not feasible. We need to extract better features from the image.
 
-On the Wikipedia, image features are defined as a set of information related to computing tasks. The computing tasks depend on the specific application \textsuperscript{\cite{wiki:featurecv}}. Briefly speaking, \textbf{feature is another digital expression of image information}. A good set of features is crucial to the final performance on the specified task, so researchers have comprehensive work on the features for many years. Digital images are stored in a computer as a gray value matrix, so at the simplest, a single image pixel can be also considered a "feature". However, in visual odometry, we hope that \textbf{feature points remain stable after the camera moves}, and the gray value is badly affected by illumination, deformation, and object material. It varies greatly between different images and is not stable enough. Ideally, when the scene and camera angle of view change slightly, the algorithm can also determine from the images which places refer to the same point. Therefore, the gray value alone is not feasible, we need to extract feature points from the image.
+We can say that the feature points are some special places in the image. Taking \autoref{fig:corner-feature}~ as an example, we can see the corners, edges, and blocks as representative places in the image. It is easy for us to correctly point out that the same corner point appears in two images, whereas pointing out the same edge is slightly more difficult because the image patches are similar when moving along the edges. It is even harder for the blocks. We found that the corners and edges in the image are more \textit{special} than pixels, and they are more distinguished between different images. Therefore, an intuitive way to extract features is to identify corners between different images and determine their correspondence. In this approach, the corners are the so-called features. There are many corner extraction algorithms, such as Harris corner {\cite{Harris1988}}, FAST corner {\cite{Rosten2006}}, GFTT corner  {\cite{Shi1994}}, etc. Most of them were proposed before 2000.
 
-We can say that the feature points are some \textbf{special places} in the image. Taking \autoref{fig:corner-feature}~ as an example, we can see the corners, edges and blocks as representative places in the image. It is easy for us to correctly point out that the same corner point appears in two images; whereas pointing out the same edge is slightly more difficult, because the image patches are similar when moving along the edge; it is even harder as for the same block. We found that the corners and edges in the image are more "special" than pixels, and they are more distinguished between different images. Therefore, an intuitive way to extract features is to identify corners between different images and then determine their correspondence. In this approach, the corners are the so-called features. There are many corner extraction algorithms, such as Harris corner \textsuperscript{\cite{Harris1988}}, FAST corner \textsuperscript{\cite{Rosten2006}}, GFTT corner point \textsuperscript{\cite{Shi1994}}, etc. Most of them were proposed before 2000.
-
-However, in the majority of applications, a single corner still cannot meet our needs. For example, a place that appears to be a corner point from a long distance may not be viewed as a corner when the camera steps in. Or, when the camera rotates, the appearance of the corner points will change, and it is not easy for us to recognize that they are the same corner point. For this reason, researchers in the field of computer vision have designed many more stable local image features during years of research, such as the SIFT\textsuperscript{\cite{Lowe2004}}, SURF\textsuperscript{\cite{Bay2006}} , ORB\textsuperscript{\cite{Rublee2011}}, etc. Compared with simple corner points, these handcrafted features should have the following properties:
+However, in the majority of applications, a single corner still cannot meet our needs. For example, a place that appears to be a corner from a long distance may not be viewed as a corner when the camera steps in. When the camera rotates, the appearance of the corner points will change, and it is not easy for us to recognize that they are the same corner point. For this reason, researchers in the field of computer vision have designed many more stable local image features during years of research, such as the SIFT {\cite{Lowe2004}}, SURF {\cite{Bay2006}} , ORB {\cite{Rublee2011}}, etc. Compared with simple corner points, these handcrafted features should have the following properties:
 
 \begin{enumerate}
-\item \emph{Repeatability}: The same feature can be found in different images.
-\item \emph{Distinctiveness}: Different features have different expressions.
-\item \emph{Efficiency}: In the same image, the number of feature points should be far smaller than the number of pixels.
-\item \emph{Locality}: The feature is only related to a small image area.
+\item \textbf{Repeatability}: The same feature can be found in different images.
+\item \textbf{Distinctiveness}: Different features have different expressions.
+\item \textbf{Efficiency}: In the same image, the number of feature points should be far smaller than the number of pixels.
+\item \textbf{Locality}: The feature is only related to a small image area.
 \end{enumerate}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=0.8\linewidth]{vo1/corner-flat-line}\\
-    \caption{corners, edges, blocks can be used as image features.}
+    \includegraphics[width=0.8\linewidth]{vo1/corner-flat-line}
+    \caption{Corners, edges and blocks can be used as image features.}
     \label{fig:corner-feature}
 \end{figure}
 
-A feature point is composed of two parts: \textbf{Key-point} and \textbf{Descriptor}. For example, when we say "calculate SIFT feature points in an image", we mean "extract SIFT key points and calculate SIFT descriptors". The key point refers to the position of the feature point in the image, and some types of feature points also hold information such as orientation and size. The descriptor is usually a vector, describing the information of the pixels around the key point according to some handcrafted rules. The descriptor should be designed according to the principle of "\textbf{features with similar appearance should have similar descriptors}". Therefore, as long as the descriptors of two feature points are close in vector space, they can be considered as the same feature point.
+A feature point is composed of two parts: \textit{key point} and \textit{descriptor}. For example, when we say ``calculate SIFT feature points in an image'', we mean ``extract SIFT key points and calculate the SIFT descriptors``. The key point refers to the 2D position of the feature point. Some types of key points also hold other information, such as the orientation and size. According to some handcrafted rules, the descriptor is usually a vector, describing the information of the pixels around the key point. The descriptor should be designed according to the principle that features with similar appearance should have similar descriptors. Therefore, as long as the two features' descriptors are close in vector space, they can be considered the same feature. 
 
-Historically, researchers put forward many image features. Some of them are very accurate and robust. They still have similar expressions under camera movement and lighting changes, and consequentially they might require a large amount of calculation. Among them, SIFT (Scale-Invariant Feature Transform) is one of the most classic. To fully consider the changes in illumination, scale, and rotation during the image transformation, it comes with a huge amount of calculation. The extraction and matching of image features is only a part compared to the entire SLAM process. Until now (2016), CPUs equipped on PCs cannot achieve real time to calculate SIFT features for localization and mapping \footnote{here refers Real-time speed as of 30Hz. }. So we rarely use this "luxury" image feature in SLAM.
+Historically, researchers put forward many image features. Some of them are very accurate and robust. They still have similar expressions under camera movement and lighting changes, and consequentially they might require a large amount of calculation. Among them, SIFT (Scale-Invariant Feature Transform) is one of the most classic. To fully consider the changes in illumination, scale, and rotation during the image transformation, the SIFT comes with a considerable amount of calculation. The extraction and matching of image features is only a part compared to the entire SLAM process. Until now (2016), CPUs equipped on PCs cannot achieve real-time to calculate the SIFT features for localization and mapping \footnote{Real-time means the speed of 30Hz. }. So, we rarely use this luxury image feature in SLAM.
 
-Some other features exchange some accuracy and robustness for the calculation speed increase. For example, the FAST key point is a feature point that is extremely fast to calculate (note the expression of "key point" here, which means that it has no descriptor), while the ORB (Oriented FAST and Rotated BRIEF) feature is currently widely used for real-time image feature extraction. It solves the problem that the FAST detector \textsuperscript{\cite{Rosten2006}} does not have directionality, and uses the extremely fast binary descriptor BRIEF\textsuperscript{\cite{calonder2010brief}} to make the whole image feature extraction process accelerate greatly. According to the author's experiment in the paper, extracting about 1000 feature points in the same image, it takes about 15.3ms for ORB, 217.3ms for SURF, and 5228.7ms for SIFT. It can be seen that ORB made a significant boost in speed while maintaining the features of rotation and scale invariance. It is a good choice for SLAM with high real-time requirements.
+Some other features exchange accuracy and robustness for the calculation speed increase. For example, the FAST keypoint is a key point that is extremely fast to calculate (note the expression of keypoint here, which means that it has no descriptor), while the ORB (Oriented FAST and Rotated BRIEF) feature is currently widely used for real-time image feature extraction. It solves the problem that the FAST detector  {\cite{Rosten2006}} does not have descriptors and uses the extremely fast binary descriptor BRIEF {\cite{calonder2010brief}} to make the whole image feature extraction process accelerate greatly. According to the author's experiment in the paper, extracting about 1000 feature points in the same image takes about 15.3ms for ORB, 217.3ms for SURF, and 5228.7ms for SIFT. It can be seen that ORB made a significant boost in speed while maintaining the features of rotation and scale invariance. It is a good choice for SLAM with high real-time requirements.
 
-Most feature extractions have good parallelism and can be accelerated by GPU and other devices. SIFT accelerated by GPU can meet real-time requirements. However, the inclusion of GPU will increase the cost of the entire SLAM system. Whether the resulting performance improvement is sufficient to offset the computational cost requires careful consideration by the system designer.
+Most feature extractions have good parallelism and can be accelerated by GPU and other devices. SIFT accelerated by GPU can meet real-time requirements. However, the inclusion of a GPU will increase the cost of the entire SLAM system \footnote{But now we have many cheap embedded GPU chips, so it may not be an issue anymore.}. Whether the resulting performance improvement is sufficient to offset the computational cost requires careful consideration by the system designer.
 
-Obviously, there are a large number of feature points in the field of computer vision, and we cannot introduce them one by one in the book. In the current SLAM scheme, ORB is a good tradeoff between quality and performance. Therefore, we take ORB as an example to introduce the entire process of extracting features. If readers are interested in feature extraction and matching algorithms, we recommend reading related books in this area\cite{Nixon2012}.
+Obviously, there are a large number of feature points in the field of computer vision, and we cannot introduce them one by one in the book. In the current SLAM scheme, ORB is a fair trade-off between quality and performance. Therefore, we take ORB as an example to introduce the entire process of extracting features. If readers are interested in feature extraction and matching algorithms, we recommend reading related books in this area \cite{Nixon2012}.
 
 \subsection{ORB Feature}
 
-ORB features are also composed of two parts: \textbf{key points} and \textbf{descriptor}. Its key point is called "Oriented FAST", which is an improved FAST corner point. We will introduce what is FAST corner point below. Its descriptor is called BRIEF (Binary Robust Independent Elementary Feature). Therefore, the extraction of ORB features is divided into the following two steps:
+ORB features are also composed of two parts: \textit{ORB key points} and \textit{ORB descriptor}. Its key point is called ``oriented FAST'', which is an improved version of the FAST. We will introduce what the FAST corner below is. Its descriptor is called BRIEF (Binary Robust Independent Elementary Feature). Therefore, the extraction of ORB features is divided into the following two steps:
 \begin{enumerate}
-\item FAST corner point extraction: find the "corner point" in the image. Compared with the original FAST, the main direction of the feature points is calculated in ORB, which makes the subsequent BRIEF descriptor rotation-invariant.
+\item FAST corner point extraction: find the corner point in the image. Compared with the original FAST, the main direction of the feature points is calculated in ORB, making the subsequent BRIEF descriptor rotation-invariant.
 \item BRIEF descriptor: describe the surrounding image area where the feature points were extracted in the previous step. ORB has made some improvements to BRIEF, mainly referring to utilizing the previously calculated direction.
 \end{enumerate}
 
-Then we will introduce FAST and BRIEF respectively.
-\subsubsection{FAST key points}
+Next, we will introduce FAST and BRIEF, respectively.
 
-FAST is a kind of corner point, which mainly detects the obvious grayscale changes locally, and is known for its fast speed. Its main idea is: if a pixel is very different from the neighboring pixels (too bright or too dark), then it is more likely to be a corner point. Compared with other corner detection algorithms, FAST only needs to compare the brightness of the pixels, which is very fast. Its entire procedure is as follows (see \autoref{fig:fastcorner}~):
+\subsubsection{The FAST Key Point}
+FAST is a kind of corner point, which mainly detects the local grayscale changes and is known for its fast speed. Its main idea is: if a pixel is very different from the neighboring pixels (too bright or too dark), it is more likely to be a corner point. Compared with other corner detection algorithms, FAST only needs to compare the pixels' brightness. Its entire procedure is as follows (see \autoref{fig:fastcorner}~):
 
 \begin{enumerate}
 \item Select pixel $p$ in the image，assuming its brightness as $I_{p}$
 \item Set a threshold $T$ (for example, 20\% of $I_{p}$).
 \item Take the pixel $p$ as the center, and select the 16 pixels on a circle with a radius of 3.
-\item If there are consecutive $N$ points on the selected circle whose brightness is greater than $I_{p}+T$ or less than $I_{p}-T$, then the central pixel $p$ can be considered a feature point ($N$ usually takes 12, which is FAST-12. Other commonly used $N$ values ​​are 9 and 11, which are called FAST-9 and FAST-11 respectively).
+\item If there are consecutive $N$ points on the selected circle whose brightness is greater than $I_{p}+T$ or less than $I_{p}-T$, then the central pixel $p$ can be considered a feature point. $N$ usually takes 12, which is FAST-12. Other commonly used $N$ values ​​are 9 and 11, called FAST-9 and FAST-11, respectively).
 \item Iterate through the above four steps on each pixel.
 \end{enumerate}
 
-In the FAST-12 algorithm, to speed up, checking the brightness of the 1, 5, 9 and 13-th pixels on the circle for each pixel can quickly exclude a lot of pixels that are not corner points. Only when 3 of these 4 pixels are greater than $I_{p}+T$ or less than $I_{p}-T$, the current pixel may potentially be a corner point, otherwise it should be directly excluded. Such 'pre-processing' operation greatly accelerates FAST corner detection. In addition, the original FAST corners are often "clustered", meaning a lot of FAST corners present in the same area. Therefore, after the initial detection, non-maximal suppression is required. Only corner points with maximum response in a certain area will be retained to avoid the corners concentrating.
+In the FAST-12 algorithm, to speed up, we can check the brightness of the 1, 5, 9, and 13 pixels on the circle to quickly exclude many pixels that are not corner points. Only when three of these four pixels are all greater than $I_{p}+T$ or less than $I_{p}-T$, the current pixel may potentially be a corner point. Otherwise, it should be directly excluded. Such a pre-processing operation greatly accelerates FAST corner detection. Also, the original FAST corners are often clustered, meaning a lot of FAST corners may present in the same area. Therefore, after the initial detection, non-maximal suppression is required. Only corner points with the maximum response in a specific location will be retained to avoid the corners concentrating.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.9\linewidth]{vo1/fast-corner}
-	\caption{FAST key points\textsuperscript{\cite{Rosten2006}}。}
+	\caption{FAST key points {\cite{Rosten2006}}. This figure is from OpenCV's document.}
 	\label{fig:fastcorner}
 \end{figure}
 
-The calculation of FAST feature points only compares the brightness difference between pixels, thus the speed is very fast, but it suffers from bad repeatability and uneven distribution. Moreover, FAST corner points do not include direction information. At the same time, because it fixed the radius of circle as 3, there is also a scaling problem: a place that looks like a corner from a distance may not be a corner when it comes close. To solve those, ORB adds the description of scale and rotation. The scale invariance is achieved by the image pyramid \footnote{ pyramid refers to the downsampling of images at different levels to obtain images with different resolutions. }, and detect corner points on each layer of the pyramid. The rotation of features is realized by the Intensity Centroid method.
+The calculation of FAST feature points only compares the brightness difference between pixels, thus the speed is very fast, but it suffers from lousy repeatability and uneven distribution. Moreover, FAST corner points do not include direction information. Because it fixed the radius of the circle as 3, there is also a scaling problem: a place that looks like a corner from a distance may not be a corner when it comes close. To solve those, ORB adds the description of scale and rotation. The scale invariance is achieved by the image pyramid \footnote{Pyramid refers to the downsampling of images at different levels to obtain images with different resolutions. } and detect corner points on each layer. The rotation of features is realized by the intensity centroid method.
 
-Pyramid is a common approach in computer vision. For a schema, see \autoref{fig:pyramid}. The bottom of the pyramid is the original image. For each layer up, the image is scaled with a fixed ratio, so that we have images of different resolutions. The smaller image can be seen as a scene viewed from a distance. In the feature matching algorithm, we can match images on different layers to achieve scale invariance. For example, if the camera is moving backwards, then we should be able to find a match in the upper layer of the previous image pyramid and the lower layer of the next image.
+An image pyramid is a common approach in computer vision. For a schema, see \autoref{fig:pyramid}. The bottom of the pyramid is the original image. For each layer up, the image is scaled with a fixed ratio so that we have images of different resolutions. The smaller image can be seen as a scene viewed from a distance. In the feature matching algorithm, we can match images on different layers to achieve scale invariance. For example, if the camera moves backward, we should find a match in the upper layer of the previous image pyramid and the lower layer of the next image.
 
 \begin{figure}[!t]
     \centering
@@ -99,41 +97,41 @@ Pyramid is a common approach in computer vision. For a schema, see \autoref{fig:
     \label{fig:pyramid}
 \end{figure}
 
-In terms of rotation, we calculate the gray centroid of the image near the feature point. The so-called centroid refers to the gray value of the image block as the center of weight. The specific steps are as follows
-\textsuperscript{\cite{Rosin1999}}：
+In terms of rotation, we calculate the gray centroid of the image near the feature point. The so-called centroid refers to the gray value of the image block as the center of weight. The specific steps are as follows {\cite{Rosin1999}}:
+
 \begin{enumerate}
-\item In a small image block $B$, define the moment of the image block as
+\item In a small image block $B$, define the moment of the image block as:
 \[
 m_{pq}=\sum_{x,y \in B}x^{p}y^{q}I(x,y), \quad p, q = \{0,1\}.
 \]
-\item calculate the centroid of the image block by the moment:
+\item Calculate the centroid of the image block by the moment:
 \[
 C=\left(\frac{m_{10}}{m_{00}},\frac{m_{01}}{m_{00}}\right).
 \]
-\item Connect the geometric center $O$ and the centroid $C$ of the image block to get a direction vector $\overrightarrow{OC}$, so the direction of the feature point can be defined as
+\item Connect the geometric center $O$ and the centroid $C$ of the image block to get a direction vector $\overrightarrow{OC}$, so the direction of the feature point can be defined as:
 \[
 \theta = \arctan(m_{01}/m_{10}).
 \]
 \end{enumerate}
-Now, FAST corner points have a description of scale and rotation, which greatly improves the robustness of their representation between different images. This improved FAST is called Oriented FAST in ORB.
+FAST corner points have a description of scale and rotation, which significantly improves the robustness of their representation between different images. This improved FAST is called oriented FAST in ORB.
 
-\subsubsection{BRIEF descriptor}
+\subsubsection{BRIEF Descriptor}
 After extracting the Oriented FAST key points, we calculate the descriptor for each point. ORB uses an improved BRIEF feature description. Let's first introduce what BRIEF is.
 
-BRIEF is a \textbf{binary} descriptor. Its description vector consists of many 0s and 1s, where 0s and 1s encode the size relationship between two random pixels near the key point (such as $p$ and $q$) : If $p$ is greater than $q$, then take 1, otherwise take 0. If we take 128 such $p,q$ pairs, we will finally get a 128-dimensional vector \textsuperscript{\cite{calonder2010brief}} consisting of 0s and 1s. BRIEF implements the comparison of randomly selected points, which is very fast, and since it expresses in binary, it is also very convenient to store and suitable for real-time image matching. The original BRIEF descriptor does not have rotation invariance, so it is easy to get lost when the image is rotated. The ORB calculates the direction of the key points in the FAST feature point extraction stage, so the direction information can be used to calculate the "Steer BRIEF" feature after the rotation, so that the ORB descriptor has better rotation invariance.
+BRIEF is a binary descriptor. Its description vector consists of many zeros and ones, which encode the size relationship between two random pixels near the key point (such as $p$ and $q$): If $p$ is greater than $q$, then take 1, otherwise take 0. If we take 128 such $p,q$ pairs, we will finally get a 128-dimensional vector  {\cite{calonder2010brief}} consisting of 0s and 1s. The BRIEF implements the comparison of randomly selected points, which is very fast. Since it expresses in binary, it is also very convenient to store and suitable for real-time image matching. The original BRIEF descriptor does not have rotation invariance, so it is easy to get lost when the image is rotated. The ORB calculates the direction of the key points in the FAST feature point extraction stage. The direction information can be used to calculate the Steer BRIEF feature after the rotation so that the ORB descriptor has better rotation invariance.
 
-Due to the consideration of rotation and scaling, the ORB still performs well under the translation, rotation and scaling. Meanwhile, the combination of FAST and BREIF is very efficient, which makes ORB features very popular in real-time SLAM. In \autoref{fig:ORB}~, we show the result of extracting ORB from an image. In the following, we will move on to feature matching between different images.
+Due to the consideration of rotation and scaling, the ORB performs well under translation, rotation, and scaling. Meanwhile, the combination of FAST and BRIEF is very efficient, which makes ORB features very popular in real-time SLAM. In \autoref{fig:ORB}~, we show the result of extracting ORB from an image. In the following, we will move on to feature matching between different images.
 
 \begin{figure}[!htp]
     \centering
     \includegraphics[width=0.9\linewidth]{vo1/feature}\\
-    \caption{ORB feature point detection by OpenCV.}
+    \caption{ORB feature points detected by OpenCV.}
     \label{fig:ORB}
 \end{figure}
 
 \subsection{Feature Matching}
 
-Feature matching (as shown in \autoref{fig:feature-matching}~) is a key step in visual SLAM. Broadly speaking, feature matching solves the data association problem in SLAM, that is, to determine the current view correspondence between the landmarks (feature points) and the landmarks (feature points) seen before. By accurately matching the descriptors between images or between image and map, we can reduce a lot of work for subsequent pose estimation and optimization operations. However, due to the locality of image features, mismatches are common and have not been effectively resolved for a long time. It has become a major bottleneck to improve the performance of  visual SLAM. It is somehow due to repeated textures in the scene, making the feature descriptions very similar. Under this circumstance, it is hard to resolve the mismatch by using local features only.
+Feature matching is a critical step in visual SLAM (\ref{fig:feature-matching}). Broadly speaking, feature matching solves the data association problem in SLAM, that is, to determine the view correspondence between the landmarks (feature points) and the landmarks (feature points) seen before. By accurately matching the descriptors between images or between images and maps, we can reduce a lot of work for subsequent pose estimation and optimization operations. However, due to the locality of image features, mismatches are common and have not been effectively resolved for a long time. It has become a significant bottleneck to improve the performance of visual SLAM. It is somehow due to repeated textures in the scene, making the feature descriptions very similar. Under this circumstance, it is hard to resolve the mismatch by using local features only.
 
 \begin{figure}[!htp]
     \centering
@@ -142,22 +140,22 @@ Feature matching (as shown in \autoref{fig:feature-matching}~) is a key step in 
     \label{fig:feature-matching}
 \end{figure}
 
-However, let’s look at the correct matching first, and then go back to discuss the mismatch problem. Consider images at two timestamps, if the feature points $x_{t}^{m}, m=1,2,...,M$ are extracted in the image $I_{t}$, then the feature points are also extracted in the image $I_{t+1}$ as $x_{t+1}^{n}, n=1,2,...,N$. How to find the correspondence between these two set elements? The simplest feature matching method is \textbf{Brute-Force Matcher}. That is, measure the distance between each feature point $x_{t}^{m}$ and all $x_{t+1}^{n}$ descriptors, and then sort, and take the closest one as the matching point. The descriptor distance indicates the \textbf{degree of similarity} between two features. In practice, different distance metric norms can be used. For descriptors of floating-point type, use Euclidean distance to measure. For binary descriptors (such as BRIEF), we often use Hamming distance as a metric - the Hamming distance between two binary strings refers to the number of \textbf{different digits}.
+However, let's first assume the matching is correct and then go back to discuss the mismatch problem. Consider images at two moments. Assume features $x_{t}^{m}, m=1,2,...,M$ are extracted in the image $I_{t}$, and $x_{t+1}^{n}, n=1,2,...,N$ in $I_{t+1}$ . How do we find the correspondence between these two sets? The simplest feature matching method is the brute-force matcher, which measures the distance between each pair of the features $x_{t}^{m}$ and all $x_{t+1}^{n}$ descriptors. Then sort the matching distance, and take the closest one as the matching point. The descriptor distance indicates the degree of similarity of two features. In practice, different distance metric norms can be used. For descriptors of floating-point type, using Euclidean distance to measure is a good choice. For binary descriptors (such as BRIEF), we often use Hamming distance as a metric. the Hamming distance between two binary vectors refers to the number of different digits.
 
-However, when the number of feature points is very large, the computational complexity of the brute force matching method will become large, especially when you want to match a certain frame and a map. This does not meet our real-time requirements in SLAM. To solve this, the \textbf{Fast Approximate Nearest Neighbor (FLANN)} algorithm is more suitable. Since the theory of these matching algorithms is mature and the implementation has been already integrated into OpenCV, the technical details will not be described here. Interested readers can refer to the literature \cite{Muja2009}.
+When the number of feature points is large, the brute force matching's computational complexity will become too expensive, especially when you want to match a frame to a map. This does not meet our real-time requirements in SLAM. The Fast Approximate Nearest Neighbor (FLANN) algorithm is more suitable in this case. Since these matching algorithms' theory is mature and the implementation has already been integrated into OpenCV, the technical details will not be described here. Interested readers can refer to the literature \cite{Muja2009}.In engineering, we can also limit the search range of the brute-force method to achieve real-time performance.
 
-\section{Practice: Feature extraction and matching}
+\section{Practice: Feature Extraction and Matching}
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.9\linewidth]{vo1/exp1-images.pdf}
-	\caption{Two frames of images used in the practice.}
+	\caption{Two images used in the practice.}
 	\label{fig:exp1-images}
 \end{figure}
 
-OpenCV has integrated most mainstream image features, and we can easily use them by function calls. Let's complete two exercise: In the first one, we demonstrate the use of OpenCV for feature matching of ORB; in the second, we demonstrate how to write a simple ORB feature from scratch based on the principles introduced. Through the practice, readers will have a deeper and more clear understanding of the ORB calculation process. Then other features can be done analogously.
+OpenCV has integrated most of the image features, and we can easily use them by function calls. Let's demonstrate two examples here. In the first one, we show the use of OpenCV for feature matching of ORB; in the second, we explain how to write an ORB feature from scratch based on the principles. Through the practice, readers will have a deeper understanding of the ORB calculation process. Then other features can be done analogously.
 
-\subsection{ORB features in OpenCV}
-First we call OpenCV to extract and match ORB. I prepared two images for this practice, 1.png and 2.png under slambook2/ch7/, as shown in \autoref{fig:exp1-images}~. They are two images from the public data set \cite{Sturm2012}. We can see a slight movement of the camera. The procedure in this section demonstrates how to extract ORB features and perform matching. In the next section, we will demonstrate how to use matching results to estimate camera motion.
+\subsection{ORB Features in OpenCV}
+First, we call OpenCV to extract and match ORB. We prepared two images for this practice, 1.png and 2.png under \textit{slambook2/ch7/}, as shown in \autoref{fig:exp1-images}~. They are two images from the public dataset \cite{Sturm2012}. We can see a slight movement of the camera. The procedure in this section demonstrates how to extract ORB features and perform matching. In the next section, we will show how to use matching results to estimate camera motion.
 
 The following program demonstrates how to use ORB:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/orb_cv.cpp]
@@ -171,80 +169,79 @@ using namespace std;
 using namespace cv;
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        cout << "usage: feature_extraction img1 img2" << endl;
-        return 1;
-    }
-    //-- load the image
-    Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-    Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
-    assert(img_1.data != nullptr && img_2.data != nullptr);
-    
-    //-- initialization
-    std::vector<KeyPoint> keypoints_1, keypoints_2;
-    Mat descriptors_1, descriptors_2;
-    Ptr<FeatureDetector> detector = ORB::create();
-    Ptr<DescriptorExtractor> descriptor = ORB::create();
-    Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
-    
-    //-- Step 1: calculate Oriented FAST keypoints
-    chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
-    detector->detect(img_1, keypoints_1);
-    detector->detect(img_2, keypoints_2);
-    
-    //-- Step 2: calculate BRIEF descriptors based on the position of Oriented FAST keypoints
-    descriptor->compute(img_1, keypoints_1, descriptors_1);
-    descriptor->compute(img_2, keypoints_2, descriptors_2);
-    chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
-    chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    cout << "extract ORB cost = " << time_used.count() << " seconds. " << endl;
-    
-    Mat outimg1;
-    drawKeypoints(img_1, keypoints_1, outimg1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-    imshow("ORB features", outimg1);
-    
-    //-- Step 3: match BRIEF descriptors of the two images using Hamming distance
-    vector<DMatch> matches;
-    t1 = chrono::steady_clock::now();
-    matcher->match(descriptors_1, descriptors_2, matches);
-    t2 = chrono::steady_clock::now();
-    time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    cout << "match ORB cost = " << time_used.count() << " seconds. " << endl;
-    
-    //-- Step 4: select correct matching (filtering)
-    // calculate the max & min distances
-    auto min_max = minmax_element(matches.begin(), matches.end(),
-        [](const DMatch &m1, const DMatch &m2) { return m1.distance < m2.distance; });
-    double min_dist = min_max.first->distance;
-    double max_dist = min_max.second->distance;
-    
-    printf("-- Max dist : %f \n", max_dist);
-    printf("-- Min dist : %f \n", min_dist);
-    
-	// When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong. 
-	// But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
-    std::vector<DMatch> good_matches;
-    for (int i = 0; i < descriptors_1.rows; i++) {
-        if (matches[i].distance <= max(2 * min_dist, 30.0)) {
-            good_matches.push_back(matches[i]);
-        }
-    }
-    
-    //-- Step 5: visualize the matching result
-    Mat img_match;
-    Mat img_goodmatch;
-    drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, img_match);
-    drawMatches(img_1, keypoints_1, img_2, keypoints_2, good_matches, img_goodmatch);
-    imshow("all matches", img_match);
-    imshow("good matches", img_goodmatch);
-    waitKey(0);
-    
-    return 0;
+	if (argc != 3) {
+		cout << "usage: feature_extraction img1 img2" << endl;
+		return 1;
+	}
+	//-- read images
+	Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
+	Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
+	assert(img_1.data != nullptr && img_2.data != nullptr);
+	
+	//-- initialization
+	std::vector<KeyPoint> keypoints_1, keypoints_2;
+	Mat descriptors_1, descriptors_2;
+	Ptr<FeatureDetector> detector = ORB::create();
+	Ptr<DescriptorExtractor> descriptor = ORB::create();
+	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
+	
+	//-- detect  Oriented FAST
+	chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+	detector->detect(img_1, keypoints_1);
+	detector->detect(img_2, keypoints_2);
+	
+	//-- compute BRIEF descriptor
+	descriptor->compute(img_1, keypoints_1, descriptors_1);
+	descriptor->compute(img_2, keypoints_2, descriptors_2);
+	chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
+	chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+	cout << "extract ORB cost = " << time_used.count() << " seconds. " << endl;
+	
+	Mat outimg1;
+	drawKeypoints(img_1, keypoints_1, outimg1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+	imshow("ORB features", outimg1);
+	
+	//-- use Hamming distance to match the features
+	vector<DMatch> matches;
+	t1 = chrono::steady_clock::now();
+	matcher->match(descriptors_1, descriptors_2, matches);
+	t2 = chrono::steady_clock::now();
+	time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+	cout << "match ORB cost = " << time_used.count() << " seconds. " << endl;
+	
+	//-- sort and remove the outliers
+	// min and max distance
+	auto min_max = minmax_element(matches.begin(), matches.end(),
+		[](const DMatch &m1, const DMatch &m2) { return m1.distance < m2.distance; });
+	double min_dist = min_max.first->distance;
+	double max_dist = min_max.second->distance;
+	
+	printf("-- Max dist : %f \n", max_dist);
+	printf("-- Min dist : %f \n", min_dist);
+	
+	// remove the bad matching
+	std::vector<DMatch> good_matches;
+	for (int i = 0; i < descriptors_1.rows; i++) {
+		if (matches[i].distance <= max(2 * min_dist, 30.0)) {
+			good_matches.push_back(matches[i]);
+		}
+	}
+	
+	//-- draw the results
+	Mat img_match;
+	Mat img_goodmatch;
+	drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, img_match);
+	drawMatches(img_1, keypoints_1, img_2, keypoints_2, good_matches, img_goodmatch);
+	imshow("all matches", img_match);
+	imshow("good matches", img_goodmatch);
+	waitKey(0);
+	
+	return 0;
 }
 \end{lstlisting}
 
-Run this program (you need to enter the paths of two image manually), the screen output should be like:
-\begin{lstlisting}[language=sh,caption=终端输入：]
+Run this program (you need to enter the paths of two images manually). The screen output should be like this:
+\begin{lstlisting}[language=sh,caption=Terminal input:]
 % build/orb_cv 1.png 2.png
 extract ORB cost = 0.0229183 seconds. 
 match ORB cost = 0.000751868 seconds.
@@ -252,7 +249,7 @@ match ORB cost = 0.000751868 seconds.
 -- Min dist : 4.000000 
 \end{lstlisting}
 
-\autoref{fig:exp1-results}~shows the results of the example. We see a large number of false matches before the filtering. After one pass of screening, though the number of matches was reduced a lot, most of the remaining matches were correct. Here, we followed an empirical rule in engineering \textbf{Hamming distance is less than twice the minimum distance} to carry out the filtering, and it may not have a theoretical explanation. However, although we can select out the correct matches in the example image, we still cannot guarantee that the matches obtained in all other images are correct. Therefore, during the motion estimation step, it is necessary to remove mismatches. On my machine, ORB extraction took 22.9 milliseconds (two images), and matching took 0.75 milliseconds. It can be seen that most of the calculation is spent on feature extraction.
+\autoref{fig:exp1-results}~shows the results of the example. We see a large number of false matches before the filtering. After removing the bad matches, most of the remaining matches are correct. Here, we followed an empirical rule in engineering that good matches are selected from where the Hamming distance is less than twice the minimum distance. It may not have a theoretical explanation but just an engineering trick. However, although we can select out the correct matches in the example image, we still cannot guarantee that the remaining matches are correct. Therefore, during the motion estimation step, it is necessary to consider those mismatches. ORB extraction took 22.9 milliseconds (two images) on my machine, and matching took 0.75 milliseconds. It can be seen that most of the calculation is spent on feature extraction.
 
 \begin{figure}[!htp]
 	\centering
@@ -261,17 +258,17 @@ match ORB cost = 0.000751868 seconds.
 	\label{fig:exp1-results} 
 \end{figure}
 
-\subsection{Coding ORB features}
-Below we show the method of coding ORB features from scratch. There are a branch of codes in this section. Only a snippet of the code is shown here. Readers are recommended to obtain the rest from the GitHub code base.
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/orb_self.cpp（片段）]
+\subsection{ORB Features from Scratch}
+Below we show the method of coding ORB features from scratch. Since the code is a bit long, only a snippet is shown here. Readers are recommended to obtain the rest from the GitHub codebase.
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/orb_self.cpp (part)]
 typedef vector<uint32_t> DescType;
 // ... omit some image loading and testing code
 // compute the descriptor
-void ComputeORB(const cv::Mat &img, vector<cv::KeyPoint> &keypoints, vector<DescType> &descriptors) {
+void ComputeORB(const cv::Mat &img, vector<cv::key point> &key points, vector<DescType> &descriptors) {
     const int half_patch_size = 8;
     const int half_boundary = 16;
     int bad_points = 0;
-    for (auto &kp: keypoints) {
+    for (auto &kp: key points) {
         if (kp.pt.x < half_boundary || kp.pt.y < half_boundary ||
         kp.pt.x >= img.cols - half_boundary || kp.pt.y >= img.rows - half_boundary) {
             // outside
@@ -305,7 +302,9 @@ void ComputeORB(const cv::Mat &img, vector<cv::KeyPoint> &keypoints, vector<Desc
         
                 // rotate with theta
                 cv::Point2f pp = cv::Point2f(cos_theta * p.x - sin_theta * p.y, sin_theta * p.x + cos_theta * p.y) + kp.pt;
-                cv::Point2f qq = cv::Point2f(cos_theta * q.x - sin_theta * q.y, sin_theta * q.x + cos_theta * q.y) + kp.pt;
+                cv::Point2f qq = cv::Point2f(cos_theta * q.x - sin_theta * q.y, sin_theta * q.x + cos_theta * q.y) + kp.pt;	
+                
+                // compare pp and qq
                 if (img.at<uchar>(pp.y, pp.x) < img.at<uchar>(qq.y, qq.x)) {
                     d |= 1 << k;
                 }
@@ -315,7 +314,7 @@ void ComputeORB(const cv::Mat &img, vector<cv::KeyPoint> &keypoints, vector<Desc
         descriptors.push_back(desc);
     }
     
-    cout << "bad/total: " << bad_points << "/" << keypoints.size() << endl;
+    cout << "bad/total: " << bad_points << "/" << key points.size() << endl;
 }
 
 // brute-force matching
@@ -343,9 +342,9 @@ void BfMatch(
     }
 }
 \end{lstlisting}
-We only show the ORB calculation and matching code. In the calculation, we use 256-bit binary description, which corresponds to 8 32-bit unsigned int data, which is expressed as DescType with typedef. Then, we calculate the angle of the FAST feature point according to the principle introduced above, and then use the angle to calculate the descriptor. To accelerated, some complicated calculations, such as of $\arctan$, $\sin$, and $\cos$, are worked around by the principle of trigonometric functions. In the BfMatch function, we also use the \_mm\_popcnt\_u32 function in the SSE instruction set to calculate the number of 1s in an unsigned int, which is used to achieve the effect of calculating the Hamming distance. The result of this program is as follows, and the matching result is shown in \autoref{fig:matches}:
+We only show the ORB calculation and matching code. In the calculation, we use 256-bit binary description, which corresponds to 8 32-bit unsigned int data expressed as DescType with typedef. Then, we calculate the FAST feature point's angle according to the principle introduced above and then use the angle to calculate the descriptor. To accelerate, some complicated calculations, such as $\arctan$, $\sin$, and $\cos$, are worked around by the principle of trigonometric functions. In the BfMatch function, we also use the \_mm\_popcnt\_u32 function in the SSE instruction set to calculate the number of 1s in an unsigned int, which is used to achieve the effect of calculating the Hamming distance. The result of this program is as follows, and the matching result is shown in \autoref{fig:matches}:
 
-\begin{lstlisting}[language=sh,caption=终端输出：]
+\begin{lstlisting}[language=sh,caption=Terminal output:]
 bad/total: 43/638
 bad/total: 8/595
 extract ORB cost = 0.00390721 seconds.
@@ -360,49 +359,49 @@ matches: 51
     \label{fig:matches}
 \end{figure}
 
-In this program, the extraction of ORB takes 3.9 milliseconds, and the matching takes only 0.86 milliseconds. Through some simple modifications in the algorithm implementation, we accelerated the extraction of ORB by 5.8 times. Keep in mind that compiling this program requires your CPU to support the SSE instruction set, which should already be supported on most modern home CPUs. If we can further parallelize the feature extraction, the algorithm can be further accelerated.
+In this program, ORB extraction takes 3.9 milliseconds, and the matching takes only 0.86 milliseconds. Through some simple modifications in implementation, we accelerated the extraction of ORB by 5.8 times. Note that compiling this program requires your CPU to support the SSE instruction set, which should be already supported on most modern PC CPUs. If we can further parallelize the feature extraction, the algorithm can be further accelerated.
 
-\subsection{Calculate camera motion}
-Now, we have key points matching. In the next step, we need to estimate the camera's motion based on the matching. It is totally different for different camera settings (or different information available for the calculation):
+\subsection{Calculate the Camera Motion}
+Now, we have key points matching. In the next step, we need to estimate the camera's motion based on the matching. It is totally different for different camera settings (or the information available for the calculation):
 
 \begin{enumerate}
-	\item When the camera is monocular, we only know the 2D pixel coordinates, so the problem is to estimate the motion according to \textbf{two sets of 2D points}. This problem is solved by \textbf{epipolar geometry}.
-	\item When the camera is binocular, RGB-D, or the distance is obtained by some method, then the problem is to estimate the motion according to \textbf{two sets of 3D points}. This problem is usually solved by ICP.
-	\item If one set is 3D and one set is 2D, that is, we get some 3D points and their projection positions on the camera, and we can also estimate the movement of the camera. This problem is solved by \textbf{PnP}.
+	\item When the camera is monocular, we only know the 2D pixel coordinates, so the problem is to estimate the motion according to two sets of 2D points. This problem is solved by \textit{epipolar geometry}.
+	\item When the camera is binocular, RGB-D, or the distance is obtained by some method, then the problem is to estimate the motion according to two sets of 3D points. This problem is usually solved by ICP.
+	\item If one set is 3D and one set is 2D, we get some 3D points and their projection positions on the camera, and we can also estimate the camera's pose. This problem is solved by \textit{PnP}.
 \end{enumerate}
 
-The following sections will introduce camera motion estimation in these three situations. We will start from the 2D-2D case with the least information and see how it is dealt with and what are the troublesome problems.
+The following sections will introduce camera motion estimation in these three situations. We will start from the 2D-2D case with the least information and see how it is dealt with and troublesome problems.
 
-\section{2D−2D: epipolar geometry}
+\section{2D−2D: Epipolar Geometry}
 \label{sec:epipolar-geometry}
 
-\subsection{epipolar constraints}
+\subsection{Epipolar Constraints}
 
-Suppose we have a pair of matched feature points from two images, as shown in \autoref{fig:doubleview}~. If there are several pairs of such matching points, the camera motion between the two frames can be recovered through the correspondence between these two-dimensional image points. How many pairs do we need? We will introduce it later. Let's first take a look at the geometric relationship between the matching points in the two images.
+Suppose we have a pair of matched feature points from two images, as shown in \autoref{fig:doubleview}~. If there are several pairs of such matching points, the camera motion between the two frames can be recovered through the correspondence between these two-dimensional image points. How many pairs do we need? We will see later. Let's first take a look at the geometric relationship between the matching points in the two images.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.6\linewidth]{vo1/fundamental}
-	\caption{epipolar constraints.}
+	\caption{The epipolar constraints.}
 	\label{fig:doubleview}
 \end{figure}
 
-Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames of image $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\mathbf{R}, \mathbf{t}$, and the centers of the two cameras as $O_{1}, O_{2}$ (Origin). Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, which are obtained through feature matching. If the matching is correct, it means that they are indeed \textbf{projection of the same point in space on two image planes}. Now we need some terms to describe the geometric relationship between them. First, the connection $\overrightarrow{O_{1}p_{1}}$ and the connection $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the three-dimensional space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called \textbf{Epipolar plane}. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$ respectively. $e_{1}, e_{2}$ is called \textbf{Epipoles}, and $O_{1}O_{2}$ is called \textbf{Baseline}. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as \textbf{Epipolar line}.
+Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\mathbf{R}, \mathbf{t}$, and the centers of the two cameras as $O_{1}, O_{2}$. Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, obtained through feature matching. If the matching is correct, it means that they are indeed the projection of the same point. Now we need some terms to describe the geometric relationship between them. First, the line $\overrightarrow{O_{1}p_{1}}$ and the line $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the 3D space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called the epipolar plane. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$, respectively. The $e_{1}, e_{2}$ is called epipoles, and $O_{1}O_{2}$ is called the baseline. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as the epipolar line.
 
-From the first frame, the ray $\overrightarrow{O_1 p_1}$ represents \textbf{spatial locations where a pixel may appear}, since all points on the ray will be projected to the same pixel. Meanwhile, if we don’t know the location of $P$, when we look at the second image, the connection $\overrightarrow{e_2 p_2}$ (i.e. the epipolar line in the second image) is possible projected positions of the point $P$, as well as the projection of the ray $\overrightarrow{O_1 p_1}$ in the second image. Now, since we have determined the pixel location of $p_2$ through feature point matching, we can infer the spatial location of $P$ and the movement of the camera, as long as the feature matching is correct. If there is no feature matching, we can't determine where the $p_2$ is on the epipolar line. At that time, you must search on the epipolar line $l_2$ to get the correct match, which will be discussed in Lecture 12.
+From the first frame, the ray $\overrightarrow{O_1 p_1}$ represents the possible spatial locations where a pixel may appear since all points on the ray will be projected to the same pixel. Meanwhile, suppose we don't know the location of $P$. When we look at the second image, the connection $\overrightarrow{e_2 p_2}$ (i.e., the epipolar line in the second image) is the possible projected positions of the point $P$, as well as the projection of the ray $\overrightarrow{O_1 p_1}$ in the second image. Now, since we have determined the pixel location of $p_2$ through feature matching, we can infer the spatial location of $P$ and the camera movement, as long as the feature matching is correct. If there is no feature matching, we can't determine where the $p_2$ is on the epipolar line. At that time, we must search on the epipolar line $l_2$ to get the correct match, which will be discussed in lecture \ref{cpt:12}.
 
-Now, let's look at the geometric relationship algebraically. Define the spatial position of $P$ in the first frame to be
+Now, let's look at the geometric relationship algebraically. Define the spatial position of $P$ in the first frame to be:
 \[
-\mathbf{P}=[X,Y,Z]^\mathrm{T}.
+\mathbf{P}=[X,Y,Z]^T.
 \]
-According to the pinhole camera model introduced in Lecture 5, we know that the pixel positions of the two pixels $\mathbf{p}_1,\mathbf{p}_2$ are
+According to the pinhole camera model introduced in lecture \ref{cpt:5}, we know that the pixel positions of the two pixels $\mathbf{p}_1,\mathbf{p}_2$ are:
 \begin{equation}
-s_1 {\mathbf{p}_1} = \mathbf{KP},\quad s_2 \mathbf{p}_2 = \mathbf{K}\left( \mathbf{RP + t} \right).
+\label{eq:7.1}
+s_1 {\mathbf{p}_1} = \mathbf{KP},\quad s_2 \mathbf{p}_2 = \mathbf{K}\left( \mathbf{RP + t} \right),
 \end{equation}
+where $\mathbf{K}$ is the camera intrinsic  matrix, and $\mathbf{R}, \mathbf{t}$ are the camera motions between two frames. Specifically, they are $\mathbf{R}_{21}$ and $\mathbf{t}_{21}$, i.e. transformation from the first frame to the second. We can also write them in Lie algebra form.
 
-where $\mathbf{K}$ is the camera intrinsic parameters matrix, and $\mathbf{R}, \mathbf{t}$ are the camera motions between two camera frames. Specifically, they are $\mathbf{R}_{21}$ and $\mathbf{t}_{21}$, i.e. transformation from the first frame to the second. We can also write them in Lie algebra form.
-
-Sometimes, we use homogeneous coordinates to represent pixels. When using homogeneous coordinates, a vector will be equal to itself multiplied by any non-zero constant. This is usually used to express a projection relationship. For example, $s_1 \mathbf{p}_1$ and $\mathbf{p}_1$ form a projection relationship, and they are equal in the sense of homogeneous coordinates. We call this \textbf{equal up to a scale} (equal up to a scale), denoted as:
+Sometimes, we use homogeneous coordinates to represent pixels. When using homogeneous coordinates, a vector will be equal to itself multiplied by any non-zero constant. This is usually used to express a projection relationship. For example, $s_1 \mathbf{p}_1$ and $\mathbf{p}_1$ form a projection relationship, and they are equal in the sense of homogeneous coordinates. We call this equal \textit{up to a scale}, denoted as:
 \begin{equation}
 s\mathbf{p} \simeq \mathbf{p}.
 \end{equation}
@@ -426,24 +425,24 @@ Left multiply both sides by $\mathbf{t}^\wedge$. Recalling the definition of $^\
 \mathbf{t}^\wedge \mathbf{x}_2 \simeq \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1.
 \end{equation}
 
-Then, left multiply $\mathbf{x}_2^\mathrm{T}$ on both sides:
+Then, left multiply $\mathbf{x}_2^T$ on both sides:
 \begin{equation}
-\mathbf{x}_2^\mathrm{T} \mathbf{t}^\wedge \mathbf{x}_2 \simeq \mathbf{x}_2^\mathrm{T} \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1.
+\mathbf{x}_2^T \mathbf{t}^\wedge \mathbf{x}_2 \simeq \mathbf{x}_2^T \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1.
 \end{equation}
 
-On the left side, $\mathbf{t}^\wedge \mathbf{x}_2$ is a vector perpendicular to both $\mathbf{t}$ and $\mathbf{x}_2$. When its inner product with $\mathbf{x}_2$ will get 0. Since the left side of the equation is strictly zero, it is also zero after multiplying by any non-zero constant, so we can write $\simeq$ as the usual equal sign. Therefore, we have a concise equation:
+On the left side, $\mathbf{t}^\wedge \mathbf{x}_2$ is a vector orthogonal to both $\mathbf{t}$ and $\mathbf{x}_2$. So its inner product with $\mathbf{x}_2$ will get 0. Since the left side of the equation is strictly zero, it is also zero after multiplying by any non-zero constant, so we can turn $\simeq$ back to the usual equal sign. Therefore, we have a concise equation:
 \begin{equation}
- \mathbf{x}_2^\mathrm{T} \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1 = 0.
+\mathbf{x}_2^T \mathbf{t}^\wedge \mathbf{R} \mathbf{x}_1 = 0.
 \end{equation}
 
-Substituting $\mathbf{p}_1, \mathbf{p}_2$ again, we have:
+Substituting the $\mathbf{p}_1, \mathbf{p}_2$ again, we have:
 \begin{equation}
-\mathbf{p}_2^\mathrm{T} \mathbf{K}^{-\mathrm{T}} \mathbf{t}^\wedge \mathbf{R} \mathbf{K}^{-1} \mathbf{p}_1  = 0.
+\mathbf{p}_2^T \mathbf{K}^{-\mathrm{T}} \mathbf{t}^\wedge \mathbf{R} \mathbf{K}^{-1} \mathbf{p}_1  = 0.
 \end{equation}
 
-Both equations are called \textbf{antipolar constraint}, which is famous for its conciseness. Geometically, it means $O_1, P, O_2$ are coplanar. The epipolar constraint encodes both translation and rotation. We denote two matrices: Fundamental Matrix $\mathbf{F}$ and Essential Matrix $\mathbf{E}$, so the epipolar constraint can be further simplified:
+Both equations are called \textbf{epipolar constraint}, which is famous for its conciseness. Geometrically, it means $O_1, P, O_2$ are coplanar. The epipolar constraint encodes both translation and rotation. We define two matrices: \textit{Fundamental} matrix $\mathbf{F}$ and \textit{essential} Matrix $\mathbf{E}$ from this equation: 
 \begin{equation}
-\mathbf{E} = \mathbf{t}^ \wedge \mathbf{R}, \quad \mathbf{F} = \mathbf{K}^{ -\mathrm{T}} \mathbf{E} {\mathbf{K}^{ - 1}}, \quad \mathbf{x}_2^\mathrm{T} \mathbf{E} {\mathbf{x}_1} = \mathbf{p}_2^\mathrm{T} \mathbf{F} {\mathbf{p}_1} = 0.
+\mathbf{E} = \mathbf{t}^ \wedge \mathbf{R}, \quad \mathbf{F} = \mathbf{K}^{ -\mathrm{T}} \mathbf{E} {\mathbf{K}^{ - 1}}, \quad \mathbf{x}_2^T \mathbf{E} {\mathbf{x}_1} = \mathbf{p}_2^T \mathbf{F} {\mathbf{p}_1} = 0.
 \end{equation}
 
 The epipolar constraint gives the spatial relationship of two matching points concisely. Therefore, the camera pose estimation problem can be summarized as the following two steps:
@@ -453,20 +452,20 @@ The epipolar constraint gives the spatial relationship of two matching points co
 	\item Find $\mathbf{R}, \mathbf{t}$ based on $\mathbf{E}$ or $\mathbf{F}$.
 \end{enumerate}
 
-Since $\mathbf{E}$ and $\mathbf{F}$ only differ from the camera internal parameters, and the internal parameters are usually known in SLAM problem \footnote{ in SfM research, it may be unknown and need to be estimated. }, so the simpler form $\mathbf{E}$ is often used in practice. Let's take $\mathbf{E}$ as an example to introduce how to solve the above two problems.
+Since $\mathbf{E}$ and $\mathbf{F}$ only differ from the camera internal parameters, and the internal parameters are assumed to be known in SLAM problem \footnote{However, in SfM research, it may be unknown and need to be estimated. }, so the simpler form $\mathbf{E}$ is often used in practice. Let's take $\mathbf{E}$ as an example to introduce how to solve the above two problems.
 
 \subsection{Essential Matrix}
 By definition, the essential matrix $\mathbf{E} = \mathbf{t}^\wedge \mathbf{R}$. It is a matrix of $3\times 3$ with 9 unknown variables. So, can any matrix of the size $3 \times 3$ be an essential matrix? From the structure of $\mathbf{E}$, there are the following points worth noting:
 
 \begin{itemize}
-	\item The essential matrix is defined by the epipolar constraint. Since the epipolar constraint is the constraint of an \textbf{equal-to-zero equation}, after multiplying $\mathbf{E}$ by any non-zero constant, \textbf{polar constraint is still satisfied}. We call this $\mathbf{E}$ 's equivalence under different scales.
-	\item According to $\mathbf{E} = \mathbf{t}^ \wedge \mathbf{R}$, it can be proved that \textsuperscript{\cite{Hartley2003}}, the singular value of the essential matrix $\mathbf{E}$ must be in the form of $[\sigma, \sigma, 0]^\mathrm{T}$. This is called \textbf{intrinsic properties of essential matrix}.
+	\item The essential matrix is defined by the epipolar constraint. Since the epipolar constraint is the constraint of an\textit{ equal-to-zero }equation, after multiplying $\mathbf{E}$ by any non-zero constant, the constraint is still satisfied. We call this $\mathbf{E}$ 's equivalence under different scales.
+	\item According to $\mathbf{E} = \mathbf{t}^ \wedge \mathbf{R}$, it can be proved that  {\cite{Hartley2003}}, the singular value of the essential matrix $\mathbf{E}$ must be in the form of $[\sigma, \sigma, 0]^T$. This is called internal properties of essential matrix.
 	\item On the other hand, since translation and rotation each have 3 degrees of freedom, $\mathbf{t}^\wedge \mathbf{R}$ has 6 degrees of freedom. But due to the equivalence of scales, $\mathbf{E}$ actually has 5 degrees of freedom.
 \end{itemize}
 
-The fact that $\mathbf{E}$ has 5 degrees of freedom indicates that we can use at least 5 pairs of points to solve $\mathbf{E}$. However, the intrinsic property of $\mathbf{E}$ is non-linear, which could cause trouble in the estimation. Therefore, it is also possible to consider only its \textbf{scale equivalence} and use 8 pairs of matched points to estimate $\mathbf{E}$——This is the classic \textbf{Eight-point-algorithm}\textsuperscript{\cite{Hartley1997, Longuet-Higgins1987}}. The eight-point method only uses the linear properties of $\mathbf{E}$, so it can be solved under the framework of linear algebra. Let's take a look at how the eight-point method works.
+The fact that $\mathbf{E}$ has 5 degrees of freedom indicates that we can use at least 5 pairs of points to solve $\mathbf{E}$. However, the internal property of $\mathbf{E}$ is nonlinear, which could cause trouble in the estimation. Therefore, it is also possible to consider only its scale equivalence and use 8 pairs of matched points to estimate $\mathbf{E}$. This is the classic \textit{eight-point-algorithm} {\cite{Hartley1997, Longuet-Higgins1987}}. The eight-point method only uses the linear properties of $\mathbf{E}$, so it can be solved under the framework of linear algebra. Let's take a look at how the eight-point method works.
 
-Consider a pair of matched points, their normalized coordinates are $\mathbf{x}_{1}=[u_{1},v_{1},1]^\mathrm{T}$, $\mathbf{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$. According to the polar constraints, we have:
+Consider a pair of matched points, their normalized coordinates are $\mathbf{x}_{1}=[u_{1},v_{1},1]^T$, $\mathbf{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$. According to the polar constraints, we have:
 \begin{equation}
 \begin{pmatrix} 
 u_{2},v_{2},1
@@ -491,7 +490,7 @@ Then the epipolar constraint can be written in a linear form related to $\mathbf
 [u_{2}u_{1},u_{2}v_{1},u_{2},v_{2}u_{1},v_{2}v_{1},v_{2},u_{1},v_{1},1] \cdot  \mathbf{e}=0.
 \end{equation}
 
-Analogously, we stack all the points into one equation and obtain a linear equation system (where $u^i, v^i$ represent the $i$th feature point): 
+Analogously, we stack all the points into one equation and obtain a linear equation system (where $u^i, v^i$ represent the $i$-th feature point): 
 \begin{equation}
 \label{Eq:eight-point}
 \begin{pmatrix}
@@ -506,65 +505,65 @@ e_{1}\\ e_{2}\\ e_{3}\\  e_{4}\\ e_{5}\\ e_{6}\\ e_{7}\\ e_{8}\\ e_{9}
 =0.
 \end{equation}
 
-These 8 equations form a linear equation system. Its coefficient matrix is composed of 2D feature point positions, and its size is $8 \times 9$. $\mathbf{e}$ is located in the null space of this matrix. If the coefficient matrix is of full rank (i.e. 8), then its null space dimension is 1, meaning that $\mathbf{e}$ forms a line. This is consistent with the scale equivalence of $\mathbf{e}$. If the matrix composed of 8 pairs of matching points meets the condition of rank 8, then the elements of $\mathbf{E}$ can be solved uniquely by the above equation.
 
-The next question is how to recover the movement of the camera $\mathbf{R}, \mathbf{t}$ according to the estimated essential matrix $\mathbf{E}$. This process is obtained by singular value decomposition (SVD). Let the SVD decomposition of $\mathbf{E}$ be
+These eight equations form a linear equation system. Its coefficient matrix is composed of 2D feature point positions, and its size is $8 \times 9$. $\mathbf{e}$ is located in the null space of this matrix. If the coefficient matrix is of full rank (i.e., 8), then its null space dimension is 1, meaning that $\mathbf{e}$ forms a line. This is consistent with the scale equivalence of $\mathbf{e}$. If the matrix composed of 8 pairs of matching points meets the condition of rank 8, then the elements of $\mathbf{E}$ can be solved uniquely by the above equation.
+
+The next question is how to recover the movement of the camera $\mathbf{R}, \mathbf{t}$ according to the estimated essential matrix $\mathbf{E}$. This process is obtained by singular value decomposition (SVD). Let the SVD decomposition of $\mathbf{E}$ be:
 \begin{equation}
-\mathbf{E} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^\mathrm{T},
+\mathbf{E} = \mathbf{U} \boldsymbol{\Sigma} \mathbf{V}^T,
 \end{equation}
-where $\mathbf{U}, \mathbf{V}$ are orthogonal matrices, and $\mathbf{\Sigma}$ are singular value matrices. According to the intrinsic properties of $\mathbf{E}$, we know that $\mathbf{\Sigma} = \mathrm{diag}( \sigma, \sigma, 0 )$. In SVD decomposition, for any $\mathbf{E}$, there are two possible $\mathbf{t}, \mathbf{R}$:
+where $\mathbf{U}, \mathbf{V}$ are orthogonal matrices, and $\boldsymbol{\Sigma}$ is the  singular value matrice. According to the internal properties of $\mathbf{E}$, we know that $\boldsymbol{\Sigma} = \mathrm{diag}( \sigma, \sigma, 0 )$. In SVD decomposition, for any $\mathbf{E}$, there are two possible $\mathbf{t}, \mathbf{R}$:
 \begin{equation}
 \begin{array}{l}
-\mathbf{t}_1^ \wedge  = \mathbf{U}{\mathbf{R}_Z}(\frac{\pi }{2}) \mathbf{\Sigma} {\mathbf{U}^\mathrm{T}}, \quad {\mathbf{R}_1} = \mathbf{U} \mathbf{R}_Z^\mathrm{T}(\frac{\pi }{2}){ \mathbf{V}^\mathrm{T}}\\
-\mathbf{t}_2^ \wedge  = \mathbf{U}{\mathbf{R}_Z}( - \frac{\pi }{2})\mathbf{\Sigma} {\mathbf{U}^\mathrm{T}}, \quad  {\mathbf{R}_2} = \mathbf{U} \mathbf{R}_Z^\mathrm{T}( - \frac{\pi }{2}){\mathbf{V}^\mathrm{T}}.
+\mathbf{t}_1^ \wedge  = \mathbf{U}{\mathbf{R}_Z}(\frac{\pi }{2}) \boldsymbol{\Sigma} {\mathbf{U}^T}, \quad {\mathbf{R}_1} = \mathbf{U} \mathbf{R}_Z^T(\frac{\pi }{2}){ \mathbf{V}^T}\\
+\mathbf{t}_2^ \wedge  = \mathbf{U}{\mathbf{R}_Z}( - \frac{\pi }{2})\boldsymbol{\Sigma} {\mathbf{U}^T}, \quad  {\mathbf{R}_2} = \mathbf{U} \mathbf{R}_Z^T( - \frac{\pi }{2}){\mathbf{V}^T}.
 \end{array}
 \end{equation}
 
-Among them, $\mathbf{R}_Z\left(\frac{\pi }{2}\right)$ represents the rotation matrix obtained by rotating $90^\circ$ along the $Z$ axis. Since $-\mathbf{E}$ is equivalent to $\mathbf{E}$, taking the minus sign for any $\mathbf{t}$ will also get the same result. Therefore, when decomposing from $\mathbf{E}$ to $\mathbf{t}, \mathbf{R}$, there are a total of \textbf{4} possible solutions.
+Among them, $\mathbf{R}_Z\left(\frac{\pi }{2}\right)$ represents the rotation matrix obtained by rotating $90^\circ$ along the $Z$ axis. Since $-\mathbf{E}$ is equivalent to $\mathbf{E}$, taking the minus sign for any $\mathbf{t}$ will also get the same result. Therefore, when decomposing from $\mathbf{E}$ to $\mathbf{t}, \mathbf{R}$, there are a total of \textbf{four} possible solutions.
 
-\autoref{fig:epipolar-solution}~ shows the 4 solutions obtained by decomposing the essential matrix. We know the projection (red point) of the space point on the camera (blue line), and want to solve the camera's motion. In the case of keeping the red point unchanged, 4 possible situations can be drawn. Fortunately, only in the first solution, $P$ has positive depths in both cameras. Therefore, we can substitute any points into the four solutions and check the depth of the point under two cameras, to determine which solution is correct.
+\autoref{fig:epipolar-solution}~ shows the four solutions obtained by decomposing the essential matrix. We know the projection (red) of the space point on the camera (blue line) and want to solve the camera's motion. In the case of keeping the redpoint unchanged, four possible situations can be drawn. Fortunately, only in the first solution, $P$ has positive depths in both cameras. Therefore, we can substitute any points into the four solutions and check the depth's sign to determine which solution is correct.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=1.0\linewidth]{vo1/epipolar-solution}
-	\caption{分解本质矩阵得到的4个解。在保持投影点（红色点）不变的情况下，两个相机及空间点一共有4种可能的情况。}
+	\caption{We get four solutions when decomposing the essential matrix. }
 	\label{fig:epipolar-solution}
 \end{figure}
 
-If you use the intrinsic properties of $\mathbf{E}$, then it has only 5 degrees of freedom. So at least 5 pairs of matched points can be used to solve the camera motion \textsuperscript{\cite{Li2006, Nister2004a}}. However, this approach is more complicated. For engineering realization, since there are usually dozens or even hundreds of matching points, it is often not helpful to reduce from 8 pairs to 5 pairs. To keep it simple, we only introduce the basic eight-point method here.
+If we use the internal properties of $\mathbf{E}$, then it has only five degrees of freedom. So at least five pairs of matched points can be used to solve the camera motion {\cite{Li2006, Nister2004a}}. However, this approach is more complicated. Since there are usually dozens or even hundreds of matching points for engineering realization, it is often not helpful to reduce from 8 pairs to 5 pairs. To keep it simple, we only introduce the basic eight-point method here.
 
-There is one remaining problem: $\mathbf{E}$ solved according to linear equations may not satisfy the intrinsic properties of $\mathbf{E}$, i.e. its singular value is not necessarily in the form of ${\sigma}, {\sigma}, 0$. At this time, we will deliberately adjust the $\mathbf{\Sigma}$ matrix to look like the above. The usual procedure is to perform SVD decomposition on the $\mathbf{E}$ obtained by the eight-point method, and the singular value matrix $\mathbf{\Sigma} = \mathrm{diag} (\sigma_1, \sigma_2, \ sigma_3)$, might as well set $\sigma_1 \geqslant \sigma_2 \geqslant \sigma_3$. take:
+There is one remaining problem: $\mathbf{E}$ solved by linear equations may not satisfy the internal properties, i.e. its singular value is not necessarily in the form of ${\sigma}, {\sigma}, 0$. At this time, we will deliberately adjust the $\boldsymbol{\Sigma}$ matrix to look like the above. The usual procedure is to perform SVD decomposition on the $\mathbf{E}$ obtained by the eight-point method. Assume the singular value matrix is $\boldsymbol{\Sigma} = \mathrm{diag} (\sigma_1, \sigma_2, \sigma_3)$, and $\sigma_1 \geqslant \sigma_2 \geqslant \sigma_3$. We may take:
 \begin{equation}
-\mathbf{E} = \mathbf{U} \mathrm{diag} (\frac{\sigma_1+\sigma_2}{2}, \frac{\sigma_1+\sigma_2}{2}, 0) \mathbf{V}^\mathrm{T}.
+\mathbf{E} = \mathbf{U} \mathrm{diag} (\frac{\sigma_1+\sigma_2}{2}, \frac{\sigma_1+\sigma_2}{2}, 0) \mathbf{V}^T.
 \end{equation}
 This is equivalent to projecting the calculated essential matrix onto the manifold where $\mathbf{E}$ is located. A simpler approach is to take the singular value matrix as $\mathrm{diag} (1,1,0)$, due to $\mathbf{E}$'s scale equivalence, so it is also reasonable.
 
 \subsection{Homography}
-In addition to the fundamental matrix and the essential matrix, there is another common matrix in two-view geometry: the homography matrix $\mathbf{H}$, which describes the mapping relationship between two planes. If the feature points in the scene all fall on the same plane (such as walls, ground, etc.), motion can be estimated through homography. This situation is more common in top-view cameras carried by drones or sweepers. 
+In addition to the fundamental matrix and the essential matrix, there is another common matrix in two-view geometry: the homography matrix $\mathbf{H}$, which describes the mapping relationship between two planes. If the feature points in the scene all fall on the same plane (such as walls, ground, etc.), we can estimate the motion through the homography matrix. This situation is more common in top-view cameras carried by drones or sweepers. 
 
-The homography matrix usually describes the transformation between some points on a common plane between two images. Consider that there is a pair of matched feature points $p_{1}$ and $p_{2}$ in the images $I_{1}$ and $I_{2}$. These feature points fall on the plane $P$. Let this plane satisfy the equation:
+The homography matrix usually describes the transformation between some points on a common plane between two images. Consider that there is a pair of matched feature points $p_{1}$ and $p_{2}$ in the images $I_{1}$ and $I_{2}$. These feature points fall on the plane $P$. Let this plane satisfy the equation of:
 \begin{equation}
-\mathbf{n}^\mathrm{T} \mathbf{P} + d = 0.
+\mathbf{n}^T \mathbf{P} + d = 0.
 \end{equation}
 Rearrange it:
 \begin{equation}
-- \frac{\mathbf{n}^\mathrm{T} \mathbf{P} }{d} = 1.
+- \frac{\mathbf{n}^T \mathbf{P} }{d} = 1.
 \end{equation}
-
-然后，回顾本节开头的式(7.1)，得：
+Recalling \eqref{eq:7.1}, we have: 
 \begin{align*}
 \mathbf{p}_2 &\simeq \mathbf{K} ( \mathbf{R} \mathbf{P} + \mathbf{t} ) \\ 
-&\simeq \mathbf{K} \left( \mathbf{R} \mathbf{P} + \mathbf{t} \cdot (- \frac{\mathbf{n}^\mathrm{T} \mathbf{P} }{d}) \right) \\
-&\simeq \mathbf{K} \left( \mathbf{R} - \frac{\mathbf{t} \mathbf{n}^\mathrm{T} }{d} \right) \mathbf{P} \\ 
-&\simeq \mathbf{K} \left( \mathbf{R} - \frac{\mathbf{t} \mathbf{n}^\mathrm{T} }{d} \right) \mathbf{K}^{-1} \mathbf{p}_1.
+&\simeq \mathbf{K} \left( \mathbf{R} \mathbf{P} + \mathbf{t} \cdot (- \frac{\mathbf{n}^T \mathbf{P} }{d}) \right) \\
+&\simeq \mathbf{K} \left( \mathbf{R} - \frac{\mathbf{t} \mathbf{n}^T }{d} \right) \mathbf{P} \\ 
+&\simeq \underbrace{\mathbf{K} \left( \mathbf{R} - \frac{\mathbf{t} \mathbf{n}^T }{d} \right) \mathbf{K}^{-1}}_{\mathbf{H}} \mathbf{p}_1.
 \end{align*}
 
-So, we got a direct description of the transformation between $\mathbf{p}_1$ and $\mathbf{p}_2$, denoting the middle part as $\mathbf{H}$, so:
+So, we get a direct description of the transformation between $\mathbf{p}_1$ and $\mathbf{p}_2$, denoting the middle part as $\mathbf{H}$, so:
 \begin{equation}
 \mathbf{p}_2 \simeq \mathbf{H} \mathbf{p}_1.
 \end{equation}
 
-Its definition is related to the parameters of rotation, translation and the plane. Similar to the fundamental matrix $\mathbf{F}$, the homography matrix $\mathbf{H}$ is also a matrix of $3 \times 3$. Solving this is similar to that of $\mathbf{F}$. Calculate $\mathbf{H}$ based on the matching points, and then decompose it to find rotation and translation. Expand the above formula, get:
+Its definition is related to the parameters of rotation, translation, and plane coefficients. Similar to the fundamental matrix $\mathbf{F}$, the homography matrix $\mathbf{H}$ is also a matrix of $3 \times 3$. Solving this is similar to that of $\mathbf{F}$. Calculate $\mathbf{H}$ based on the matching points, and then decompose it to find rotation and translation. Expand the above formula, get:
 \begin{equation}
 \begin{pmatrix} 
 u_{2}\\v_{2}\\1
@@ -587,7 +586,7 @@ u_{2}&=\frac{h_{1}u_{1}+h_{2}v_{1}+h_{3}}{h_{7}u_{1}+h_{8}v_{1}+h_{9}}\\
 v_{2}&=\frac{h_{4}u_{1}+h_{5}v_{1}+h_{6}}{h_{7}u_{1}+h_{8}v_{1}+h_{9}}.
 \end{aligned}
 \]
-Rearrange:
+Rearrange it:
 \[
 \begin{gathered}
 h_{1}u_{1}+h_{2}v_{1}+h_{3}-h_{7}u_{1}u_{2}-h_{8}v_{1}u_{2}=u_{2}\\
@@ -595,7 +594,7 @@ h_{4}u_{1}+h_{5}v_{1}+h_{6}-h_{7}u_{1}v_{2}-h_{8}v_{1}v_{2}=v_{2}.
 \end{gathered}
 \]
 
-A pair of matching point can construct two constraints (in fact, there are three constraints, but considering their linear correlation, only the first two are taken), so the homography matrix with 8 degrees of freedom can be estimated by 4 pairs of matching feature points (In the case of non-degenerate, that is, these feature points cannot have three collinear points), that is, to solve the following linear equations (when $h_9 = 0$, the right side is zero):
+A pair of matching points can construct two constraints, so the homography matrix with 8 degrees of freedom can be estimated by 4 pairs of matched features \footnote{In fact, there are three constraints, but the third one is linear dependent on the former two, so only the first two are taken.} (in the case of non-degenerate, which means these feature points cannot have three collinear points).  We solve the following linear equations to compute the $\mathbf{H}$: (when $h_9 = 0$, the right side is zero):
 \begin{equation}
 \begin{pmatrix}
 u_{1}^{1}& v_{1}^{1}& 1 & 0 & 0 & 0 & -u_{1}^{1}u_{2}^{1} & -v_{1}^{1}u_{2}^{1}\\
@@ -616,16 +615,16 @@ u_{2}^{1}\\ v_{2}^{1}\\ u_{2}^{2}\\ v_{2}^{2}\\u_{2}^{3}\\ v_{2}^{3}\\u_{2}^{4}\
 \end{pmatrix}.
 \end{equation}
 
-This approach regards the $\mathbf{H}$ matrix as a vector, and estimates the $\mathbf{H}$ by solving the linear equation of the vector, also known as the Direct Linear Transform. Similar to the essential matrix, the homography matrix needs to be decomposed after obtaining the homography matrix to get the corresponding rotation matrix $\mathbf{R}$ and translation vector $\mathbf{t}$. The decomposition method includes numerical method \textsuperscript{\cite{faugeras1988motion, Zhang1996}} and analytical method \textsuperscript{\cite{malis2007deeper}}. Similar to the decomposition of the essential matrix, the decomposition of the homography matrix will also return 4 sets of rotation matrices and translation vectors, and meanwhile the normal vectors of the planes where the corresponding scene points located. If the depths of the projected map points are all positive (that is, in front of the camera), then two sets of solutions can be excluded. In the end, only two sets of solutions are left, and more prior information is needed to make a final decision. Usually we can solve it by assuming the normal vector of the known scene plane. If the scene plane is parallel to the camera plane, then the theoretical value of the normal vector $\mathbf{n}$ is $\mathbf{1}^\mathrm{T}$ .
+This approach regards the $\mathbf{H}$ matrix as a vector and estimates the $\mathbf{H}$ by solving the linear equations, also known as the direct linear transform (DLT). Like the essential matrix, the homography matrix needs to be decomposed after to get the corresponding rotation matrix $\mathbf{R}$ and translation vector $\mathbf{t}$. The decomposition method includes numerical method  {\cite{faugeras1988motion, Zhang1996}} and analytical method  {\cite{malis2007deeper}}. Similar to the decomposition of the essential matrix, the decomposition of the homography matrix will also return four sets of rotation matrices and translation vectors as well as the plane coefficients. If the depths of the projected map points are all positive (in front of the camera), then two sets of solutions can be excluded. In the end, only two sets of solutions are left, and more prior information is needed to make a final decision. Usually, we can solve it by assuming the normal vector of the known scene plane. If the scene plane is parallel to the camera plane, then the theoretical value of the normal vector $\mathbf{n}$ is $\mathbf{1}^T$.
 
-Homography is of great significance in SLAM. When the feature points are coplanar or the camera experiences purely rotation, the degree of freedom of the fundamental matrix decreases, which causes the degeneration. The actual data is always noisy. If you stick to the eight-point method to solve the fundamental matrix, the redundant freedom of the fundamental matrix will be mainly determined by the noise. In order to avoid the effects of degradation, we usually estimate the fundamental matrix $\mathbf{F}$ and the homography matrix $\mathbf{H}$ at the same time, and choose the one with the smaller reprojection error to estimate the motion.
+The homography is of great significance in SLAM. When the feature points are coplanar, or the camera motion is pure rotation, the degree of freedom of the fundamental matrix decreases, which causes degeneration. The real data is always noisy. If you stick to the eight-point method to solve the fundamental matrix, the fundamental matrix's redundant freedom will be mainly determined by the noise. To avoid the effects of degradation, we usually estimate the fundamental matrix $\mathbf{F}$ and the homography matrix $\mathbf{H}$ simultaneously and then choose one with the smaller reprojection error as the final result.
 
-\section{Practice: Solving camera motion with epipolar constraints}
-In the following, let's solve the camera motion through the essential matrix. The program in the practice part of the previous section provides feature matching, and here we use the matching feature points to calculate $\mathbf{E}, \mathbf{F}$ and $\mathbf{H}$, and then decompose $ \mathbf{E}$ to get $\mathbf{R} and \mathbf{t}$. The whole program is solved using the algorithm provided by OpenCV. We encapsulate the feature extraction in the previous section into functions for later use. This section only shows the code for the pose estimation.
+\section{Practice: Solving Camera Motion with Epipolar Constraints}
+In the following section, let's solve the camera motion through the essential matrix. The program in the previous section provides feature matching results, and here we use them to calculate $\mathbf{E} or \mathbf{F}$ and then decompose $ \mathbf{E}$ to get $\mathbf{R} and \mathbf{t}$. The whole program is solved using the algorithm provided by OpenCV. We encapsulate the feature extraction in the previous section into functions for later use. This section only shows the code for the pose estimation.
 
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp （片段）]
-void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
-    std::vector<KeyPoint> keypoints_2,
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp (part)]
+void pose_estimation_2d2d(std::vector<key point> key points_1,
+    std::vector<key point> key points_2,
     std::vector<DMatch> matches,
     Mat &R, Mat &t) {
     // Camera Intrinsics,TUM Freiburg2
@@ -636,8 +635,8 @@ void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
     vector<Point2f> points2;
     
     for (int i = 0; i < (int) matches.size(); i++) {
-        points1.push_back(keypoints_1[matches[i].queryIdx].pt);
-        points2.push_back(keypoints_2[matches[i].trainIdx].pt);
+        points1.push_back(key points_1[matches[i].queryIdx].pt);
+        points2.push_back(key points_2[matches[i].trainIdx].pt);
     }
     
     //-- Calculate fundamental matrix
@@ -665,8 +664,8 @@ void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
 }
 \end{lstlisting}
 
-This function shows how to solve the camera motion from the feature point, and then, we call it in the main function to get the camera motion:
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp （片段）]
+This function shows how to solve the camera motion from the 2D feature points. Then, we call it in the main function to get the camera motion:
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_2d2d.cpp (part)]
 int main( int argc, char** argv ){
     if (argc != 3) {
         cout << "usage: pose_estimation_2d2d img1 img2" << endl;
@@ -677,14 +676,14 @@ int main( int argc, char** argv ){
     Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
     assert(img_1.data && img_2.data && "Can not load images!");
     
-    vector<KeyPoint> keypoints_1, keypoints_2;
+    vector<key point> key points_1, key points_2;
     vector<DMatch> matches;
-    find_feature_matches(img_1, img_2, keypoints_1, keypoints_2, matches);
+    find_feature_matches(img_1, img_2, key points_1, key points_2, matches);
     cout << "In total, we get " << matches.size() << " set of feature points" << endl;
     
     //-- Estimate the motion between two frames
     Mat R, t;
-    pose_estimation_2d2d(keypoints_1, keypoints_2, matches, R, t);
+    pose_estimation_2d2d(key points_1, key points_2, matches, R, t);
     
     //-- Check E=t^R*scale
     Mat t_x =
@@ -696,9 +695,9 @@ int main( int argc, char** argv ){
     //-- Check epipolar constraints
     Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
     for (DMatch m: matches) {
-        Point2d pt1 = pixel2cam(keypoints_1[m.queryIdx].pt, K);
+        Point2d pt1 = pixel2cam(key points_1[m.queryIdx].pt, K);
         Mat y1 = (Mat_<double>(3, 1) << pt1.x, pt1.y, 1);
-        Point2d pt2 = pixel2cam(keypoints_2[m.trainIdx].pt, K);
+        Point2d pt2 = pixel2cam(key points_2[m.trainIdx].pt, K);
         Mat y2 = (Mat_<double>(3, 1) << pt2.x, pt2.y, 1);
         Mat d = y2.t() * t_x * R * y1;
         cout << "epipolar constraint = " << d << endl;
@@ -744,39 +743,39 @@ epipolar constraint = [-0.0008009088410884102]
 ......
 \end{lstlisting}
 
-It can be seen from the output of the program that the accuracy of meeting the epipolar constraints is around the order of $10 ^{-3}$. According to the previous discussion, there are 4 possibilities for $\mathbf{R}, \mathbf{t}$ obtained by decomposition. In this program, OpenCV will use triangulation to detect whether the depth of the detected point is positive to select the correct solution.
+It can be seen from the program's output that the accuracy of the epipolar constraints is around the order of $10 ^{-3}$. According to the previous discussion, there are 4 possibilities for $\mathbf{R}, \mathbf{t}$ obtained by decomposition. In this program, OpenCV will use triangulation to detect whether the detected point's depth is positive to select the correct solution.
 
 \subsection*{Discussion}
-From demo program that the resulted $\mathbf{E}$ and $\mathbf{F}$ are different by a camera internal parameter matrix. Although it is not numerically intuitive, their mathematical relationship can be verified. Motion can be decomposed from $\mathbf{E}, \mathbf{F}$ and $\mathbf{H}$, but $\mathbf{H}$ needs to assume that the feature points are on the same plane. For the data of this experiment, this assumption is not true, so we mainly use $\mathbf{E}$ to find the motion.
+From the demo, we can see that the result $\mathbf{E}$ and $\mathbf{F}$ are different by a camera intrinsic matrix. Although it is not numerically intuitive, their mathematical relationship can be verified by the program. Motion can be decomposed from $\mathbf{E}, \mathbf{F}$ and $\mathbf{H}$, but $\mathbf{H}$ needs to assume that the feature points are on the same plane. For this experiment's data, this assumption is not true, so we mainly use $\mathbf{E}$ to find the motion.
 
-It is worth mentioning that since $\mathbf{E}$ itself has scale equivalence, the $\mathbf{t}, \mathbf{R}$ also have scale equivalence. And $\mathbf{R} \in \mathrm{SO}(3)$ has its own constraints, so we think that $\mathbf{t}$ has a \textbf{scale}. In other words, in the decomposition process, if $\mathbf{t}$ is multiplied by any non-zero constant, the decomposition is still valid. Therefore, we usually \textbf{normalize} $\mathbf{t}$ to make its length equal to 1.
+It is worth mentioning that since $\mathbf{E}$ itself has scale equivalence, the $\mathbf{t}, \mathbf{R}$ also have scale equivalence. And $\mathbf{R} \in \mathrm{SO}(3)$ has its own constraints, so we think that $\mathbf{t}$ has a \textbf{scale}. In other words, in the decomposition process, if $\mathbf{t}$ is multiplied by any non-zero constant, the decomposition is still valid. Therefore, we usually normalize $\mathbf{t}$ to make its length equal to 1.
 
 \subsubsection{Scale Ambiguity}
-The normalization of $\mathbf{t}$ directly leads to \textbf{Scale Ambiguity of monocular vision}. For example, the first dimension of $\mathbf{t}$ output in the program is about 0.822. We are unsure that it refers to 0.822 meters or 0.822 centimeters. Because after multiplying $\mathbf{t}$ by any constant, the epipolar constraint is still valid. In other words, in monocular SLAM, the trajectory and map are simultaneously zoomed at any multiple, and the image we get is still the same. This has already been introduced in the Chapter 2.
+The normalization of $\mathbf{t}$ directly leads to \textit{scale ambiguity in monocular vision}. For example, the first dimension of $\mathbf{t}$ output in the program is about 0.822. We are unsure that it refers to 0.822 meters or 0.822 centimeters. Because after multiplying $\mathbf{t}$ by any constant, the epipolar constraint is still valid. In other words, in monocular SLAM, the trajectory and map are simultaneously zoomed at any multiple, and the image we get is still the same. This has already been introduced in chapter \ref{cpt:2}.
 
-In monocular vision, the normalization of $\mathbf{t}$ for two images is equivalent to \textbf{fixing scale}. Although we don't know its actual length, we use $\mathbf{t}$ as the unit 1 to calculate the camera motion and the 3D position of the feature points. This is called \textbf{initialization} of monocular SLAM. After initialization, 3D-2D can be used to calculate camera motion. The unit of the trajectory and map after initialization is the scale fixed during initialization. Therefore, monocular SLAM has an inevitable \textbf{initialization} step. The two initialized images must have a certain amount of translation, and then the unit of trajectory and map will be determined by this translation.
+In the monocular vision, the normalization of $\mathbf{t}$ for two images is equivalent to fixing the scale. Although we don't know its real length, we use this $\mathbf{t}$ as unit 1 to calculate the camera motion and the 3D position of the feature points. This is called the initialization phrase of monocular SLAM. After initialization, 3D-2D can be used to calculate camera motion. The latter trajectory and map will use the fixed scale during initialization. Therefore, monocular SLAM has an inevitable initialization step. The two initialized images must have a certain amount of translation, and then the unit of trajectory and map will be determined by this translation.
 
 In addition to normalizing $\mathbf{t}$, another method is to set the average depth of all the feature points during initialization to 1, or a fixed scale. Compared to set the length of $\mathbf{t}$ to 1, normalizing the depth of the feature points can control the scale of the scene and make the calculation more numerically stable. But there is no theoretical difference.
 
-\subsubsection{The problem of initialization caused by pure rotation}
-In the decomposition of $\mathbf{E}$ to get $\mathbf{R}, \mathbf{t}$, if the camera is purely rotated, causing $\mathbf{t}$ to be zero, then $\mathbf{E}$ will also be zero, which will make it impossible for us to solve $\mathbf{R}$. However, at this time we can rely on $\mathbf{H}$ to find the rotation, but when only the rotation is performed, we cannot use triangulation to estimate the spatial position of the feature points (this will be introduced later), so we can conclude that \textbf{Monocular initialization cannot only be pure rotation, it must have a certain amount of translation}. If there is no translation, the monocular can not be initialized. In practice, if the translation is too small during initialization, it will make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating in place, it is easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in the case of monocular SLAM.
+\subsubsection{The Problem of Pure Rotation}
+In the decomposition of $\mathbf{E}$ to get $\mathbf{R}, \mathbf{t}$, if the camera is purely rotated, causing $\mathbf{t}$ to be zero, then $\mathbf{E}$ will also be zero, which will make it impossible for us to solve $\mathbf{R}$. However, we can rely on $\mathbf{H}$ to find the rotation at this time, but we cannot generally assume the scene is a plane. Also, in the rotation-only case, we cannot use triangulation to estimate the feature points' spatial position (this will be introduced later). So we can conclude that the monocular initialization cannot be performed in the pure rotation case. It must have a certain amount of translation. If there is no translation, the monocular SLAM system can not be initialized. In practice, if the translation is too small during initialization, it will also make the pose estimation and triangulation results unstable and even failed. In contrast, if the camera is moved left and right instead of rotating, it will be easy to initialize the monocular SLAM. Therefore, experienced SLAM researchers often choose to move the camera left and right to smoothly initialize in monocular SLAM, while novices tend to rotate the camera sitting in the seat. You can tell if one is really an experienced SLAM engineer or not from this.
 
-\subsubsection{More than 8 pairs of matched points}
-When we get more than 8 pairs of matched points (for example, we found 79 pairs of matches), we can calculate a least squares solution. Recalling the linearized epipolar constraint in \eqref{Eq:eight-point}, we denote the coefficient matrix on the left as $\mathbf{A}$:
+\subsubsection{More Than Eight Pairs of Features}
+When we get more than eight pairs of matched points (for example, we found 79 pairs of matches), we can calculate a least-square solution. Recalling the linearized epipolar constraint in \eqref{Eq:eight-point}, we denote the coefficient matrix on the left as $\mathbf{A}$:
 \begin{equation}
 \mathbf{A} \mathbf{e} = \mathbf{0} .
 \end{equation}
 
-For the eight-point method, the size of $\mathbf{A}$ is $8 \times 9$. If the given matching points are more than $8$, the equation constitutes an overdetermined equation, that is, $\mathbf{e}$ does not necessarily exist to make the above formula true. Therefore, it can be solved by minimizing in a quadratic form:
+For the eight-point method, the size of $\mathbf{A}$ is $8 \times 9$. If the given features are more than $8$, the equation constitutes an overdetermined equation, that is, $\mathbf{e}$ does not necessarily exist to make the above formula perfectly true. Therefore, it can be solved by minimizing in a quadratic form:
 \begin{equation}
-\mathop {\min }\limits_{\mathbf{e}} \left\| \mathbf{Ae} \right\|_2^2 = \mathop {\min }\limits_{\mathbf{e}} { \mathbf{e}^\mathrm{T}} {\mathbf{A}^\mathrm{T}} \mathbf{Ae}.
+\mathop {\min }\limits_{\mathbf{e}} \left\| \mathbf{Ae} \right\|_2^2 = \mathop {\min }\limits_{\mathbf{e}} { \mathbf{e}^T} {\mathbf{A}^T} \mathbf{Ae}.
 \end{equation}
 
-So the $\mathbf{E}$ matrix in the sense of least squares is obtained. However, due to potential mismatches, we prefer to use \textbf{Random Sample Concensus (RANSAC)} instead of least squares to solve the above problem. RANSAC is general, applicable to many cases with incorrect data, and can handle data with incorrect matching.
+So the $\mathbf{E}$ matrix in the sense of least-squares is obtained. However, we prefer to use random sample consensus (RANSAC) instead of least-squares to solve the above problem due to potential mismatches. RANSAC is general, applicable to many cases with incorrect data, and can handle data with incorrect matching.
 
 \section{Triangulation}
 \label{sec:7.5}
-In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of \textbf{Triangulation}, shown in \autoref{fig: triangluar}.
+In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of \textbf{Triangulation}, shown in \autoref{fig:triangluar}.
 
 \begin{figure}[!ht]
 	\centering
@@ -787,7 +786,7 @@ In the previous two sections, we introduced using the epipolar constraint to est
 
 Triangulation refers to observing the same landmark point at different locations and determining the distance of the landmark point from the observed locations. Triangulation was first proposed by Gauss and used in metrology. It can be also applied to astronomy and geography. For example, we can estimate the distance to us from the angle of the star observed in different seasons. In SLAM, we mainly use triangulation to estimate the distance of pixels.
 
-Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference, and the transformation matrix to the right image is $\mathbf{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. There is a feature point $p_{1}$ in $I_{1}$, which corresponds to a feature point $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the map point corresponding to the two feature points in the 3D scene. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least square.
+Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference, and the transformation matrix to the right image is $\mathbf{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. There is a feature point $p_{1}$ in $I_{1}$, which corresponds to a feature point $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the map point corresponding to the two feature points in the 3D scene. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least-square.
 
 According to the definition in epipolar geometry, let $\mathbf{x}_1, \mathbf{x}_2$ be the normalized coordinates of two feature points, then they satisfy:
 \begin{equation}
@@ -800,7 +799,7 @@ Now we know $\mathbf{R}$ and $\mathbf{t}$, we want to find the depth $s_1$ and $
 s_2 \mathbf{x}_2^\wedge \mathbf{x}_2 = 0 = s_1 \mathbf{x}_2^\wedge \mathbf{R} \mathbf{x}_1 + \mathbf{x}_2^\wedge \mathbf{t}. 
 \end{equation}
 
-The left side of this equation is zero, and the right side can be regarded as an equation of $s_1$, and $s_1$ can be obtained directly from it. With $s_1$, $s_2$ is also very easy to calculate. Thus, we get the depth of the points under the two frames and determine their spatial coordinates. Definitely, due to the existence of noise, our estimated $\mathbf{R}, \mathbf{t}$ may not exactly make the equation \eqref{eq:x1tox2} zero, so a more common approach is to find the least square solution rather than a direct solution.
+The left side of this equation is zero, and the right side can be regarded as an equation of $s_1$, and $s_1$ can be obtained directly from it. With $s_1$, $s_2$ is also very easy to calculate. Thus, we get the depth of the points under the two frames and determine their spatial coordinates. Definitely, due to the existence of noise, our estimated $\mathbf{R}, \mathbf{t}$ may not exactly make the equation \eqref{eq:x1tox2} zero, so a more common approach is to find the least-square solution rather than a direct solution.
 
 \section{Practice: Triangulation}
 \subsection{Triangulation Program}
@@ -808,8 +807,8 @@ In the following, we demonstrate how to obtain the spatial positions of the feat
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/triangulation.cpp（片段）]
 void triangulation(
-	const vector<KeyPoint> &keypoint_1,
-	const vector<KeyPoint> &keypoint_2,
+	const vector<key point> &key point_1,
+	const vector<key point> &key point_2,
 	const std::vector<DMatch> &matches,
 	const Mat &R, const Mat &t,
 	vector<Point3d> &points) {
@@ -827,8 +826,8 @@ void triangulation(
 	vector<Point2f> pts_1, pts_2;
 	for (DMatch m:matches) {
 		// Convert pixel coordinates to camera coordinates
-		pts_1.push_back(pixel2cam(keypoint_1[m.queryIdx].pt, K));
-		pts_2.push_back(pixel2cam(keypoint_2[m.trainIdx].pt, K));
+		pts_1.push_back(pixel2cam(key point_1[m.queryIdx].pt, K));
+		pts_2.push_back(pixel2cam(key point_2[m.trainIdx].pt, K));
 	}
 	
 	Mat pts_4d;
@@ -866,14 +865,14 @@ Therefore, to improve the accuracy of triangulation, one is to improve the accur
 	\label{fig:triangulation-discuss}
 \end{figure}
 
-In monocular vision, since the image has no depth information, we have to wait for the feature points to be tracked for a few frames, and then use triangulation to determine the depth of the new feature points. This is also called delayed triangulation \textsuperscript{\cite{Davison2003}}. However, if the camera rotates in place, causing the parallax to be small, it is difficult to estimate the depth of the newly observed feature points. This situation is more common in robotics, as rotation is a common command for robots. In this case, monocular vision may suffer from tracking failures and incorrect scales.
+In monocular vision, since the image has no depth information, we have to wait for the feature points to be tracked for a few frames, and then use triangulation to determine the depth of the new feature points. This is also called delayed triangulation  {\cite{Davison2003}}. However, if the camera rotates in place, causing the parallax to be small, it is difficult to estimate the depth of the newly observed feature points. This situation is more common in robotics, as rotation is a common command for robots. In this case, monocular vision may suffer from tracking failures and incorrect scales.
 
 Although this section only introduces the depth estimation of triangulation, we can also quantitatively calculate the \textbf{location} and \textbf{uncertainty} of each feature point. Therefore, if we assume that the feature point obeys the Gaussian distribution and continuously observe it, with the correct information, we can expect \textbf{its variance will continue to decrease and even converge}. This can be referred to as \textbf{Depth Filter}. However, since its principle is more complicated, we will discuss it in detail later. Next, we will discuss the estimation of camera motion from 3D-2D matching points, as well as 3D-3D estimation methods.
 
 \section{3D−2D：PnP}
 PnP (Perspective-n-Point) is a method to solve 3D to 2D paired point motion. It describes how to estimate the pose of the camera when the $n$ 3D space points and their projection positions are known. As mentioned earlier, the 2D-2D epipolar geometry method requires 8 or more point pairs (take the eight-point method as an example), and there have problems with initialization, pure rotation, and scale. However, if the 3D position of one of the feature points in the two images is known, then we need at least 3 point pairs (and at least one additional point to verify the result) to estimate the camera motion. The 3D position of the feature point can be determined by triangulation or the depth map of an RGB-D camera. Therefore, in binocular or RGB-D visual odometry, we can directly use PnP to estimate camera motion. In the monocular visual odometry, initialization must be conducted before using PnP. The 3D-2D method does not require epipolar constraints, and can obtain better motion estimation in a few matching points. It is the most important pose estimation method.
 
-There are many ways to solve PnP problems, for example, P3P\textsuperscript{\cite{GaoHouTangEtAl2003}}, direct linear transformation (DLT), EPnP (Efficient PnP)\textsuperscript{\cite{LepetitMoreno-NoguerFua2008 }}, UPnP\textsuperscript{\cite{Penate-SanchezAndrade-CettoMoreno-Noguer2013}}, etc. In addition, the method of \textbf{non-linear optimization} can be used to construct a least-square problem and iteratively solve it, which is commonly called the Bundle Adjustment. Let's look at DLT first, and then we will explain Bundle Adjustment.
+There are many ways to solve PnP problems, for example, P3P {\cite{GaoHouTangEtAl2003}}, direct linear transformation (DLT), EPnP (Efficient PnP) {\cite{LepetitMoreno-NoguerFua2008 }}, UPnP {\cite{Penate-SanchezAndrade-CettoMoreno-Noguer2013}}, etc. In addition, the method of \textbf{non-linear optimization} can be used to construct a least-square problem and iteratively solve it, which is commonly called the Bundle Adjustment. Let's look at DLT first, and then we will explain Bundle Adjustment.
 
 \subsection{Direct Linear Transformation}
 Consider such a problem: the positions of a set of 3D points and their projection positions in a certain camera are known, find the pose of the camera. This problem can also be used to solve the problem of camera pose when a given map and image are given. If the 3D point is regarded as a point in another camera coordinate system, it can also be used to solve the relative motion problem of two cameras. We will start from simple questions.
@@ -903,17 +902,17 @@ v_{1}=\frac{t_{5}X+t_{6}Y+t_{7}Z+t_{8}}{t_{9}X+t_{10}Y+t_{11}Z+t_{12}}.
 
 To simplify the representation, define $\mathbf{T}$ as a row vector:
 \[
-\mathbf{t}_{1}=(t_{1},t_{2},t_{3},t_{4})^\mathrm{T},
-\mathbf{t}_{2}=(t_{5},t_{6},t_{7},t_{8})^\mathrm{T},
-\mathbf{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^\mathrm{T},
+\mathbf{t}_{1}=(t_{1},t_{2},t_{3},t_{4})^T,
+\mathbf{t}_{2}=(t_{5},t_{6},t_{7},t_{8})^T,
+\mathbf{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^T,
 \]
 Now we have:
 \[
-\mathbf{t}_1^\mathrm{T}\mathbf{P}-\mathbf{t}_3^\mathrm{T}\mathbf{P} u_1=0,
+\mathbf{t}_1^T\mathbf{P}-\mathbf{t}_3^T\mathbf{P} u_1=0,
 \]
 and
 \[
-\mathbf{t}_2^\mathrm{T}\mathbf{P}-\mathbf{t}_3^\mathrm{T}\mathbf{P} v_1=0.
+\mathbf{t}_2^T\mathbf{P}-\mathbf{t}_3^T\mathbf{P} v_1=0.
 \]
 
 Please note that $\mathbf{t}$ is the variable to be found. As you can see, each feature point provides two linear constraints on $\mathbf{t}$. Assuming there are a total of $N$ feature points, the following linear equations can be constructed:
@@ -931,11 +930,11 @@ Please note that $\mathbf{t}$ is the variable to be found. As you can see, each 
 =0.
 \end{equation}
 
-Since $\mathbf{t}$ has a total dimension of 12, the linear solution of matrix $\mathbf{T}$ can be achieved by at least 6 pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least square solution of the overdetermined equation.
+Since $\mathbf{t}$ has a total dimension of 12, the linear solution of matrix $\mathbf{T}$ can be achieved by at least 6 pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least-square solution of the overdetermined equation.
 
-In the DLT solution, we directly regard the $\mathbf{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\mathbf{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the constraint, it is a general matrix. The translation vector is easier to handle, it belongs to the vector space. For the rotation matrix $\mathbf{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\mathbf{T}$ estimated by DLT. This can be done by QR decomposition \textsuperscript{\cite{Hartley2003, Chen1994}}, or it can be calculated like this \textsuperscript{\cite{Barfoot2016,Green1952}}:
+In the DLT solution, we directly regard the $\mathbf{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\mathbf{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the constraint, it is a general matrix. The translation vector is easier to handle, it belongs to the vector space. For the rotation matrix $\mathbf{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\mathbf{T}$ estimated by DLT. This can be done by QR decomposition  {\cite{Hartley2003, Chen1994}}, or it can be calculated like this  {\cite{Barfoot2016,Green1952}}:
 \begin{equation}
-\mathbf{R} \leftarrow {\left( {\mathbf{R}{\mathbf{R}^\mathrm{T}}} \right)^{ - \frac{1}{2}}} \mathbf{R}.
+\mathbf{R} \leftarrow {\left( {\mathbf{R}{\mathbf{R}^T}} \right)^{ - \frac{1}{2}}} \mathbf{R}.
 \end{equation}
 This can be seen as reprojecting the result from the matrix space onto the $\mathrm{SE}(3)$ manifold and converting it into two parts: rotation and translation.
 
@@ -1007,7 +1006,7 @@ From the principle of P3P to solve PnP, we use the similarity of triangles to so
 	\item If the 3D point or 2D point is affected by noise, or there is a mismatch, the algorithm goes into trouble.
 \end{enumerate}
 
-People also proposed many other methods, such as EPnP, UPnP and so on. They use more information and optimize the camera pose in an iterative way to eliminate the effects of noise as much as possible. However, compared to P3P, the principles are more complicated, so we recommend that readers read the original papers or understand the PnP process by practice. In SLAM, the usual approach is to first estimate the camera pose using methods such as P3P/EPnP, and then construct a least squares optimization problem to adjust the estimated values (Bundle Adjustment). When the camera motion is sufficiently continuous, or you can also assume that the camera does not move or move at a constant speed, you can use the estimated values as the initial values for optimization. Next we look at the PnP problem from the perspective of nonlinear optimization.
+People also proposed many other methods, such as EPnP, UPnP and so on. They use more information and optimize the camera pose in an iterative way to eliminate the effects of noise as much as possible. However, compared to P3P, the principles are more complicated, so we recommend that readers read the original papers or understand the PnP process by practice. In SLAM, the usual approach is to first estimate the camera pose using methods such as P3P/EPnP, and then construct a least-squares optimization problem to adjust the estimated values (Bundle Adjustment). When the camera motion is sufficiently continuous, or you can also assume that the camera does not move or move at a constant speed, you can use the estimated values as the initial values for optimization. Next we look at the PnP problem from the perspective of nonlinear optimization.
 
 %
 %\subsubsection{Random sample consensus（RANSAC）}
@@ -1040,7 +1039,7 @@ Other than the linear method, we can also construct the PnP problem as a nonline
 
 We can build a Bundle Adjustment problem in PnP to optimize the camera pose. If the camera is moving continuously (as in the majority of SLAM processes), you can also use BA directly to solve the camera pose. In this section, we will give the basic form of this problem in two views, and then discuss the larger-scale BA problem in Lecture 9.
 
-Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\mathbf{R}, \mathbf{t}$ of the camera, and its Lie group is expressed as $\mathbf{T}$. Suppose the coordinates of a point in space are $\mathbf{P}_i=[X_i,Y_i,Z_i]^\mathrm{T}$, and their projected pixel coordinates are $\mathbf{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
+Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\mathbf{R}, \mathbf{t}$ of the camera, and its Lie group is expressed as $\mathbf{T}$. Suppose the coordinates of a point in space are $\mathbf{P}_i=[X_i,Y_i,Z_i]^T$, and their projected pixel coordinates are $\mathbf{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
 \begin{equation}
 s_i \left[ 
 \begin{array}{l}
@@ -1072,14 +1071,14 @@ The residual term of this problem is the difference between the projection posit
 
 We have already discussed the least-square optimization problem in the Chapter \ref{cpt:6}. Using Lie algebra, unconstrained optimization problems can be constructed, which can be easily solved by optimization algorithms such as Gauss Newton method and Levenberg-Marquardt method. However, before using the Gauss-Newton method and Levenberg-Marquardt method, we need to find the derivative of each error term with respect to the optimization variable, which is \textbf{linearization}:
 \begin{equation}
-\mathbf{e}( \mathbf{x} + \Delta \mathbf{x} ) \approx \mathbf{e}(\mathbf{x}) + \mathbf{J} ^\mathrm{T}\Delta \mathbf{x}.
+\mathbf{e}( \mathbf{x} + \Delta \mathbf{x} ) \approx \mathbf{e}(\mathbf{x}) + \mathbf{J} ^T\Delta \mathbf{x}.
 \end{equation}
 
-The form of $\mathbf{J}^\mathrm{T}$ is worth discussing, and it can even be said to be the key. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer to analytical derivatives. Now, $\mathbf{e}$ is the pixel coordinate error (2-dimensional) and $\mathbf{x}$ is the camera pose (6-dimensional), $\mathbf{J}^\mathrm{T}$ is a matrix of $2 \times 6$. Let's derive the form of $\mathbf{J}^\mathrm{T}$.
+The form of $\mathbf{J}^T$ is worth discussing, and it can even be said to be the key. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer to analytical derivatives. Now, $\mathbf{e}$ is the pixel coordinate error (2-dimensional) and $\mathbf{x}$ is the camera pose (6-dimensional), $\mathbf{J}^T$ is a matrix of $2 \times 6$. Let's derive the form of $\mathbf{J}^T$.
 
 We have introduced how to use the perturbation model to find the derivative of Lie algebra. First, define the coordinates of the space point in the camera frame as $\mathbf{P}'$, and take out the first 3 dimensions:
 \begin{equation}
-\mathbf{P}' = \left( \mathbf{T}{\mathbf{P}} \right)_{1:3}= [X', Y', Z']^\mathrm{T}.
+\mathbf{P}' = \left( \mathbf{T}{\mathbf{P}} \right)_{1:3}= [X', Y', Z']^T.
 \end{equation}
 
 Then, the camera projection model with respect to $\mathbf{P}'$ is:
@@ -1133,7 +1132,7 @@ The second term is the derivative of the transformed point with respect to the L
 \frac{{\partial \left( \mathbf{TP} \right)}}{{\partial \delta \boldsymbol{\xi} }} = {\left( \mathbf{TP} \right)^ \odot } = \left[ 
 \begin{array}{*{20}{cc}}
 \mathbf{I} &- \mathbf{P}'^ \wedge \\
-\mathbf{0}^\mathrm{T} &\mathbf{0}^\mathrm{T} 
+\mathbf{0}^T &\mathbf{0}^T 
 \end{array}
 \right].
 \end{equation}
@@ -1208,7 +1207,7 @@ t=
 0.06138584177157709]
 \end{lstlisting}
 
-Readers can compare $\mathbf{R},\mathbf{t}$ solved in the previous 2D-2D case to see the difference. It can be seen that when 3D information is involved, the estimated $\mathbf{R}$ is almost the same, while the $\mathbf{t}$ is quite different. This is due to the inclusion of depth information. However, since the depth map collected by Kinect has some noise, the 3D points here are not accurate. In a larger-scale BA, we would like to optimize the pose and all three-dimensional feature points at the same time.
+Readers can compare $\mathbf{R},\mathbf{t}$ solved in the previous 2D-2D case to see the difference. It can be seen that when 3D information is involved, the estimated $\mathbf{R}$ is almost the same, while the $\mathbf{t}$ is quite different. This is due to the inclusion of depth information. However, since the depth map collected by Kinect has some noise, the 3D points here are not accurate. In a larger-scale BA, we would like to optimize the pose and all 3D feature points at the same time.
 
 
 \subsection{Handwriting pose estimation}
@@ -1478,7 +1477,7 @@ solve pnp by g2o cost time: 0.000923095 seconds.
 
 Those three results are basically the same. In terms of efficiency, the Gauss-Newton method implemented by ourselves ranked first with 0.15 milliseconds, followed by OpenCV's PnP, and finally the implementation of g2o. Nonetheless, the time for the three is within 1 millisecond, which shows that the pose estimation algorithm does not really consume computational effort.
 
-Bundle Adjustment is common. It may not be limited to two images. We can put the poses and spatial points matched by multiple images for iterative optimization, and even put the entire SLAM process in. That approach is large in scale and mainly used in the back-end. We will deal with this problem again in Lecture 10. At the front end, we usually consider a small Bundle Adjustment problem regarding local camera poses and feature points, aiming to solve and optimize it in real time.
+Bundle Adjustment is common. It may not be limited to two images. We can put the poses and spatial points matched by multiple images for iterative optimization, and even put the entire SLAM process in. That approach is large in scale and mainly used in the backend. We will deal with this problem again in Lecture 10. At the frontend, we usually consider a small Bundle Adjustment problem regarding local camera poses and feature points, aiming to solve and optimize it in real time.
 
 \section{3D−3D：Iterative Closest Point (ICP)}
 In the end, we will introduce the 3D-3D pose estimation problem. Suppose we have a set of matched 3D points (for example, we matched two RGB-D images):
@@ -1547,12 +1546,12 @@ Carefully observe those two terms, we find that the first term is only related t
 
 We find that once the rotation between the two sets of points is found, and the translation is easy to obtain. So we focus on the calculation of $\mathbf{R}$. Expand the error term about $\mathbf{R}$, get:
 \begin{equation}
- \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\mathbf{q}_i} - \mathbf{R} \mathbf{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \mathbf{q}_i^\mathrm{T} \mathbf{q}_i + \mathbf{q}_i^{ \prime \mathrm{T}}  \mathbf{R}^\mathrm{T} \mathbf{R} \mathbf{q}^\prime_i - 2\mathbf{q}_i^\mathrm{T} \mathbf{R} \mathbf{q}^\prime_i.
+ \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\mathbf{q}_i} - \mathbf{R} \mathbf{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \mathbf{q}_i^T \mathbf{q}_i + \mathbf{q}_i^{ \prime \mathrm{T}}  \mathbf{R}^T \mathbf{R} \mathbf{q}^\prime_i - 2\mathbf{q}_i^T \mathbf{R} \mathbf{q}^\prime_i.
 \end{equation}
 
-The first item is not relevant to $\mathbf{R}$. The second item can also be ignored since $\mathbf{R}^\mathrm{T}\mathbf{R}=\mathbf{I}$. Therefore, the actual optimization objective function becomes the simplest form of
+The first item is not relevant to $\mathbf{R}$. The second item can also be ignored since $\mathbf{R}^T\mathbf{R}=\mathbf{I}$. Therefore, the actual optimization objective function becomes the simplest form of
 \begin{equation}
-\sum\limits_{i = 1}^n - \mathbf{q}_i^\mathrm{T} \mathbf{R} \mathbf{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \mathbf{R} \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \right) = - \mathrm{tr} \left( \mathbf{R} \sum\limits_{i = 1}^n \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \ \right).
+\sum\limits_{i = 1}^n - \mathbf{q}_i^T \mathbf{R} \mathbf{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \mathbf{R} \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \right) = - \mathrm{tr} \left( \mathbf{R} \sum\limits_{i = 1}^n \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \ \right).
 \end{equation}
 
 Next, we introduce how to solve the optimal $\mathbf{R}$ in the above problem through SVD. The proof of optimality is more complicated, and interested readers can refer to the literature \cite{Arun1987, PomerleauColasSiegwart2015}. To find $\mathbf{R}$, first define the matrix:
@@ -1562,12 +1561,12 @@ Next, we introduce how to solve the optimal $\mathbf{R}$ in the above problem th
 
 $\mathbf{W}$ is a $3 \times 3$ matrix. Performing SVD decomposition on $\mathbf{W}$, we get:
 \begin{equation}
-\mathbf{W} = \mathbf{U \Sigma V}^\mathrm{T}.
+\mathbf{W} = \mathbf{U \Sigma V}^T.
 \end{equation}
 
-$\mathbf{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\mathbf{U}$ and $\mathbf{V}$ are diagonal matrices. When $\mathbf{W}$ is of full rank, $\mathbf{R}$ is
+$\boldsymbol{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\mathbf{U}$ and $\mathbf{V}$ are diagonal matrices. When $\mathbf{W}$ is of full rank, $\mathbf{R}$ is
 \begin{equation}
-\mathbf{R} = \mathbf{U} \mathbf{V}^\mathrm{T}.
+\mathbf{R} = \mathbf{U} \mathbf{V}^T.
 \end{equation}
 
 Once solving $\mathbf{R}$, use the equation \eqref{eq:pnp-solve-t} to solve $\mathbf{t}$. If the determinant of $\mathbf{R}$ is negative, then $-\mathbf{R}$ is taken as the optimal value.
@@ -1583,9 +1582,9 @@ The derivative of a single error term with respect to the pose has been derived 
 \frac{{\partial \mathbf{e}}}{{\partial \delta \boldsymbol{\xi} }} =  - {\left( {\exp \left( {{ \boldsymbol{\xi} ^ \wedge }} \right){{\mathbf{p}}_i}'} \right)^ \odot }.
 \end{equation}
 
-Therefore, in nonlinear optimization, it only needs to iterate continuously to find the minimum value. Moreover, it can be proved that \textsuperscript{\cite{Barfoot2016}}, the ICP problem has a unique solution or an infinite number of solutions. In the case of a unique solution, as long as the minimum value solution can be found, then \textbf{this minimum value is the global optimal value}. So the local minimum is always the global minimum. This also means that the initial value of the ICP solution can be arbitrarily selected. This is a big advantage of solving ICP when the points have been matched already.
+Therefore, in nonlinear optimization, it only needs to iterate continuously to find the minimum value. Moreover, it can be proved that  {\cite{Barfoot2016}}, the ICP problem has a unique solution or an infinite number of solutions. In the case of a unique solution, as long as the minimum value solution can be found, then \textbf{this minimum value is the global optimal value}. So the local minimum is always the global minimum. This also means that the initial value of the ICP solution can be arbitrarily selected. This is a big advantage of solving ICP when the points have been matched already.
 
-It should be noted that the ICP we are talking about here refers to the problem of pose estimation when the matching is given by the image features. In the case of known matching, this least squares problem actually has an analytical solution \textsuperscript{\cite{Faugeras1986, Horn1987, Sharp2002}}, so iterative optimization is not necessary. ICP researchers tend to be more concerned about the unknown matching situation. So, why do we introduce optimization-based ICP? This is because, in some cases, such as in RGB-D SLAM, the depth of a pixel may or may not be measured, so we can combine PnP and ICP optimization: For feature points with known depth, model their 3D-3D errors; for feature points with unknown depths, model 3D-2D reprojection errors. Therefore, all errors can be considered in the same problem, making the solution more convenient.
+It should be noted that the ICP we are talking about here refers to the problem of pose estimation when the matching is given by the image features. In the case of known matching, this least-squares problem actually has an analytical solution  {\cite{Faugeras1986, Horn1987, Sharp2002}}, so iterative optimization is not necessary. ICP researchers tend to be more concerned about the unknown matching situation. So, why do we introduce optimization-based ICP? This is because, in some cases, such as in RGB-D SLAM, the depth of a pixel may or may not be measured, so we can combine PnP and ICP optimization: For feature points with known depth, model their 3D-3D errors; for feature points with unknown depths, model 3D-2D reprojection errors. Therefore, all errors can be considered in the same problem, making the solution more convenient.
 
 \section{Practice: Solving ICP}
 \subsection{Using SVD}
