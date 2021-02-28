@@ -2,14 +2,14 @@
 \chapter{Gaussian Distribution}
 \label{cpt:app-A}
 \section{Gaussian Distribution}
-If way say a random variable $x$ satisfies a Gaussian distribution $N(\mu, \sigma)$, then its pdf is:
+If way say a random variable $x$ satisfies a Gaussian distribution $N(\mu, \sigma)$, then its \textit{pdf} is:
 \begin{equation}
 p\left( x \right) = \frac{1}{{\sqrt {2\pi } \sigma }}\exp \left( { - \frac{1}{2}\frac{{{{\left( {x - \mu } \right)}^2}}}{{{\sigma ^2}}}} \right).
 \end{equation}
 
 The matrix form is:
 \begin{equation}
-p\left( x \right) = \frac{1}{{\sqrt {(2\pi)^N  \det \left( \boldsymbol{\Sigma } \right) }}}\exp \left( { - \frac{1}{2}{{\left( {\mathbf{x} - \boldsymbol{\mu} } \right)}^\mathrm{T}}{\boldsymbol{\Sigma} ^{ - 1}}\left( {\mathbf{x} - \boldsymbol{\mu} } \right)} \right).
+p\left( \mathbf{x} \right) = \frac{1}{{\sqrt {(2\pi)^N  \det \left( \boldsymbol{\Sigma } \right) }}}\exp \left( { - \frac{1}{2}{{\left( {\mathbf{x} - \boldsymbol{\mu} } \right)}^T}{\boldsymbol{\Sigma} ^{ - 1}}\left( {\mathbf{x} - \boldsymbol{\mu} } \right)} \right).
 \end{equation}
 
 \section{Transform of Gaussian Variables}
@@ -30,11 +30,11 @@ a\mathbf{x} \sim N( a \boldsymbol{\mu}_x, a^2 \boldsymbol{\Sigma}_{xx}).
 
 If we take a linear transform of $\mathbf{x}$ with $\mathbf{y} = \mathbf{A} \mathbf{x}$, then $\mathbf{y}$ satisfies:
 \begin{equation}
-\mathbf{y} \sim N( \mathbf{A} \boldsymbol{\mu}_x, \mathbf{A} \boldsymbol{\Sigma}_{xx} \mathbf{A}^\mathrm{T}).
+\mathbf{y} \sim N( \mathbf{A} \boldsymbol{\mu}_x, \mathbf{A} \boldsymbol{\Sigma}_{xx} \mathbf{A}^T).
 \end{equation}
 
 \subsection{Normalized Product}
-If we multiply two Gaussian random variables like $p\left( \mathbf{xy} \right) = N\left( {\boldsymbol{\mu} ,\boldsymbol{\Sigma}} \right)$, then we have:
+If we want to fuse two Gaussian estimations like $\mathbf{x}$ and $\mathbf{y}$, assume the fused mean and covariance are $\boldsymbol{\mu}$ and $\boldsymbol{\Sigma}$, then we have:
 \begin{equation}
 \begin{array}{l}
 {\boldsymbol{\Sigma}^{-1}} = \boldsymbol{\Sigma}_{xx}^{-1} + \boldsymbol{\Sigma}_{yy}^{-1} \\
@@ -71,7 +71,7 @@ where $\mathbf{A}, \mathbf{b}$ is the linear coefficient matrix and bias, $\math
 
 Then we can calculate $\mathbf{y}$'s distribution:
 \begin{equation}
-p\left( \mathbf{y} \right) = N\left( {\mathbf{A}{\boldsymbol{\mu}_x} + \mathbf{b}, \mathbf{R} + \mathbf{A} {\boldsymbol{\Sigma}_{xx}}{\mathbf{A}^\mathrm{T}}} \right).
+p\left( \mathbf{y} \right) = N\left( {\mathbf{A}{\boldsymbol{\mu}_x} + \mathbf{b}, \mathbf{R} + \mathbf{A} {\boldsymbol{\Sigma}_{xx}}{\mathbf{A}^T}} \right).
 \end{equation}
 
-This provides a theoretical basis for the prediction part of the Kalman filter.
+This provides the theoretical basis for the prediction part of the Kalman filter.

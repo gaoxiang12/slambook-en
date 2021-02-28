@@ -5,98 +5,98 @@
 \begin{mdframed}  
 	\textbf{Goal of Study}
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
-		\item Understand the principle of optical flow to track feature points.
-		\item Understand how the direct method estimates the camera pose.
-		\item Use g2o for direct method.
+		\item Study the principle of optical flow.
+		\item Learn how to use the direct method to estimate the camera pose.
+        \item Use g2o to implement the direct method.
 	\end{enumerate}
 \end{mdframed}
 
-Different from feature point method, direct method is another main stream of visual odometry. Despite that it has not yet become the mainstream of VO, after recent years of development, the direct method can compete with feature point method to some extent. In this chapter, we will introduce the principle of the direct method and implement its core part.
+Different from the feature method, the direct method is also another important approach in VO. Despite that it has not been the mainstream of VO, the direct method can compete with the feature method after years of development. In this chapter, we will introduce the principle of the direct method and implement its core algorithm.
 
 \newpage
 \includepdf{resources/other/ch8.pdf}
 
 \newpage
-\section{Origin of the direct method}
-In the last chapter, we introduced using feature points to estimate camera motion. Although the feature point method plays a key role in visual odometry, researchers still believe that it has at least the following shortcomings:
+\section{The Motivation of the Direct Method}
+In the last chapter, we introduced using features to estimate camera motion. Although the feature point method plays a crucial role in visual odometry, researchers still believe that it has at least the following shortcomings:
 
 \begin{enumerate}
-	\item The extraction of key points and the calculation of descriptors are very time-consuming. In practice, SIFT currently cannot be calculated in real time on the CPU, and ORB also requires nearly 20ms of calculation. If the entire SLAM runs at a speed of 30 milliseconds per frame, more than half of the time will be spent on feature points calculation.
+	\item The extraction of key points and the calculation of the descriptor are very time-consuming. In practice, SIFT currently cannot be calculated in real-time on the CPU, and ORB also requires nearly 20ms of calculation. If the entire SLAM runs at a speed of 30 Hz, more than half of the time will be spent on feature calculation.
 
-	\item When using feature points, all information except feature points is ignored. An image has hundreds of thousands of pixels, but only a few hundred feature points. Using only feature points discards most of the \textbf{possibly useful} image information. 
+	\item In the feature method, not all the information is used. An image has hundreds of thousands of pixels but only a few hundred feature points. Using only feature points discards most of the possibly useful image information. 
 	
-	\item The camera sometimes moves to places \textbf{lack of feature}, where there is often no obvious texture information. For example, sometimes we will face a white wall or an empty corridor. The number of feature points in these scenes will be significantly reduced, and we may not find enough matching points to calculate camera motion.。
+	\item The camera sometimes moves to featureless places, where there is often no obvious texture information. For example, sometimes we will face a white wall or an empty corridor. The number of feature points in these scenes will be significantly reduced, and we may not find enough matching points to calculate camera motion.
 \end{enumerate}
 
 Now we see that there are indeed some problems with using feature points. Is there any way to overcome these shortcomings? We have the following ideas:
 
 \begin{itemize}
-	\item Keep feature points, but discard their descriptors. At the same time, use \textbf{Optical Flow} to track the motion of feature points. This can avoid the time brought by the calculation and matching of the descriptor, and the time spent on calculating optical flow itself is less than the descriptor calculation and matching.
-	\item Only calculate key points, not descriptors. At the same time, use \textbf{Direct Method} to calculate the position of the feature point in the image at the next timestamp. This can also save the time spent on the calculation of the descriptor as well as the the calculation of optical flow.	
+	\item Keep feature points, but discard their descriptors. At the same time, use the optical flow to track the motion of the key points. This can avoid the time taken by the descriptors. The time spent on calculating optical flow itself is less than the descriptor calculation and matching.
+	\item Only calculate key points, not descriptors. Simultaneously, use the direct method to estimate the camera motion as well as the tracked pixels. This can also save the time spent on the calculation of the descriptor and the optical flow.	
 \end{itemize}
 
-The first method still uses feature points, but substitutes the descriptor matching with optical flow tracking, and still uses epipolar geometry, PnP or ICP algorithms to estimate camera motion. This still requires that the extracted keypoints are distinguishable, that is, we need to extract the corner points. In the direct method, we will estimate the camera motion and the projection of the points at the same time according to the \textbf{pixel gray information} of the image, and the extracted points to be corner points is not longer a hard prerequisite. As you will see later, they can even be randomly selected points.
+The first approach still uses feature points but substitutes the descriptor matching with optical flow tracking. It still uses epipolar geometry, PnP, or ICP algorithms to estimate camera motion. This requires that the extracted key points are distinguishable, which means the system still relies on corner points. In the direct method, we will estimate the camera motion and the projection of the points simultaneously according to the pixel's grayscale. The corner points are no longer necessary. As you will see later, they can even be used for randomly selected points.
 
-When using the feature point method to estimate camera motion, we regard feature points as fixed points in three-dimensional space. According to their projection position in the camera, the camera motion is optimized by \textbf{minimize reprojection error}. In this process, we need to know exactly the pixel position of the spatial point after the projection of the two cameras-this is why we need to match or track the features. Meanwhile, computing and matching features requires a lot of computation. In contrast, in the direct method, we do not need to know the correspondence between points in advance, but find it by minimizing \textbf{Photometric error}.
+In the feature method, we regard feature points as fixed points in three-dimensional space. The camera motion is optimized by minimizing the reprojection error. In this process, we need to know exactly the spatial point's projected position (through feature matching), which is sometimes hard to find. Meanwhile, computing and matching features require a lot of computation. In contrast, in the direct method, we do not need to know the correspondence between points in advance but find it by minimizing the \textit{photometric error}.
 
-We will focus on the direct method in this chapter. It is to overcome the shortcomings of the feature point method listed above. The direct method estimates the camera motion based on the brightness information of the pixels, and can completely eliminate the calculation of keypoints and descriptors. Therefore, it not only saves the calculation time of features, but also solves the problems caused by lacking features. As long as there are brightness changes in the scene (it can be a gradual change without forming a local image gradient), the direct method will work. According to the number of pixels used, the direct method can be categorized into sparse, semi-dense and dense. Compared with the feature point method that can only reconstruct sparse feature points (sparse map), the direct method also has the capability to restore semi-dense or dense structures.
+We will focus on the direct method in this chapter. Its (original) motivation is to overcome the shortcomings of the feature point method listed above. The direct method estimates the camera motion based on the pixels' brightness information and can completely eliminate the calculation of key points and descriptors. Therefore, it saves the calculation time of features and solves the problems caused by lacking features. As long as there are brightness changes in the scene (it can be an edge, not a corner, even gradual change without forming a local image gradient), the direct method will work. According to the number of pixels used, the direct method can be categorized into sparse, semi-dense, and dense. Compared with the feature point method that can only reconstruct sparse feature points (sparse map), the direct method also can restore semi-dense or dense structures.
 
-Historically, there were also early uses of the direct method \textsuperscript{\cite{Silveira2008}}. With the emergence of some open source projects that use the direct method, such as SVO\textsuperscript{\cite{Forster2014}}, LSD-SLAM\textsuperscript{\cite{Engel2014}}, DSO\textsuperscript{\cite{Engel2016}}, etc. Direct method became a more and more important part of the visual odometry.
+Historically, there were also early uses of the direct method {\cite{Silveira2008}}. With the emergence of some open-source projects that use the direct method, such as SVO{\cite{Forster2014}}, LSD-SLAM {\cite{Engel2014}}, DSO {\cite{Engel2016}}, etc., the direct method became a more and more important part of the visual odometry.
 
 \section{2D Optical Flow}
-Direct method was inspired by the optical flow. They are similar and use the same assumptions. Optical flow describes the motion of pixels in the image, and the direct method is accompanied by a camera motion model. Before the direct method, we will introduce optical flow first.
+The direct method was inspired by the optical flow. It is similar to optical flow to some extent and uses the same assumptions. Optical flow describes the motion of pixels in the image, and the direct method is accompanied by a camera motion model. Before the direct method, we will introduce optical flow first.
 
-Optical flow is a method of describing the movement of pixels between images, as shown in \autoref{fig:LK}~. The same pixel will move in the image over time, and we want to track its movement. The calculation of motion of a portion of pixels is called \textbf{sparse optical flow}, and the calculation of all pixels in an image is called \textbf{dense optical flow}. A well-known sparse optical flow method is called Lucas-Kanade optical flow \textsuperscript{\cite{Lucas1981}}. It can be used to track the position of feature points in SLAM. Dense optical flow is represented by Horn-Schunck optical flow \textsuperscript{\cite{Horn1981}}. This section mainly introduces Lucas-Kanade optical flow, also known as LK optical flow.
+Optical flow is a method of describing pixels' movement between images, as shown in \autoref{fig:LK}~. If a dynamic object moves in the camera, we will expect the pixels to also move in the image over time, and we want to track its movement. The calculation of a part of the pixel's motion is called sparse optical flow, and the calculation of all pixels in an image is called dense optical flow. A well-known sparse optical flow method is called Lucas-Kanade optical flow \cite{Lucas1981}. It can be used to track the position of feature points in SLAM. Dense optical flow is represented by Horn-Schunck optical flow \cite{Horn1981}. This section mainly introduces Lucas-Kanade optical flow (LK flow) since it is more useful in SLAM. 
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=1.0\linewidth]{vo2/opticalFlow}
-	\caption{workflow of LK method}
+	\caption{Optical flow of a single pixel.}
 	\label{fig:LK}
 \end{figure}
 
-\subsection*{Lucas-Kanade optical flow}
-In the LK optical flow, we think that the image from the camera changes over time. The image can be regarded as a function of time $\mathbf{I}(t)$. Then, for a pixel at $(x,y)$ at time $t$, its grayscale can be written as
+\subsection*{Lucas-Kanade Optical Flow}
+In the LK optical flow, we assume the image changes over time. The image can be regarded as a function of time $\mathbf{I}(t)$. Then, for a pixel at $(x,y)$ at time $t$, its grayscale can be written as:
 \[
 \mathbf{I}(x,y,t).
 \]
-In this way, the image is regarded as a function of position and time, and its range is the grayscale of the pixels in the image. Now consider a fixed point in space, its pixel coordinates at time $t$ are $x,y$. Due to the movement of the camera, its image coordinates will change. We want to estimate the position of this space point in the image at other times. How to estimate it? Here we will introduce the basic assumptions of the optical flow method.
+In this way, the image is regarded as a function of position and time, and its value is the grayscale. Now consider a 2D pixel. Its coordinates at time $t$ are $x,y$. Due to the movement of the camera, its image coordinates will change. We want to estimate the position of this pixel at other times. But how to estimate it? Here we will introduce the basic assumption of the optical flow method.
 
-\textbf{Constant Brightness}：The pixel grayvalue of the same space point is constant in each image.
+\textbf{Constant grayscale assumption}：The pixel's grayscale is constant in each image.
 
 For the pixel at $(x,y)$ at time $t$, suppose it moves to $(x+\mathrm{d}x, y+\mathrm{d}y)$ at time $t+\mathrm{d}t$. Since the grayscale is unchanged, we have:
 \begin{equation} 
 \mathbf{I}(x+\mathrm{d}x, y+\mathrm{d}y, t+\mathrm{d}t) = \mathbf{I} (x,y,t).
 \end{equation}
 
-Note that in the most of time in practice the assumption of constant brightness is not true. In fact, due to the different materials of the objects, the pixels will have highlights and shadows; sometimes, the camera will automatically adjust its exposure parameters to make the overall image brighter or darker. At these times, the assumption of constant brightness is invalid, so the result of optical flow is not necessarily reliable. However, on the other hand, all algorithms work under certain assumptions. If we do not make any assumptions, we cannot design practical algorithms. So, let us consider this assumption to be true for now and see how to calculate the motion of the pixels.
+Note that most of the time, the assumption of constant brightness is not true in practice. If you have learned some computer graphics knowledge, the final brightness of a pixel is determined by lots of parameters. Due to the objects' various materials, the pixels will have highlights and shadows; sometimes, the camera will automatically adjust its exposure parameters to make the overall image brighter or darker. At these times, the assumption of constant brightness is invalid, so the result of optical flow is not necessarily reliable. However, on the other hand, all algorithms work under certain assumptions. If we do not make any assumptions, we cannot design practical algorithms. So, let us temporarily accept this assumption and see how to calculate the motion of the pixels.
 
-Carry out Taylor expansion on the left side and only keep the first-order term, we have:
+Carry out the Taylor expansion on the left side and only keep the first-order term. We have:
 \begin{equation}
 \mathbf{I} \left( {x + \mathrm{d}x,y + \mathrm{d}y,t + \mathrm{d}t} \right) \approx \mathbf{I} \left( {x,y,t} \right) + \frac{{\partial \mathbf{I} }}{{\partial x}}\mathrm{d}x + \frac{{\partial \mathbf{I}}}{{\partial y}}\mathrm{d}y + \frac{{\partial \mathbf{I}}}{{\partial t}}\mathrm{d}t.
 \end{equation}
 
-Because we assume that the brightness does not change, the brightness at the next timestamp is equal to the current one, thus:
+Because we assume that the brightness does not change, so we have:
 \begin{equation}
  \frac{{\partial \mathbf{I} }}{{\partial x}}\mathrm{d}x + \frac{{\partial \mathbf{I}}}{{\partial y}}\mathrm{d}y + \frac{{\partial \mathbf{I}}}{{\partial t}}\mathrm{d}t = 0.
 \end{equation}
 
-Divide both sides by $\mathrm{d}t$:
+Divide both sides by $\mathrm{d}t$\footnote{Well, this is not strictly correct to say so. We can also start from the time derivative and get the same result.}:
 \begin{equation}\label{key}
- \frac{{\partial \mathbf{I} }}{{\partial x}} \frac{\mathrm{d}x}{\mathrm{d}t} + \frac{{\partial \mathbf{I}}}{{\partial y}} \frac{\mathrm{d}y}{\mathrm{d}t} =- \frac{{\partial \mathbf{I}}}{{\partial t}}.
+ \frac{{\partial \mathbf{I} }}{{\partial x}} \frac{\mathrm{d}x}{\mathrm{d}t} + \frac{{\partial \mathbf{I}}}{{\partial y}} \frac{\mathrm{d}y}{\mathrm{d}t} =- \frac{{\partial \mathbf{I}}}{{\partial t}},
 \end{equation}
-
-Where $\mathrm{d}x / \mathrm{d}t$ is the speed of the pixel on the $x$ axis, and $\mathrm{d}y/\mathrm{d}t$ is the speed on the $y$ axis, denoting them as $u,v$. At the same time, $\partial \mathbf{I}/{\partial x}$ is the gradient of the image in the $x$ direction at this point, and the other is the gradient in the $y$ direction, denoted as $\mathbf{I} _x, \mathbf{I}_y$. Denote the change of the image brightness with respect to time as $\mathbf{I}_t$. They can be written in a matrix form as:
+where $\mathrm{d}x / \mathrm{d}t$ is the speed of the pixel on the $x$ axis, and $\mathrm{d}y/\mathrm{d}t$ is the speed on the $y$ axis. We denote them as $u,v$. At the same time, $\partial \mathbf{I}/{\partial x}$ is the gradient of the image in the $x$ direction at this point, and $\partial \mathbf{I}/{\partial y}$ is the gradient in the $y$ direction, denoted as $\mathbf{I} _x, \mathbf{I}_y$. Denote the change of the image brightness with respect to time as $\mathbf{I}_t$. Then the above equation can be written in the matrix form:
 \begin{equation}
 \left[ {\begin{array}{*{20}{c}}
 	{{ \mathbf{I}_x}}&{{ \mathbf{I}_y}}
-	\end{array}} \right]\left[ \begin{array}{l}
-u\\
-v
-\end{array} \right] =  - {\mathbf{I}_t}.
+	\end{array}} \right]\left[ 
+        \begin{array}{l}
+        u\\
+        v
+        \end{array} \right] =  - {\mathbf{I}_t}.
 \end{equation}
 
-What we want is to calculate the motion $u,v$ of the pixel, but this formula is a linear equation with two variables, and we cannot find $u,v$ by itself. Therefore, additional constraints are needed to calculate $u,v$. In LK optical flow, we assume \textbf{pixels in a certain window have the same motion}.
+What we want is to calculate the motion $u,v$ of the pixel, but this formula is a linear equation with two variables, and we cannot find $u,v$ by a single pixel. Therefore, additional constraints are needed to calculate $u,v$. In LK optical flow, we also assume the pixels in a certain window have the same motion.
 
 Consider a window of size $w \times w$, which contains $w^2$ pixels. Since the pixels in this window are assumed to have the same motion, we have a total of $w^2$ equations:
 \begin{equation}
@@ -122,7 +122,7 @@ Stacking them:
 	\end{array}} \right].
 \end{equation}
 
-The whole equation is:
+Then the whole equation is:
 \begin{equation}
 \mathbf{A}\left[ \begin{array}{l}
 u\\
@@ -130,15 +130,15 @@ v
 \end{array} \right] =  - \mathbf{b}.
 \end{equation}
 
-This is an overdetermined linear equation about $u,v$. And we can find its least square solution.
+This is an overdetermined linear equation about $u,v$. And we can find its least-square solution.
 \begin{equation}
 {\left[ \begin{array}{l}
 	u\\
 	v
-	\end{array} \right]^*} = -{\left( {{ \mathbf{A}^\mathrm{T}}\mathbf{A}} \right)^{ - 1}}{ \mathbf{A}^\mathrm{T}}\mathbf{b}.
+	\end{array} \right]^*} = -{\left( {{ \mathbf{A}^T}\mathbf{A}} \right)^{ - 1}}{ \mathbf{A}^T}\mathbf{b}.
 \end{equation}
 
-In this way, the speed $u,v$ of pixels between images is obtained. When $t$ takes discrete moments instead of continuous time, we can estimate the position of a block of pixels in several images. Since the pixel gradient is only valid locally, if one iteration does not produce a reasonable result, we will iterate this calculation several times. In SLAM, LK optical flow is often used to track the motion of corner points. We can have a deeper understanding of it through the program.
+In this way, the speed $u,v$ of pixels between images is obtained. When $t$ takes discrete moments instead of continuous-time, we can estimate the position of a block of pixels in several images. Since the pixel gradient is only valid locally, if one iteration does not produce a good result, we will iterate this calculation several times. In SLAM, LK optical flow is often used to track the motion of corner points. We can have a deeper understanding of it through the program.
 
 \section{Practice: LK Optical Flow}
 \label{sec:LKFlow}
@@ -164,10 +164,10 @@ In this way, the speed $u,v$ of pixels between images is obtained. When $t$ take
 %\end{lstlisting}
 %
 %This script will match according to the collection time in the two input files, and finally output to the file associate.txt. The output file contains the time and file name information of the two images after pairing, which can be used as the source for subsequent processing. In addition, the TUM data set also provides tools for comparing estimated trajectories with standard trajectories. We will introduce them when they are used.
-\subsection{Use LK optical flow}
-In the practice, we will use several sample images to track their feature points with OpenCV optical flow. At the same time, we will also manually implement a LK optical flow for a comprehensive understanding. We use two sample images from the Euroc dataset, extract the corner points in the first image, and then use optical flow to track their position in the second image. First, let's use the LK optical flow in OpenCV:
+\subsection{LK Flow in OpenCV}
+We will use several sample images to track their feature points with OpenCV's optical flow in practice. At the same time, we will also manually implement an LK optical flow for a comprehensive understanding. We use two sample images from the Euroc dataset, extract the corner points in the first image, and then use optical flow to track their second image position. First, let's use the LK optical flow in OpenCV:
 
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/optical_flow.cpp (snippet))]
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/optical_flow.cpp (part))]
 // use opencv's flow for validation
 vector<Point2f> pt1, pt2;
 for (auto &kp: kp1) pt1.push_back(kp.pt);
@@ -176,13 +176,13 @@ vector<float> error;
 cv::calcOpticalFlowPyrLK(img1, img2, pt1, pt2, status, error);
 \end{lstlisting}
 
-The optical flow in OpenCV is very simple to use. You only need to call the cv::calcOpticalFlowPyrLK function, provide two images and the corresponding feature points, you can get the tracked points, as well as the status and error of each point. We can determine whether the corresponding point is tracked correctly according to whether the status variable is 1. This function also has some optional parameters, but in the demonstration we only use the default parameters. We omit other codes that mention features and draw results here, which have been shown in the previous code snippet.
+The optical flow in OpenCV is very easy to use. We only need to call the cv::calcOpticalFlowPyrLK function, provide two images and the corresponding feature points, get the tracked points, the status, and each point's error. We can determine whether the corresponding point is tracked correctly according to whether the status variable is 1. This function also has some optional parameters, but we only use the default parameters in the demonstration. We omit other codes that mention features and draw results here, which have been shown in the previous code part.
 
-\subsection{Implement optical flow with Gauss Newton method}
-\subsubsection{Single-layer optical flow}
-Optical flow can also be seen as an optimization problem: by minimizing the grayscale error, the optimal pixel shift is estimated. Therefore, similar to those various Gauss-Newton methods previously implemented, we now also implement an optical flow based on the Gauss-Newton method.
+\subsection{Optical Flow with Gauss-Newton method}
+\subsubsection{Single-layer Optical Flow}
+Optical flow can also be seen as an optimization problem: by minimizing the grayscale error, the optimal pixel shift is estimated. Therefore, similar to those previously implemented Gauss-Newton methods, we now also implement an optical flow based on the Gauss-Newton method \footnote{This example requires OpenCV 4.0 or higher because the interface of OpenCV has changed.}.
 
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/optical_flow.cpp (snippet))]
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/optical_flow.cpp (part))]
 class OpticalFlowTracker {
 public:
 	OpticalFlowTracker(
@@ -316,16 +316,16 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range) {
 }
 \end{lstlisting}
 
-We have implemented a single-layer optical flow function in the OpticalFlowSingleLevel function, in which cv::parallel\_for\_ is called in parallel to call OpticalFlowTracker::calculateOpticalFlow, which calculates the optical flow of feature points within a specified range. This parallel for loop is internally implemented by the Intel tbb library. We only need to define the function body according to its interface, and then pass the function to it as a std::function object.
+We have implemented a single-layer optical flow function in the OpticalFlowSingleLevel function, in which cv::parallel\_for\_ is called to parallelize the OpticalFlowTracker::calculateOpticalFlow function. It calculates the optical flow of feature points within a specified range. This parallel for loop is internally implemented by the Intel tbb library. We only need to define the function body according to its interface and then pass the function to it as a std::function object.
 
 In the implementation of calculateOpticalFlow, we solve such a problem:
 \begin{equation}
 \mathop {\min }\limits_{\Delta x,\Delta y} \left\| {{\mathbf{I}_1}\left( {x,y} \right) - {\mathbf{I}_2}\left( {x + \Delta x,y + \Delta y} \right)} \right\|_2^2.
 \end{equation}
-Therefore, the residual is the part inside the brackets, and the corresponding Jacobian is the gradient of the second image at $x + \Delta x,y + \Delta y$. In addition, according to \cite{Baker2004}, the gradient can also be replaced by the gradient $\mathbf{I}_1 (x,y)$ of the first image. This is called \textbf{Inverse} optical flow method. In inverse optical flow, the gradient of $\mathbf{I}_1 (x,y)$ remains unchanged, so we can use the result calculated in the first iteration in the subsequent iterations. When the Jacobian remains unchanged, the $\mathbf{H}$ matrix is unchanged, and only the residual is calculated for each iteration, which can save a lot of calculation.
+Therefore, the residual is the part inside the brackets, and the corresponding Jacobian is the gradient of the second image at $x + \Delta x,y + \Delta y$. In addition, according to \cite{Baker2004}, the gradient can also be replaced by the gradient $\mathbf{I}_1 (x,y)$ of the first image. This is called the inverse optical flow method. In inverse optical flow, the gradient of $\mathbf{I}_1 (x,y)$ remains unchanged, so we can use the result calculated in the first iteration in the subsequent iterations. When the Jacobian remains unchanged, the $\mathbf{H}$ matrix is unchanged, and only the residual is calculated for each iteration, which can save a lot of calculation.
 
-\subsubsection{Multi-layer optical flow}
-Since we write optical flow as an optimization problem, we must assume that the initial value of optimization is close to the optimal value to ensure the convergence of the algorithm. Therefore, if the camera moves faster and the difference between the two images is obvious, the single-layer image optical flow method can be easily stuck at a local minimum. While it can be resolved to some extent by image pyramids.
+\subsubsection{Multi-layer Optical Flow}
+Since we write optical flow as an optimization problem, we must assume that the initial value of optimization is close to the optimal value to ensure the algorithm's convergence. Therefore, if the camera moves faster and the difference between the two images is obvious, the single-layer image optical flow method can be easily stuck at a local minimum. But it can be resolved to some extent by image pyramids.
 
 \begin{figure}[!htp]
 	\centering
@@ -334,12 +334,12 @@ Since we write optical flow as an optimization problem, we must assume that the 
 	\label{fig:image-pyramid}
 \end{figure}
 
-Image pyramid refers to scaling the image to get samples in different resolutions, as shown in \autoref{fig:image-pyramid}. The original image is used as the bottom layer of the pyramid. Every time one layer goes up, the lower layer image is scaled to a certain magnification, and then a pyramid is obtained. When calculating the optical flow, start from the top layer image, and then use the tracking result of the previous layer as the initial value of the optical flow of the next layer. Since the upper layer image is relatively rough, this process is also called \textbf{coarse-to-fine} optical flow, which is also the usual process of optical flow in practice.
+Image pyramid refers to scaling the image to get samples in different resolutions, as shown in \autoref{fig:image-pyramid}. The original image is used as the bottom layer of the pyramid. Every time we go one layer up, the lower layer image is scaled to a certain magnification, and then a pyramid is obtained. When calculating the optical flow, we start from the top layer image and go down one by one using the previous layer's tracking result as the initial value of the next layer's optical flow. Since the upper layer image is relatively rough, this process is also called coarse-to-fine optical flow, which is also the usual optical flow process in practice.
 
-The advantage of going from coarse to fine is that when the pixel motion of the original image is large, the motion is still within a small range from the image at the top of the pyramid. For example, if the feature points of the original image move by 20 pixels, it is easy for the optimization to be trapped in the minimum value due to the non-convexity of the image. But now suppose there is a pyramid with a zoom magnification of 0.5 times, then in the upper two layers of images, the pixel movement is only 5 pixels, and the result is obviously better than directly optimizing on the original image.
+The advantage of going from coarse to fine is that when the pixel motion of the original image is large, the motion is still within a small range from the image at the top of the pyramid. For example, suppose the original image's feature points move by 20 pixels. In that case, it is easy for the optimization to be trapped in the local minimum due to the image's non-convexity. But now, suppose there is a pyramid with a zoom magnification of 0.5 times. In the upper two layers of images, the pixel movement is only 5 pixels, and the result is obviously better than directly optimizing the original image.
 
-We have implemented multi-layer optical flow in the program, the code is as follows:
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/optical_flow.cpp (snippet)]
+We have implemented multi-layer optical flow in the program:
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/optical_flow.cpp (part)]
 void OpticalFlowMultiLevel(
 	const Mat &img1,
 	const Mat &img2,
@@ -397,8 +397,8 @@ void OpticalFlowMultiLevel(
 }
 \end{lstlisting}
 
-This code constructs a four-layer pyramid with a scaling rate of 0.5, and calls the single-layer optical flow function to achieve the multi-layer optical flow. In the main function, we tested the performance of OpenCV's optical flow, single-layer optical flow, and multi-layer optical flow on two images, and recorded their runtime:
-\begin{lstlisting}[language=sh,caption=终端输入：]
+This code constructs a four-layer pyramid with a scaling rate of 0.5 and calls the single-layer optical flow function to achieve the multi-layer optical flow. In the main function, we tested the performance of OpenCV's optical flow, single-layer optical flow, and multi-layer optical flow on two images and recorded their runtime:
+\begin{lstlisting}[language=sh,caption=Terminal input:]
 ./build/optical_flow
 build pyramid time: 0.000150349
 track pyr 3 cost time: 0.000304633
@@ -408,29 +408,29 @@ track pyr 0 cost time: 0.000375099
 optical flow by gauss-newton: 0.00189268
 optical flow by opencv: 0.00220134
 \end{lstlisting}
-In terms of runtime, the multi-layer optical flow method takes roughly the same time as OpenCV. Since the performance of the parallelized program varies from run to run, these numbers will not be exactly the same on the reader's machine. For the result of optical flow, see \autoref{fig:optical-flow-result}. It can be seen that the multi-layer optical flow has the same effect as OpenCV, and the single-layer optical flow performs obviously worser than the multi-layer optical flow.
+In terms of runtime, the multi-layer optical flow method takes roughly the same time as OpenCV. Since the parallelized program's performance varies from run to run, these numbers will not be exactly the same on the reader's machine. For the result of optical flow, see \autoref{fig:optical-flow-result}. It can be seen that the multi-layer optical flow has the same effect as OpenCV, and the single-layer optical flow performs obviously worse than the multi-layer optical flow.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=.85\linewidth]{vo2/optical-flow}
-	\caption{Comparison of the results of various optical flows}
+	\caption{Comparison of the results of various optical flows.}
 	\label{fig:optical-flow-result}
 \end{figure}
 
-\subsection{Summary of optical flow practice}
-We see that LK optical flow can directly obtain the corresponding relationship of feature points. This correspondence is like the matching of descriptors, except that optical flow requires higher image continuity and light stability. We can use PnP, ICP, or epipolar geometry to estimate the camera motion through the feature points tracked by optical flow. These methods were introduced in the previous lecture and will not be discussed here.
+\subsection{Summary of the Optical Flow Practice}
+We see that LK optical flow can directly obtain the corresponding relationship of feature points. This correspondence is just like matching descriptors, except that optical flow requires higher image continuity and light stability. We can use PnP, ICP, or epipolar geometry to estimate the camera motion through the feature points tracked by optical flow. These methods were introduced in the previous lecture and will not be discussed here.
 
-In terms of runtime, it extracts about 230 feature points in the experiment. OpenCV and multi-layer optical flow need about 2 milliseconds to complete the tracking (the CPU I use is Intel I7-8550U), which is quite fast. If we use keypoints like FAST, then the entire optical flow calculation can be done in about 5 milliseconds, which is very fast compared to feature matching. However, if the position of the corner point is not good, the optical flow is also easy to be lost or give wrong results, which requires the subsequent algorithm to have a certain outlier removal mechanism, we leave the relevant discussion to the later chapter.
+In terms of runtime, it extracts about 230 feature points in the experiment. OpenCV and multi-layer optical flow need about 2 milliseconds to complete the tracking (the CPU I use is Intel I7-8550U), which is quite fast. If we use key points like FAST, then the entire optical flow calculation can be done in about 5 milliseconds, which is very fast compared to feature matching. However, if the position of the corner point is not good, the optical flow is also easy to be lost or give wrong results, which requires the subsequent algorithm to have a certain outlier removal mechanism. We leave the relevant discussion to the later chapter.
 
-In a nutshell, the optical flow method can accelerate the visual odometry calculation method based on feature points by avoiding the process of calculating and matching descriptors, but requires smoother camera movement (or higher collection frequency).
+In summary, the optical flow method can accelerate the visual odometry calculation method based on feature points by avoiding the process of calculating and matching descriptors but requires smoother camera movement (or higher collection frequency).
 
 \section{Direct Method}
-Next, let's discuss the direct method, which is somehow similar to the optical flow method. We first introduce the principle of the direct method, and then implement the direct method.
+Next, let's discuss the direct method, which is somehow similar to the optical flow method. We first introduce the principle of the direct method and then implement it.
 
-\subsection{Derivation of the direct method}
-In the optical flow, we will first track the location of feature points, and then determine the camera's movement based on these locations. Then, such a two-step plan is difficult to guarantee the overall optimality. We can ask, can we adjust the result of the previous step in the latter step? For example, if I think that the camera has turned 15 degrees to the right, can the optical flow use this 15-degree motion as the initial value to adjust the calculation of the optical flow? This idea is reflected in the direct method.
+\subsection{Derivation of the Direct Method}
+In the optical flow, we will first track the location of features and then determine the camera's movement based on these locations. Such a two-step plan is difficult to guarantee overall optimality. We can ask, can we adjust the previous results in the latter step? For example, if the camera has turned 15 degrees to the right, can the optical flow use this 15-degree motion as the initial value to adjust the optical flow calculation? This idea is reflected in the direct method.
 
-As shown in \autoref{fig:directMethod}~, consider a spatial point $P$ and camera at two timestamps. The world coordinates of $P$ are $[X,Y,Z]$, and the pixel coordinates of its imaging on two cameras are $\mathbf{p}_1, \mathbf{p}_2$.
+In \autoref{fig:directMethod}~, consider a spatial point $P$ and camera at two timestamps. The world coordinates of $P$ are $[X,Y,Z]$, and the pixel coordinates of its imaging on two cameras are $\mathbf{p}_1, \mathbf{p}_2$.
 
 \begin{figure}[!htp]
 	\centering
@@ -439,7 +439,7 @@ As shown in \autoref{fig:directMethod}~, consider a spatial point $P$ and camera
 	\label{fig:directMethod}
 \end{figure}
 
-Our goal is to find the relative pose transformation from the first camera to the second camera. We take the first camera as the frame of reference, and set the rotation and translation of the second camera as $\mathbf{R}, \mathbf{t}$ (corresponding to the Lie group as $\mathbf{T}$). At the same time, the internal parameters of the two cameras are the same, denoted as $\mathbf{K}$. Let's write down the complete projection equation:
+Our goal is to find the relative pose transformation from the first camera to the second camera. We take the first camera as the frame of reference, and set the rotation and translation of the second camera as $\mathbf{R}, \mathbf{t}$ (corresponding to the $\mathbf{T}$ in $\mathrm{SE}(3)$). At the same time, the intrinsics of the two cameras are the same, denoted as $\mathbf{K}$. Let's write down the complete projection equation:
 \begin{align*}
 {\mathbf{p}_1} &= {\left[ \begin{array}{l}
 	u\\
@@ -450,26 +450,26 @@ Our goal is to find the relative pose transformation from the first camera to th
 	u\\
 	v\\
 	1
-	\end{array} \right]_2} = \frac{1}{Z_2} \mathbf{K}\left( {\mathbf{RP} +\mathbf{t}} \right) = \frac{1}{Z_2} \mathbf{K} \left(\mathbf{T}  \mathbf{P} \right)_{1:3}.
+	\end{array} \right]_2} = \frac{1}{Z_2} \mathbf{K}\left( {\mathbf{RP} +\mathbf{t}} \right) = \frac{1}{Z_2} \mathbf{K} \left(\mathbf{T}  \mathbf{P} \right)_{1:3},
 \end{align*}
-Where $Z_1$ is the depth of $P$, and $Z_2$ is the depth of $P$ in the second camera frame, which is the third coordinate of $\mathbf{RP}+\mathbf{t}$ . Since $\mathbf{T}$ can only be multiplied with homogeneous coordinates, we need to take out the first 3 elements after multiplying. This is consistent with the content of \ref{cpt:5}.
+where $Z_1$ is the depth of $P$, and $Z_2$ is the depth of $P$ in the second camera frame, which is the third coordinate of $\mathbf{RP}+\mathbf{t}$. Since $\mathbf{T}$ can only be multiplied with homogeneous coordinates, we need to take out the first 3 elements after multiplying. This is consistent with the content of \ref{cpt:5}.
 
-Recall that in the feature point method, since we know the pixel positions of $\mathbf{p}_1, \mathbf{p}_2$ through matching descriptors, we can calculate the reprojection position. But in the direct method, since there is no feature matching, we have no way of knowing which $\mathbf{p}_2$ and $\mathbf{p}_1$ correspond to the same point. The idea of the direct method is to find the position of $\mathbf{p}_2$ according to the current camera pose estimation. But if the camera pose is not good enough, the appearance of $\mathbf{p}_2$ and $\mathbf{p}_1$ will be significantly different. Therefore, in order to reduce this difference, we optimize the pose of the camera to find $\mathbf{p}_2$ that is more similar to $\mathbf{p}_1$. This can also be done by solving an optimization problem, but at this time it is not to minimize the reprojection error, but to minimize the \textbf{Photometric Error}, which is the brightness error of the two pixels of $P$:
+Recall that in the feature point method, since we know the pixel positions of $\mathbf{p}_1, \mathbf{p}_2$ through matching descriptors, we can calculate the reprojection position. But in the direct method, since there is no feature matching, we have no way of knowing which $\mathbf{p}_2$ and $\mathbf{p}_1$ correspond to the same point. The direct method's idea is to find the position of $\mathbf{p}_2$ according to the current camera pose estimation. But if the camera pose is not good enough, the appearance of $\mathbf{p}_2$ and $\mathbf{p}_1$ will be significantly different. Therefore, to reduce this difference, we optimize the camera's pose to find $\mathbf{p}_2$ that is more similar to $\mathbf{p}_1$. This can also be done by solving an optimization problem, but at this time, it is not to minimize the reprojection error but to minimize the \textit{photometric error}, which is the brightness error of the two pixels of $P$:
 \begin{equation}
 e = {\mathbf{I}_1}\left( {{\mathbf{p}_1}} \right) - {\mathbf{I}_2}\left( {{\mathbf{p}_2}} \right).
 \end{equation}
 
-Note that $e$ is a scalar here. Similarly, the optimization is with respect to the second norm of the error, taking the unweighted form for now, as:
+Note that $e$ is a scalar here. Similarly, the optimization is with respect to the $\mathcal{L}_2$ norm of the error, taking the unweighted form for now, as:
 \begin{equation}
 \mathop {\min }\limits_{\mathbf{T}}  J\left( \mathbf{T}  \right) = \|e\|^2.
 \end{equation}
 
-The optimization is based on \textbf{constant brightness assumption}. We assume that the grayscale of a spatial point imaged at various viewing points is constant. If we have many (for example, $N$) space points $P_i$, then the whole camera pose estimation problem becomes
+The optimization is still based on the \textbf{constant brightness assumption}. We assume that the grayscale of a spatial point imaged at various viewing points is constant. If we have many (for example, $N$) space points $P_i$, then the whole camera pose estimation problem becomes:
 \begin{equation}
-\mathop {\min }\limits_{\mathbf{T}}  J\left( \mathbf{T}  \right) = \sum\limits_{i = 1}^N {e_i^\mathrm{T}{e_i}}, \quad {e_i} = {\mathbf{I}_1}\left( {{\mathbf{p}_{1,i}}} \right) - {\mathbf{I}_2}\left( {{ \mathbf{p}_{2,i}}} \right).
+\mathop {\min }\limits_{\mathbf{T}}  J\left( \mathbf{T}  \right) = \sum\limits_{i = 1}^N {e_i^T{e_i}}, \quad {e_i} = {\mathbf{I}_1}\left( {{\mathbf{p}_{1,i}}} \right) - {\mathbf{I}_2}\left( {{ \mathbf{p}_{2,i}}} \right).
 \end{equation}
 
-The variable to be optimized here is the camera pose $\mathbf{T}$, instead of the motion of each feature point in the optical flow. In order to solve this optimization problem, we are concerned about how the error $e$ changes with the camera pose $\mathbf{T}$, and we need to analyze their derivative relationship. First, define two intermediate variables:
+The variable to be optimized here is the camera pose $\mathbf{T}$, instead of the motion of each feature point in the optical flow. To solve this optimization problem, we are concerned about how the error $e$ changes with the camera pose $\mathbf{T}$, and we need to analyze their derivative relationship. First, define two intermediate variables:
 \begin{align*}
 \mathbf{q} &= \mathbf{T} \mathbf{P}, \\
 \mathbf{u} &= \frac{1}{{{Z_2}}} \mathbf{K} \mathbf{q}.
@@ -478,15 +478,15 @@ Here, $\mathbf{q}$ is the coordinates of $P$ in the second camera coordinate sys
 \begin{equation}
 e(\mathbf{T})=\mathbf{I}_1(\mathbf{p}_{1})-\mathbf{I}_2(\mathbf{u}),
 \end{equation}
-所以：
+Then we get:
 \begin{equation}
-\frac{\partial e}{\partial \mathbf{T}} = \frac{{\partial {\mathbf{I}_2}}}{{\partial \mathbf{u}}}\frac{{\partial \mathbf{u}}}{{\partial \mathbf{q}}}\frac{{\partial \mathbf{q}}}{{\partial \delta \mathbf{\xi} }}\delta \mathbf{\xi},
+\frac{\partial e}{\partial \mathbf{T}} = \frac{{\partial {\mathbf{I}_2}}}{{\partial \mathbf{u}}}\frac{{\partial \mathbf{u}}}{{\partial \mathbf{q}}}\frac{{\partial \mathbf{q}}}{{\partial \delta \boldsymbol{\xi} }}\delta \boldsymbol{\xi},
 \end{equation}
-Where $\delta \mathbf{\xi}$ is the left disturbance of $\mathbf{T}$. We see that the first derivative is divided into 3 terms due to the chain rule, and these 3 terms are easy to obtain:
+Where $\delta \boldsymbol{\xi}$ is the left disturbance of $\mathbf{T}$. We see that the first derivative is divided into three terms due to the chain rule, and these three terms are easy to obtain:
 
 \begin{enumerate}
 	\item $ \partial \mathbf{I}_2 / \partial \mathbf{u} $ is the grayscale gradient at pixel $\mathbf{u}$.
-	\item $ \partial \mathbf{u} / \partial \mathbf{q} $ is the derivative of the projection equation with respect to the three-dimensional point in the camera frame. Remember $\mathbf{q}=[X,Y,Z]^\mathrm{T}$, according to $\ref{cpt:7}$, the derivative is
+	\item $ \partial \mathbf{u} / \partial \mathbf{q} $ is the derivative of the projection equation with respect to the three-dimensional point in the camera frame. Remember $\mathbf{q}=[X,Y,Z]^T$, according to chapter $\ref{cpt:7}$, the derivative is:
 	\begin{equation}
 	\frac{{\partial \mathbf{u}}}{{\partial \mathbf{q}}} = \left[ {\begin{array}{*{20}{c}}
 		{\frac{{\partial u}}{{\partial X}}}&{\frac{{\partial u}}{{\partial Y}}}&{\frac{{\partial u}}{{\partial Z}}}\\
@@ -497,15 +497,15 @@ Where $\delta \mathbf{\xi}$ is the left disturbance of $\mathbf{T}$. We see that
 		\end{array}} \right].
 	\end{equation}
 	
-	\item ${\partial \mathbf{q}}/{\partial \delta \mathbf{\xi} }$is the derivative of the transformed three-dimensional point with respect to the transformation, which was introduced in the chapter of Lie Algebra:
+	\item ${\partial \mathbf{q}}/{\partial \delta \boldsymbol{\xi} }$ is the derivative of the transformed three-dimensional point with respect to the transformation, which was introduced in chapter \ref{cpt:4}:
 	\begin{equation}
-	\frac{{\partial \mathbf{q}}}{{\partial \delta \mathbf{\xi} }} = \left[ { \mathbf{I}, - {\mathbf{q}^ \wedge }} \right].
+	\frac{{\partial \mathbf{q}}}{{\partial \delta \boldsymbol{\xi} }} = \left[ { \mathbf{I}, - {\mathbf{q}^ \wedge }} \right].
 	\end{equation}
 \end{enumerate}
 
-In practice, the last two items are only related to the three-dimensional point $\mathbf{q}$ irrelevant to the image, we often combine them together:
+In practice, the last two items are only related to the three-dimensional point $\mathbf{q}$, which is irrelevant to the image. We often combine them together:
 \begin{equation}
-\frac{{\partial \mathbf{u}}}{{\partial \delta \mathbf{\xi} }} = \left[ {\begin{array}{*{20}{c}}
+\frac{{\partial \mathbf{u}}}{{\partial \delta \boldsymbol{\xi} }} = \left[ {\begin{array}{*{20}{c}}
 	{\frac{{{f_x}}}{Z}}&0&{ - \frac{{{f_x}X}}{{{Z^2}}}}&{ - \frac{{{f_x}XY}}{{{Z^2}}}}&{{f_x} + \frac{{{f_x}{X^2}}}{{{Z^2}}}}&{ - \frac{{{f_x}Y}}{Z}}\\
 	0&{\frac{{{f_y}}}{Z}}&{ - \frac{{{f_y}Y}}{{{Z^2}}}}&{ - {f_y} - \frac{{{f_y}{Y^2}}}{{{Z^2}}}}&{\frac{{{f_y}XY}}{{{Z^2}}}}&{\frac{{{f_y}X}}{Z}}
 	\end{array}} \right].
@@ -514,34 +514,32 @@ In practice, the last two items are only related to the three-dimensional point 
 This $2 \times 6$ matrix also appeared in the last chapter. Therefore, we derive the Jacobian of residual with respect to Lie algebra:
 \begin{equation}
 \label{eq:jacobianofDirect}
-\mathbf{J} =  - \frac{{\partial { \mathbf{I}_2}}}{{\partial \mathbf{u}}}\frac{{\partial \mathbf{u}}}{{\partial \delta \mathbf{\xi} }}.
+\mathbf{J} =  - \frac{{\partial { \mathbf{I}_2}}}{{\partial \mathbf{u}}}\frac{{\partial \mathbf{u}}}{{\partial \delta \boldsymbol{\xi} }}.
 \end{equation}
 
-For the problem of $N$ points, we can use this method to calculate the Jacobian of the optimization problem, and then use the Gauss Newton method or Levenberg-Marquardt method to calculate the increments and iteratively solve it. So far, we have introduced the entire process of the direct method to estimate the camera pose. Let's implement the direct method in a program.
+For the problem of $N$ points, we can use this method to calculate the Jacobian of the optimization problem and then use the Gauss-Newton method or Levenberg-Marquardt method to calculate the increments and iteratively solve it. So far, we have introduced the entire process of the direct method to estimate the camera pose. Let's implement the direct method in a program.
 
 \subsection{Discussion of Direct Method}
-In the above derivation, $P$ is a spatial point with a known location. How did it come from? Under the RGB-D camera, we can reproject any pixel into the three-dimensional space, and then project it into the next image. If it is binocular, the pixel depth can also be calculated based on the parallax. If in a monocular camera, this matter is more difficult, because we must also consider the uncertainty caused by the depth of $P$. Depth estimation will be elaborated in Chapter 13. Now let's consider the simple case first, i.e. when the depth of $P$ is known.
+In the above derivation, $P$ is a spatial point with a known location. Where does it come from? We can reproject any pixel into the three-dimensional space under the RGB-D camera and then project it into the next image. If it is binocular, the pixel depth can also be calculated based on the parallax. If in a monocular camera, this matter is more complicated because we must also consider the uncertainty caused by the depth of $P$. Depth estimation will be elaborated on in chapter \ref{cpt:12}. Now let's consider the simple case first, i.e., when the depth of $P$ is known.
 
-According to the source of $P$, we can classify the direct method:
+According to the source of $P$, we can classify the direct method as:
 \begin{enumerate}
-	\item $P$ comes from the sparse keypoint, which we call the sparse direct method. Usually we use hundreds to thousands of keypoints, and like L-K optical flow, it is assumed that the surrounding pixels are also unchanged. This sparse direct method does not need to calculate descriptors and only uses hundreds of pixels, so it is the fastest, but it can only calculate sparse reconstruction.
-	\item $P$ comes from some pixels. We see that in the formula \eqref{eq:jacobianofDirect}, if the pixel gradient is zero, the entire Jacobian is ​​zero, which will not contribute to the calculation of the motion increment. Therefore, you can consider only using pixels with gradients and discarding areas where the pixel gradients are not obvious. This is called a semi-dense direct method, which can reconstruct a semi-dense structure.
-	\item $P$ is all pixels, which is called the dense direct method. Dense reconstruction needs to calculate all pixels (generally hundreds of thousands to several million), so most of them cannot be calculated in real time on the existing CPU and require GPU acceleration. However, as discussed above, the points with inconspicuous pixel gradients will not contribute much in motion estimation, and it will be difficult to estimate the position during reconstruction.
+	\item $P$ comes from the sparse key point, which we call the sparse direct method. Usually, we use hundreds to thousands of key points, and like L-K optical flow, it is assumed that the surrounding pixels are also unchanged. This sparse direct method does not need to calculate descriptors and only uses hundreds of pixels, so it is the fastest, but it can only calculate sparse reconstruction.
+	\item $P$ comes from some pixels not necessarily being features. In the formula \eqref{eq:jacobianofDirect}, if the pixel gradient is zero, the entire Jacobian is ​​zero, which will not contribute to the problem. Therefore, we can consider only using pixels with high gradients and discarding areas where the pixel gradients are not obvious. This is called a semi-dense direct method, which can reconstruct a semi-dense structure.
+	\item $P$ is all pixels, which is called the dense direct method. Dense reconstruction needs to calculate all pixels (generally hundreds of thousands to several million), so most of them cannot be calculated in real-time on the existing CPU and require GPU acceleration. However, as discussed above, the points with inconspicuous pixel gradients will not contribute much to motion estimation, and it will be difficult to estimate the position during reconstruction.
 \end{enumerate}
 
-It can be seen that the reconstruction from sparse to dense can be calculated by the direct method. Their computational complexity are gradually increasing. The sparse method can quickly solve the camera pose, while the dense method can build a complete map. Which method to use depends on the objective of the application. In particular, on simple computing platforms, the sparse direct method can achieve very fast results, and is suitable for occasions with high real-time performance and limited computing resources.
-
-\textsuperscript{\cite{Engel2016}}。
+It can be seen that the reconstruction from sparse to dense can be calculated by the direct method. Their computational complexity is gradually increasing. The sparse method can quickly solve the camera pose, while the dense method can build a complete map. Which method to use depends on the objective of the application. In particular, on simple computing platforms, the sparse direct method can achieve very fast results and is suitable for occasions with high real-time performance and limited computing resources {\cite{Engel2016}}.
 
 \section{Practice: Direct method}
-\subsection{Single-layer direct method}
-Now, let's demonstrate how to use the sparse direct method. Since this book does not involve GPU programming, the dense direct method is omitted. Meanwhile, in order to keep the program simple, we use depth data instead of monocular data, so that the monocular depth recovery part can be omitted. The depth recovery based on feature points (i.e. triangulation) has been introduced in the previous chapter, and the depth recovery based on block matching will be introduced later. In this section we will consider the sparse direct method of binocular.
+\subsection{Single-layer Direct Method}
+Now, let's demonstrate how to use the sparse direct method. Since this book does not involve GPU programming, the dense direct method is omitted. Meanwhile, to keep the program simple, we use depth data instead of monocular data to omit the monocular depth recovery part. The depth recovery based on feature points (i.e., triangulation) has been introduced in the previous chapter, and the depth recovery based on block matching will be introduced later. In this section, we will consider the sparse direct method of binocular cameras.
 
-Since solving the direct method is finally equivalent to solving an optimization problem, you can use optimization libraries such as g2o or Ceres to help solve it, or you can implement the Gauss-Newton method yourself. Similar to optical flow, the direct method can also be divided into a single-layer direct method and a pyramid-like multilayer direct method. We also first implement the single-layer direct method, and then extend to multiple layers.
+Since solving the direct method is finally equivalent to solving an optimization problem, we can use optimization libraries such as g2o or Ceres to help us or implement the Gauss-Newton method by ourselves. Like the optical flow, the direct method can also be divided into a single-layer direct method and a pyramid-like multi-layer direct method. We also first implement the single-layer direct method and then extend it to multiple layers.
 
-In the single-layer direct method, similar to the parallel optical flow, we can also calculate the error and Jacobian of each pixel in parallel. For this reason, we define a class for calculating Jacobian:
+In the single-layer direct method, similar to the parallel optical flow, we can also calculate each pixel's error and Jacobian in parallel. For this reason, we define a class for calculating Jacobian:
 
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp（片段）]
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (part)]
 /// class for accumulator jacobians in parallel
 class JacobianAccumulator {
 public:
@@ -663,8 +661,8 @@ void JacobianAccumulator::accumulate_jacobian(const cv::Range &range) {
 }
 \end{lstlisting}
 
-In the accumulate\_jacobian function of this class, we calculate the pixel residual and Jacobian according to the previous derivation for the pixels in the specified range, and finally add it to the overall $\mathbf{H}$ matrix. Then, define a function to iterate this process:
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (snippet)]
+In the accumulate\_jacobian function of this class, we calculate the pixel residual and Jacobian according to the previous derivation for the pixels in the specified range and finally add it to the overall $\mathbf{H}$ matrix. Then, define a function to iterate this process:
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (part)]
 void DirectPoseEstimationSingleLayer(
 	const cv::Mat &img1,
 	const cv::Mat &img2,
@@ -706,11 +704,11 @@ void DirectPoseEstimationSingleLayer(
 	}
 }
 \end{lstlisting}
-This function calculates the corresponding pose updates according to the calculated $\mathbf{H}$ and $\mathbf{b}$, and then updates it to the current estimated value. We have introduced the details clearly in the theoretical part, this part of the code does not seem difficult.
+This function calculates the corresponding pose updates according to the calculated $\mathbf{H}$ and $\mathbf{b}$ and then updates it to the current estimated value. We have introduced the details clearly in the theoretical part. This part of the code does not seem difficult.
 
-\subsection{Multi-layer direct method}
+\subsection{Multi-layer Direct Method}
 Then, similar to optical flow, we extend the direct method to the pyramid and use the coarse-to-fine process to calculate relative transformation. This part of the code is also similar to optical flow:
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (snippet)]
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (part)]
 void DirectPoseEstimationMultiLayer(
 	const cv::Mat &img1,
 	const cv::Mat &img2,
@@ -741,7 +739,7 @@ void DirectPoseEstimationMultiLayer(
 	
 	double fxG = fx, fyG = fy, cxG = cx, cyG = cy;  // backup the old values
 	for (int level = pyramids - 1; level >= 0; level--) {
-		VecVector2d px_ref_pyr; // set the keypoints in this pyramid level
+		VecVector2d px_ref_pyr; // set the key points in this pyramid level
 		for (auto &px: px_ref) {
 			px_ref_pyr.push_back(scales[level] * px);
 		}
@@ -757,11 +755,10 @@ void DirectPoseEstimationMultiLayer(
 \end{lstlisting}
 It should be noted that, because the direct method of Jacobian takes the camera's intrinsic parameters, and when the pyramid scales the image, the corresponding internal parameters also need to be multiplied by the corresponding ratio.
 
-\subsection{Results discussion}
-Finally, we use some sample pictures to test the results of the direct method. We use several images of the Kitti\textsubscript{\cite{Geiger2013}} autonomous driving dataset. First, we read the first image left.png, in the corresponding disparity map disparity.png, calculate the depth corresponding to each pixel, and then use the direct method to calculate the camera poses for the five images 000001.png-000005.png. In order to show the insensitivity of the direct method to the feature points, we randomly select some points in the first image without using any corner points or feature point extraction algorithms.
-\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (snippet)]
+\subsection{Discussion}
+Finally, we use some sample pictures to test the results of the direct method. We use several images of the Kitti {\cite{Geiger2013}} autonomous driving dataset. First, we read the first image left.png, in the corresponding disparity map disparity.png, calculate the depth corresponding to each pixel, and then use the direct method to calculate the camera poses for the five images 000001.png-000005.png. In order to show the insensitivity of the direct method to the feature points, we randomly select some points in the first image without using any corner points or feature point extraction algorithms.
+\begin{lstlisting}[language=c++,caption=slambook2/ch8/direct_method.cpp (part)]
 int main(int argc, char **argv) {
-	
 	cv::Mat left_img = cv::imread(left_file, 0);
 	cv::Mat disparity_img = cv::imread(disparity_file, 0);
 	
@@ -793,66 +790,66 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-Readers can run this program on your machine, it will output the tracking points on each level of the pyramid of each image, and output the running time. The result of the multi-layer direct method is shown in \autoref{fig:direct-experiment}. According to the output of the program, you can see that the fifth image is about when the camera moves 3.8 meters forward. It can be seen that even if we randomly select points, the direct method can correctly track most of the pixels and estimate the camera motion. It does not include any feature extraction, matching, or optical flow. In terms of running time, at 2000 points, it takes 1-2 milliseconds for each layer of the direct method to iterate, so the four-layer pyramid takes about 8 milliseconds. In contrast, the optical flow of 2000 points takes about ten milliseconds, excluding the subsequent pose estimation. Therefore, the direct method is usually faster than the traditional feature points and optical flow.
+Readers can run this program on your machine. It will output the tracking points on each level of each image's pyramid and print the running time. The result of the multi-layer direct method is shown in \autoref{fig:direct-experiment}. According to the program's output, we can see that the fifth image is about when the camera moves 3.8 meters forward. It can be seen that even if we randomly select the points, the direct method can correctly track most of the pixels and estimate the camera motion. It does not include any feature extraction, matching, or optical flow. At 2000 points, it takes 1-2 milliseconds for each layer of the direct method to iterate in terms of running time, so the four-layer pyramid takes about 8 milliseconds. In contrast, the optical flow of 2000 points takes about ten milliseconds, excluding the subsequent pose estimation. Therefore, the direct method is usually faster than the traditional feature points and optical flow.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=1.0\linewidth]{vo2/direct-experiment}
-	\caption{Experimental results of the direct method. upper left: original image; upper right: disparity map corresponding to the original image; lower left: fifth tracking image; lower right: tracking result}
+	\caption{Experimental results of the direct method. upper left: original image; upper right: disparity map corresponding to the original image; lower left: fifth tracking image; lower right: tracking result.}
 	\label{fig:direct-experiment}
 \end{figure}
 
-Below we briefly explain the iterative process of the direct method. Compared with the feature point method, the direct method completely relies on the optimization to solve the camera pose. It can be seen from the formula \eqref{eq:jacobianofDirect} that the pixel gradient guides the direction of optimization. If you want to get the correct optimization results, you must ensure that \textbf{most pixel gradients can guide the optimization in the right direction}.
+Below we briefly explain the iterative process of the direct method. Compared with the feature point method, the direct method completely relies on the optimization solver. It can be seen from the formula \eqref{eq:jacobianofDirect} that the pixel gradient guides the direction of optimization. If you want to get the correct optimization results, you must ensure that most pixel gradients can guide the optimization in the right direction.
 
 What does it mean? Assume that for the reference image, we measured a pixel with a gray value of 229. And, since we know its depth, we can infer the position of the space point $P$ (\autoref{fig:directExperiment}~shown as the grayscale measured in $I_1$).
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=.9\linewidth]{vo2/directExperiment}
-	\caption{workflow of one iteration.}
+	\caption{One iteration in the direct method.}
 	\label{fig:directExperiment}
 \end{figure}
 
-Now, we have got a new image and need to estimate its camera pose. This pose is obtained by continuous optimization iterations of an initial value. Assuming that our initial value is relatively poor, under this initial value, the pixel gray value after the projection of the space point $P$ is 126. Therefore, the error of this pixel is $229-126=103$. In order to reduce this error, we hope to \textbf{fine-tune the camera's pose to make the pixels brighter}.
+Now, we have got a new image and need to estimate its camera pose. This pose is obtained by continuous optimization iterations of an initial value. Assuming that our initial value is relatively poor. Under this initial value, the gray value after the projection of the space point $P$ is 126. Therefore, the error of this pixel is $229-126=103$. To reduce this error, we hope to fine-tune the camera's pose to make the pixels brighter.
 
-How do I know where to fine-tune the pixels to make them brighter? This requires the use of local pixel gradients. We found in the image that if we take a step forward along the $u$ axis, the gray value at that point becomes 123, that is, 3 is subtracted. Similarly, if you take a step forward along the $v$ axis, the gray value is reduced by 18 and becomes 108. Around this pixel, we see that the gradient is $[-3,-18]$. In order to increase the brightness, we will suggest optimizing the algorithm to fine-tune the camera so that the image of $P$ moves to \textbf{top left}. In this process, we use the local gradient of the pixel to approximate the grayscale distribution near it, but please note that the real image is not smooth, so this gradient is not valid at a distance.
+How do I know where to fine-tune the pixels to make them brighter? This requires the use of local pixel gradients. We found in the image that if we take a step forward along the $u$ axis, the gray value at that point becomes 123. That is, 3 is subtracted. Similarly, if you take a step forward along the $v$ axis, the gray value is reduced by 18 and becomes 108. Around this pixel, the gradient is $[-3,-18]$. In order to increase the brightness, we will suggest optimizing the algorithm to fine-tune in a direction so that the image of $P$ moves to the top left. In this process, we use the local gradient of the pixel to approximate the grayscale distribution near it, but please note that the real image is not smooth, so this gradient is not valid at a distance.
 
-However, the optimization can't just follow the behavior of just one pixel, but also need to get track of other pixels. After considering many pixels, the optimization algorithm chose a place not far from the direction we suggested, and calculated an update amount $\exp ({\mathbf{\xi}^\wedge} )$. After adding the update amount, the image has moved from $I_2$ to $I_2'$, and the projection position of the pixel has also changed to a brighter place. We see that with this update, \textbf{error has become smaller}. Under ideal circumstances, we expect the error to continue to decrease and eventually converge.
+However, the optimization can't just follow just one pixel's behavior and need to get track of other pixels. After considering many pixels, the optimization algorithm chose a place not far from the direction we suggested and calculated an updated amount $\exp ({\boldsymbol{\xi}^\wedge} )$. After adding the updated amount, the image has moved from $I_2$ to $I_2'$, and the projection position of the pixel has also changed to a brighter place. We see that with this update, an error has become smaller. Under ideal circumstances, we expect the error to continue to decrease and eventually converge.
 
-But is this actually the case? Do we really only need to walk along the gradient direction to reach an optimal value? Note that the gradient of the direct method is directly determined by the image gradient, so we must ensure that \textbf{when walking along the image gradient, the photometric error will continue to decrease}. However, the image is usually a very strong \textbf{non-convex function}, as shown in \autoref{fig:non-convex}~. In practice, if we move along the image gradient, it is easy to fall into a local minimum due to the non-convexity (or noise) of the image itself, and we cannot continue to optimize. The direct method can only be established when the camera movement is very small and the gradient in the image will not have strong non-convexity.
+But is this actually the case? Do we really only need to walk along the gradient direction to reach an optimal value? Note that the gradient of the direct method is directly determined by the image gradient, so we must ensure that the photometric error will continue to decrease when walking along the image gradient. However, the image is usually a very strong non-convex function, as shown in \autoref{fig:non-convex}~. In practice, if we move along the image gradient, it is easy to fall into a local minimum due to the non-convexity (or noise) of the image itself, and we cannot continue to optimize. The direct method can only be established when the camera movement is very small, and the gradient in the image will not have strong non-convexity.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=1.0\linewidth]{vo2/nonconvex}
-	\caption{Three-dimensional visualization of an image. The path from one point in the image to another point is not necessarily a "straight downhill road", but needs to be "climbing over the mountains" frequently. This reflects the non-convexity of the image itself.}
+	\caption{Three-dimensional visualization of an image. The path from one point in the image to another point is not necessarily a ``straight downhill road'', but needs to be ``climbing over the mountains'' frequently. This reflects the non-convexity of the image function.}
 	\label{fig:non-convex}
 \end{figure}
 
-In the example, we only calculated the difference of a single pixel, and this difference is obtained by directly subtracting the grayscale. However, a single pixel is not distinguishable, and there are probably many pixels around with similar brightness. Therefore, we sometimes use small patches and use more complex difference measures, such as Normalized Cross Correlation (NCC). For the sake of simplicity, the example uses the sum of squares of errors to maintain consistency with the derivation.
+In the example, we only calculated the difference of a single pixel, and this difference is obtained by directly subtracting the grayscale. However, a single pixel is not distinguishable, and there are probably many pixels around with similar brightness. Therefore, we sometimes use small patches and use more complex difference measures, such as the normalized cross-correlation (NCC). For the sake of simplicity, the example uses the sum of squares of errors to maintain consistency with the derivation.
 
-\subsection{Advantages and disadvantages of the direct method}
+\subsection{Advantages and Disadvantages of the Direct Method}
 Finally, we summarize the advantages and disadvantages of the direct method. In general, its advantages are as follows:
 
 \begin{itemize}
-	\item It can save the time of calculating feature points and descriptors.
-	\item Only pixel gradients are required, no feature points are required. Therefore, the direct method can be used in the absence of features. An extreme example is an image with only gradients. It may not be able to extract corner features, but its motion can be estimated by a direct method. In the demonstration experiment, we see that the direct method can also work normally for randomly selected points. This is very important in practice, because practical scenes may not have many corner points to use.。
+	\item It can save time in calculating feature points and descriptors.
+	\item Only pixel gradients are required. No feature points are required. Therefore, the direct method can be used in the absence of features. An extreme example is an image with only edge gradients. It may not be able to extract corner features, but its motion can be estimated by a direct method. In the demonstration experiment, we see that the direct method can also work normally for randomly selected points. This is very important in practice because practical scenes may not have many corner points to use.
 	\item It is possible to construct semi-dense or even dense maps, which cannot be achieved by the feature point method.
 \end{itemize}
 
 On the other hand, its shortcomings are also obvious:
 \begin{itemize}
-	\item \textbf{Non-convexity}. The direct method completely relies on gradient search and reduces the objective function to calculate the camera pose. The objective function needs to take the gray value of the pixel, and the image is a strongly non-convex function. This makes the optimization algorithm easy to be stuck at a local minimum, and the direct method can only succeed when the movement is small. Against this, the pyramids can reduce the impact of non-convexity to a certain extent.
-	\item \textbf{Single pixel has no discriminativeness}. Many points look alike. So we either calculate image patches or calculate complex correlations. Since each pixel has inconsistent "opinions" about changing the camera movement, only a few obey the majority, and increasing the quantity for better quality. Therefore, the performance of the direct method decreases significantly when there are fewer selected points. We usually recommend using more than 500 points.
-	\textbf{Brightness constant is a strong assumption}. If the camera is automatically exposed, when it adjusts the exposure parameters, it will make the overall image brighter or darker. This situation also occurs when the light changes. The feature point method has a certain tolerance to illumination, while the direct method calculates the difference of brightness, and the overall brightness change will destroy the brightness constant assumption and make the algorithm fail. In response to this, the practical direct method will also estimate the camera's exposure parameters \cite{Engel2016} so that it can still work when the exposure time changes.
+	\item \textbf{Non-convexity}. The direct method completely relies on gradient search and reduces the objective function to calculate the camera pose. The objective function needs to take the pixel's gray value, and the image is a strongly non-convex function. This makes the optimization algorithm easy to be stuck at a local minimum, and the direct method can only succeed when the movement is small. Against this, the pyramids can reduce the impact of non-convexity to a certain extent.
+	\item \textbf{A single pixel is not separable}. Many pixels just look alike. So we either calculate on image patches or the complex correlations. Since each pixel may have inconsistent "opinions" about the camera's adjustment, we need many pixels to make a fair judgment. But how many pixels are enough? This is hard to answer. The performance of the direct method decreases when there are fewer selected points. We usually recommend using more than 500 points, but this is just an empirical choice.
+	\item \textbf{Constant brightness is a strong assumption}. Constant brightness is a strong assumption. If the camera is automatically exposed, it will make the overall image brighter or darker when it adjusts the exposure parameters. This situation also occurs when the light changes. The feature point method has a certain tolerance to illumination. In contrast, the direct method calculates the difference of brightness, and the overall brightness change will destroy the brightness constant assumption and make the algorithm fail. In response to this, the direct method will also estimate the camera's exposure parameters \cite{Engel2016} to still work when the exposure time changes.
 \end{itemize}
 
-\section*{习题}
+\section*{Exercises}
 \begin{enumerate}
 	\item In addition to LK optical flow, do you know other optical flow methods? What are their characteristics?
 	\item In the program to calculate the image gradient, we simply calculate the difference between the brighteness of $u+1$ and $u-1$ divided by 2 as the gradient in the direction of $u$. What are the disadvantages of this approach? Hint: For features closer together, the changes should be faster; while for features farther away it changes more slowly in the image, can this information be used when calculating the gradient?
 	\item Can the direct method be implemented in an "inverse" way like optical flow? That is, use the gradient of the original image instead of the gradient of the target image?
 	\item[\optional] Use Ceres or g2o to implement sparse direct method and semi-dense direct method.
-	\item Compared with the direct method of RGB-D, the monocular direct method is often more complicated. In addition to the unknown matching, the pixel distance is also to be estimated, and we need to use the pixel depth as an optimization variable during optimization. Refer to the literature \cite{Engel2013, Engel2014}, can you understand its principle?
+	\item Compared with the direct method of RGB-D, the monocular direct method is often more complicated. In addition to the unknown matching, the distance of the pixel also needs to be estimated. We need to use pixel depth as an optimization variable during optimization. Refer to the literature \cite{Engel2013, Engel2014}, can you implement its calculation?
 \end{enumerate}
 
 
