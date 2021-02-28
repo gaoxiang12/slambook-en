@@ -14,7 +14,7 @@
 	\end{enumerate}
 \end{mdframed}
 
-In the previous chapters, we introduced the details of motion and observation equations and explained how nonlinear optimization is used to solve those equations. From this chapter, we finish introducing the fundamental knowledge and moving on to the next topic. Starting from chapter \ref{cpt:2}, we will investigate visual odometry, backend optimization, loop detection, and map reconstruction. This chapter and the next chapter mainly focus on two commonly used visual odometry methods: the feature and direct methods. This chapter will introduce what feature points are, how to extract and match them, and how to estimate camera motion based on matched feature points.
+In the previous chapters, we introduced the details of motion and observation equations and explained how nonlinear optimization is used to solve those equations. From this chapter, we finish introducing the fundamental knowledge and moving on to the next topic. Starting from this chapter, we will investigate visual odometry, backend optimization, loop detection, and map reconstruction. This chapter and the next chapter mainly focus on two commonly used visual odometry methods: the feature and direct methods. This chapter will introduce what feature points are, how to extract and match them, and how to estimate camera motion based on matched feature points.
 
 \newpage
 \includepdf{resources/other/ch7.pdf}
@@ -140,7 +140,7 @@ Feature matching is a critical step in visual SLAM (\ref{fig:feature-matching}).
     \label{fig:feature-matching}
 \end{figure}
 
-However, let's first assume the matching is correct and then go back to discuss the mismatch problem. Consider images at two moments. Assume features $x_{t}^{m}, m=1,2,...,M$ are extracted in the image $I_{t}$, and $x_{t+1}^{n}, n=1,2,...,N$ in $I_{t+1}$ . How do we find the correspondence between these two sets? The simplest feature matching method is the brute-force matcher, which measures the distance between each pair of the features $x_{t}^{m}$ and all $x_{t+1}^{n}$ descriptors. Then sort the matching distance, and take the closest one as the matching point. The descriptor distance indicates the degree of similarity of two features. In practice, different distance metric norms can be used. For descriptors of floating-point type, using Euclidean distance to measure is a good choice. For binary descriptors (such as BRIEF), we often use Hamming distance as a metric. the Hamming distance between two binary vectors refers to the number of different digits.
+However, let's first assume the matching is correct and then go back to discuss the mismatch problem. Consider images at two moments. Assume features $x_{t}^{m}, m=1,2,...,M$ are extracted in the image $I_{t}$, and $x_{t+1}^{n}, n=1,2,...,N$ in $I_{t+1}$ . How do we find the correspondence between these two sets? The simplest feature matching method is the brute-force matcher, which measures the distance between each pair of the features $x_{t}^{m}$ and all $x_{t+1}^{n}$ descriptors. Then sort the matching distance, and take the closest one as the matching point. The descriptor distance indicates the degree of similarity of two features. In practice, different distance metric norms can be used. For descriptors of floating-point type, using Euclidean distance to measure is a good choice. For binary descriptors (such as BRIEF), we often use Hamming distance as a metric. The Hamming distance between two binary vectors refers to the number of different digits.
 
 When the number of feature points is large, the brute force matching's computational complexity will become too expensive, especially when you want to match a frame to a map. This does not meet our real-time requirements in SLAM. The Fast Approximate Nearest Neighbor (FLANN) algorithm is more suitable in this case. Since these matching algorithms' theory is mature and the implementation has already been integrated into OpenCV, the technical details will not be described here. Interested readers can refer to the literature \cite{Muja2009}.In engineering, we can also limit the search range of the brute-force method to achieve real-time performance.
 
@@ -386,7 +386,7 @@ Suppose we have a pair of matched feature points from two images, as shown in \a
 	\label{fig:doubleview}
 \end{figure}
 
-Taking \autoref{fig:doubleview}~ as an example, our goal is to find the motion between two frames $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\mathbf{R}, \mathbf{t}$, and the centers of the two cameras as $O_{1}, O_{2}$. Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, obtained through feature matching. If the matching is correct, it means that they are indeed the projection of the same point. Now we need some terms to describe the geometric relationship between them. First, the line $\overrightarrow{O_{1}p_{1}}$ and the line $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the 3D space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called the epipolar plane. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$, respectively. The $e_{1}, e_{2}$ is called epipoles, and $O_{1}O_{2}$ is called the baseline. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as the epipolar line.
+Take \autoref{fig:doubleview}~ as an example. Our goal is to find the motion between two frames $I_{1}, I_{2}$. Define the motion from the first frame to the second frame as $\mathbf{R}, \mathbf{t}$, and the centers of the two cameras as $O_{1}, O_{2}$. Now, consider that there is a feature point $p_{1}$ in $I_{1}$, which corresponds to the feature point $p_{2}$ in $I_{2}$, obtained through feature matching. If the matching is correct, it means that they are indeed the projection of the same point. Now we need some terms to describe the geometric relationship between them. First, the line $\overrightarrow{O_{1}p_{1}}$ and the line $\overrightarrow{O_{2}p_{2}}$ will intersect at the point $P$ in the 3D space. The three points $O_{1}, O_{2}, and P$ can determine a plane, and it is called the epipolar plane. The intersection of the line of $O_{1}O_{2}$ and the image plane $I_{1}, I_{2}$ is $e_{1}, e_{2}$, respectively. The $e_{1}, e_{2}$ is called epipoles, and $O_{1}O_{2}$ is called the baseline. We call the intersecting line $l_{1},l_{2}$ between the polar plane and the two image planes $I_{1}, I_{2}$ as the epipolar line.
 
 From the first frame, the ray $\overrightarrow{O_1 p_1}$ represents the possible spatial locations where a pixel may appear since all points on the ray will be projected to the same pixel. Meanwhile, suppose we don't know the location of $P$. When we look at the second image, the connection $\overrightarrow{e_2 p_2}$ (i.e., the epipolar line in the second image) is the possible projected positions of the point $P$, as well as the projection of the ray $\overrightarrow{O_1 p_1}$ in the second image. Now, since we have determined the pixel location of $p_2$ through feature matching, we can infer the spatial location of $P$ and the camera movement, as long as the feature matching is correct. If there is no feature matching, we can't determine where the $p_2$ is on the epipolar line. At that time, we must search on the epipolar line $l_2$ to get the correct match, which will be discussed in lecture \ref{cpt:12}.
 
@@ -465,7 +465,7 @@ By definition, the essential matrix $\mathbf{E} = \mathbf{t}^\wedge \mathbf{R}$.
 
 The fact that $\mathbf{E}$ has 5 degrees of freedom indicates that we can use at least 5 pairs of points to solve $\mathbf{E}$. However, the internal property of $\mathbf{E}$ is nonlinear, which could cause trouble in the estimation. Therefore, it is also possible to consider only its scale equivalence and use 8 pairs of matched points to estimate $\mathbf{E}$. This is the classic \textit{eight-point-algorithm} {\cite{Hartley1997, Longuet-Higgins1987}}. The eight-point method only uses the linear properties of $\mathbf{E}$, so it can be solved under the framework of linear algebra. Let's take a look at how the eight-point method works.
 
-Consider a pair of matched points, their normalized coordinates are $\mathbf{x}_{1}=[u_{1},v_{1},1]^T$, $\mathbf{x}_{2}=[u_{2},v_{2},1]^{\mathrm{T}}$. According to the polar constraints, we have:
+Consider a pair of matched points, their normalized coordinates are $\mathbf{x}_{1}=[u_{1},v_{1},1]^T$, $\mathbf{x}_{2}=[u_{2},v_{2},1]^T$. According to the polar constraints, we have:
 \begin{equation}
 \begin{pmatrix} 
 u_{2},v_{2},1
@@ -483,7 +483,7 @@ u_{1}\\v_{1}\\1
 
 We rewrite the matrix $\mathbf{E}$ in the vector form:
 \[
-\mathbf{e}= [e_{1},e_{2},e_{3},e_{4},e_{5},e_{6},e_{7},e_{8},e_{9}]^{\mathrm{T}},
+\mathbf{e}= [e_{1},e_{2},e_{3},e_{4},e_{5},e_{6},e_{7},e_{8},e_{9}]^T,
 \]
 Then the epipolar constraint can be written in a linear form related to $\mathbf{e}$:
 \begin{equation}
@@ -775,25 +775,25 @@ So the $\mathbf{E}$ matrix in the sense of least-squares is obtained. However, w
 
 \section{Triangulation}
 \label{sec:7.5}
-In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of \textbf{Triangulation}, shown in \autoref{fig:triangluar}.
+In the previous two sections, we introduced using the epipolar constraint to estimate the camera motion and discussed its limitations. After estimating the motion, the next step is to use the camera motion to estimate the spatial positions of the feature points. In monocular SLAM, the depths of the pixels cannot be obtained by a single image. We need to estimate the depths of the map points by the method of triangulation, shown in \autoref{fig:triangluar}.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.9\linewidth]{vo1/triangularization}
-	\caption{三角化获得地图点深度。}
+	\caption{Use triangulation to estimate the depth.}
 	\label{fig:triangluar}
 \end{figure}
 
-Triangulation refers to observing the same landmark point at different locations and determining the distance of the landmark point from the observed locations. Triangulation was first proposed by Gauss and used in metrology. It can be also applied to astronomy and geography. For example, we can estimate the distance to us from the angle of the star observed in different seasons. In SLAM, we mainly use triangulation to estimate the distance of pixels.
+Triangulation refers to observing the same landmark point at different locations and determining the distance of the landmark point from the observed locations. Triangulation was first proposed by Gauss and used in metrology. It can also be applied to astronomy and geography. For example, we can estimate the distance to us from the angle of the star observed in different seasons. In SLAM, we mainly use triangulation to estimate the distance of pixels.
 
-Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference, and the transformation matrix to the right image is $\mathbf{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. There is a feature point $p_{1}$ in $I_{1}$, which corresponds to a feature point $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the map point corresponding to the two feature points in the 3D scene. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least-square.
+Similar to the previous section, consider the images $I_{1}$ and $I_{2}$, with the left image as a reference. The transform matrix to the right image is $\mathbf{T}$. The principal points of the camera are $O_{1}$ and $O_{2}$. The feature $p_{1}$ is in $I_{1}$, which corresponds to a feature $p_{2}$ in $I_{2}$. In theory, the straight line $O_{1}p_{1}$ and $O_{2}p_{2}$ will intersect at a point $P$ in the scene, which is the 3D map point. However, due to the noise, these two lines often fail to exactly intersect. Therefore, it can be solved in the sense of least-square.
 
 According to the definition in epipolar geometry, let $\mathbf{x}_1, \mathbf{x}_2$ be the normalized coordinates of two feature points, then they satisfy:
 \begin{equation}
 s_2 \mathbf{x}_2 = s_1  \mathbf{R} \mathbf{x}_1 + \mathbf{t}.  
 \end{equation}
 
-Now we know $\mathbf{R}$ and $\mathbf{t}$, we want to find the depth $s_1$ and $s_2$ of two feature points. Geometically, you can find a 3D point on the ray $O_1 p_1$ to make its projection close to $\mathbf{p}_2$. Similarly, you can also find it on $O_2 p_2$, or in the middle of two lines . Different strategies correspond to different calculation methods, but they return similar results. For example, if we want to calculate $s_1$, we first multiply both sides of the above formula by $\mathbf{x}_2^\wedge$ to get:
+Now we know the $\mathbf{R}$ and $\mathbf{t}$, we want to find the depth $s_1$ and $s_2$ of two feature points. Geometrically, you can find a 3D point on the ray $O_1 p_1$ to make its projection close to $\mathbf{p}_2$. Similarly, you can also find it on $O_2 p_2$ or in the middle of two lines. Different strategies correspond to different calculation methods, but the results are similar. For example, if we want to calculate $s_1$, we first multiply both sides of the above formula by $\mathbf{x}_2^\wedge$ to get:
 \begin{equation}
 \label{eq:x1tox2}
 s_2 \mathbf{x}_2^\wedge \mathbf{x}_2 = 0 = s_1 \mathbf{x}_2^\wedge \mathbf{R} \mathbf{x}_1 + \mathbf{x}_2^\wedge \mathbf{t}. 
@@ -802,10 +802,10 @@ s_2 \mathbf{x}_2^\wedge \mathbf{x}_2 = 0 = s_1 \mathbf{x}_2^\wedge \mathbf{R} \m
 The left side of this equation is zero, and the right side can be regarded as an equation of $s_1$, and $s_1$ can be obtained directly from it. With $s_1$, $s_2$ is also very easy to calculate. Thus, we get the depth of the points under the two frames and determine their spatial coordinates. Definitely, due to the existence of noise, our estimated $\mathbf{R}, \mathbf{t}$ may not exactly make the equation \eqref{eq:x1tox2} zero, so a more common approach is to find the least-square solution rather than a direct solution.
 
 \section{Practice: Triangulation}
-\subsection{Triangulation Program}
-In the following, we demonstrate how to obtain the spatial positions of the feature points in the previous section through triangulation based on the camera pose previously solved by epipolar geometry. We will use the triangulation function provided by OpenCV.
+\subsection{Triangulation with OpenCV}
+We demonstrate how to obtain the feature point's spatial position in the previous section through triangulation based on the camera pose solved by epipolar geometry. We will use the triangulation function provided by OpenCV here.
 
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/triangulation.cpp（片段）]
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/triangulation.cpp (part)]
 void triangulation(
 	const vector<key point> &key point_1,
 	const vector<key point> &key point_2,
@@ -847,48 +847,48 @@ void triangulation(
 }
 \end{lstlisting}
 
-Meanwhile, we can add the triangulation part to the main function, and then draw the depth of each point. Readers can run this program to view the triangulation results.
+Meanwhile, we can add the triangulation part to the main function and then draw each point's depth. Readers can run this program to view the triangulation results.
 
 \subsection{Discussion}
 Regarding triangulation, there is one more thing that must be noted.
 
-Triangulation is caused by \textbf{translation}. Only when there is enough amount of translation, triangles in the epipolar geometry can be formed, and only then can triangulation be implemented. Therefore, triangulation cannot be used for pure rotation, because the epipolar constraint will always be satisfied. Definitely, the actual data is often not completely equal to zero. In the presence of translation, we should also concern about the uncertainty of triangulation, which will lead to a \textbf{triangulation contradiction}.
+Triangulation is caused by the \textit{translation}. Only when there is enough amount of translation, triangles in the epipolar geometry can be formed, and then the triangulation can be implemented. Therefore, triangulation cannot be used for pure rotation because the triangle does not exist in this case. Definitely, the real data is often not wholly equal to zero. In the presence of translation, we should also concern about the uncertainty of triangulation, which will lead to the triangulation contradiction.
 
-As shown in \autoref{fig:triangulation-discuss}~, when the translation is small, the uncertainty on the pixel will result in a larger depth uncertainty. That is to say, if the feature point moves by one pixel $\delta x$, so that the line of sight angle changes by an angle $\delta \theta$, then the measured depth will experience a change of $\delta d$. It can be seen from the geometric relationship that when $\mathbf{t}$ is larger, $\delta d$ will be significantly smaller, meaning that when the translation is larger, the triangulation measurement will be more accurate at the same camera resolution. The quantitative analysis of the process can be proceeded by using the law of sine.
+As shown in \autoref{fig:triangulation-discuss}~, when the translation is small, the pixel's uncertainty will result in a more enormous depth uncertainty. That is to say, if the feature point moves by one pixel $\delta x$, the sight angle changes by an angle $\delta \theta$, then the measured depth will experience a difference of $\delta d$. It can be seen from the geometric relationship that when $\mathbf{t}$ is larger, $\delta d$ will be significantly smaller, meaning that when the translation is larger, the triangulation measurement will be more accurate at the same camera resolution. The quantitative analysis of the process can be proceeded by using the law of sine.
 
-Therefore, to improve the accuracy of triangulation, one is to improve the accuracy of feature points extraction, that means to increase the image resolution, but this will cause the image to become larger and increase the computational cost. Another way is to increase the amount of translation. However, this will cause obvious changes in the \textbf{appearance} of the image, for example, the side of the box that was originally blocked can be exposed, or the lighting of the object changes, etc. Changes in appearance will make feature extraction and matching more difficult. In a nutshell, increasing the translation may lead to failure of matching; and if the translation is too small, the accuracy of the triangulation is insufficient. This is the contradiction of triangulation. We call this problem "parallax".
+Therefore, to improve the accuracy of triangulation, one is to improve the accuracy of feature points extraction, which means to increase the image resolution, but this will cause the image to become larger and increase the computational cost. Another way is to increase the amount of translation. However, this will cause obvious changes in the image's appearance. For example, the box's side view initially blocked may be exposed, the lighting of the object changes, etc. Changes in appearance will make feature extraction and matching more difficult. In a nutshell, increasing the translation may lead to failure of matching; and if the translation is too small, the triangulation's accuracy is insufficient. This is the contradiction of triangulation. 
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=1.0\linewidth]{vo1/triangulation-discuss.pdf}
-	\caption{三角测量的矛盾。}
+	\caption{The contradiction of triangulation.}
 	\label{fig:triangulation-discuss}
 \end{figure}
 
-In monocular vision, since the image has no depth information, we have to wait for the feature points to be tracked for a few frames, and then use triangulation to determine the depth of the new feature points. This is also called delayed triangulation  {\cite{Davison2003}}. However, if the camera rotates in place, causing the parallax to be small, it is difficult to estimate the depth of the newly observed feature points. This situation is more common in robotics, as rotation is a common command for robots. In this case, monocular vision may suffer from tracking failures and incorrect scales.
+In the monocular vision, since the image has no depth information, we have to wait for the feature points to be tracked for a few frames and then use triangulation to determine the new feature points' depth. This is also called delayed triangulation  {\cite{Davison2003}}. However, if the camera rotates in place, causing the parallax to be small, it is difficult to estimate the newly observed feature points' depth. This situation is common in robotics, as rotation is also a standard command for robots. In this case, monocular vision may suffer from tracking failures and incorrect scales.
 
-Although this section only introduces the depth estimation of triangulation, we can also quantitatively calculate the \textbf{location} and \textbf{uncertainty} of each feature point. Therefore, if we assume that the feature point obeys the Gaussian distribution and continuously observe it, with the correct information, we can expect \textbf{its variance will continue to decrease and even converge}. This can be referred to as \textbf{Depth Filter}. However, since its principle is more complicated, we will discuss it in detail later. Next, we will discuss the estimation of camera motion from 3D-2D matching points, as well as 3D-3D estimation methods.
+Although this section only introduces the depth estimation of triangulation, we can also quantitatively calculate each feature point's location and uncertainty. Therefore, if we assume that the feature point obeys the Gaussian distribution and continuously observes it with the correct information, we can expect its variance will continue to decrease and even converge. This can be referred to as the depth filter. However, since its principle is more complicated, we will discuss it in later chapters \ref{cpt:12}. Next, we will discuss the estimation of camera motion from 3D-2D matching points and 3D-3D estimation methods.
 
 \section{3D−2D：PnP}
-PnP (Perspective-n-Point) is a method to solve 3D to 2D paired point motion. It describes how to estimate the pose of the camera when the $n$ 3D space points and their projection positions are known. As mentioned earlier, the 2D-2D epipolar geometry method requires 8 or more point pairs (take the eight-point method as an example), and there have problems with initialization, pure rotation, and scale. However, if the 3D position of one of the feature points in the two images is known, then we need at least 3 point pairs (and at least one additional point to verify the result) to estimate the camera motion. The 3D position of the feature point can be determined by triangulation or the depth map of an RGB-D camera. Therefore, in binocular or RGB-D visual odometry, we can directly use PnP to estimate camera motion. In the monocular visual odometry, initialization must be conducted before using PnP. The 3D-2D method does not require epipolar constraints, and can obtain better motion estimation in a few matching points. It is the most important pose estimation method.
+PnP (Perspective-n-Point) is a method to solve 3D to 2D motion estimation. It describes how to estimate the camera's pose when the $n$ 3D space points and their projection positions are known. As mentioned earlier, the 2D-2D epipolar geometry method requires eight or more point pairs (take the eight-point method as an example), and there have problems with initialization, pure rotation, and scale. However, if the 3D position of one of the feature points in the two images is known, then we need at least three pairs (and at least one additional point to verify the result) to estimate the camera motion. The 3D position of the feature point can be determined by triangulation or the depth map of an RGB-D camera. Therefore, in binocular or RGB-D visual odometry, we can directly use PnP to estimate camera motion. While in the monocular case, initialization must be conducted before using PnP. The 3D-2D method does not require epipolar constraints and can obtain better motion estimation in a few matching points. It is the most important pose estimation method.
 
-There are many ways to solve PnP problems, for example, P3P {\cite{GaoHouTangEtAl2003}}, direct linear transformation (DLT), EPnP (Efficient PnP) {\cite{LepetitMoreno-NoguerFua2008 }}, UPnP {\cite{Penate-SanchezAndrade-CettoMoreno-Noguer2013}}, etc. In addition, the method of \textbf{non-linear optimization} can be used to construct a least-square problem and iteratively solve it, which is commonly called the Bundle Adjustment. Let's look at DLT first, and then we will explain Bundle Adjustment.
+There are many ways to solve PnP problems, for example, P3P {\cite{GaoHouTangEtAl2003}}, direct linear transformation (DLT), EPnP (Efficient PnP) {\cite{LepetitMoreno-NoguerFua2008 }}, UPnP {\cite{Penate-SanchezAndrade-CettoMoreno-Noguer2013}}, etc. In addition, nonlinear optimization can be used to construct a least-square problem and iteratively solve it, which is commonly called the bundle adjustment. Let's look at DLT first, and then we will explain the bundle adjustment approach.
 
 \subsection{Direct Linear Transformation}
-Consider such a problem: the positions of a set of 3D points and their projection positions in a certain camera are known, find the pose of the camera. This problem can also be used to solve the problem of camera pose when a given map and image are given. If the 3D point is regarded as a point in another camera coordinate system, it can also be used to solve the relative motion problem of two cameras. We will start from simple questions.
+Consider such a problem: we know the 3D positions of a point set and their projections in the camera, now we want to find the camera's pose. This problem can be used to solve the camera pose when a given map and image are given. If the 3D point is regarded as a point in another camera coordinate system, it can also solve the two cameras' relative motion problem. We will start with simple questions.
 
-Consider a 3D spatial point $P$, its homogeneous coordinates are ${\mathbf{P}}=(X,Y,Z,1)^{\mathrm{T}}$. In the image $I_{1}$, it is projected to the feature point ${\mathbf{x}}_{1}=(u_{1},v_{1},1)^{\mathrm{T}}$(expressed in the normalized plane homogeneous coordinates). At this time, the pose of the camera $\mathbf{R}, \mathbf{t}$ is unknown. Similar to the solution of the homography matrix, we define the $3\times 4$ augmented matrix $[\mathbf{R}|\mathbf{t}]$, encoding rotation and translation information \footnote{this is different from the transformation matrix $\mathbf{T}$ in $\mathrm{SE}(3)$. }. We will write its expanded form as follows:
+Consider a 3D spatial point $P$, its homogeneous coordinates are ${\mathbf{P}}=(X,Y,Z,1)^T$. In the image $I_{1}$, it is projected to the feature point ${\mathbf{x}}_{1}=(u_{1},v_{1},1)^T$(expressed as the normalized homogeneous coordinates). At this time, the pose of the camera $\mathbf{R}, \mathbf{t}$ is unknown. Similar to the solution of the homography matrix, we define the $3\times 4$ augmented matrix $[\mathbf{R}|\mathbf{t}]$, encoding rotation and translation information \footnote{This is different from the transformation matrix $\mathbf{T}$ in $\mathrm{SE}(3)$. }. We will write its expanded form as follows:
 \begin{equation}
 s
 \begin{pmatrix}
 u_{1} \\ v_{1} \\ 1
 \end{pmatrix}
-=
+= \underbrace{
 \begin{pmatrix}
 t_{1} & t_{2} & t_{3} & t_{4}\\ 
 t_{5} & t_{6} & t_{7} & t_{8}\\ 
 t_{9} & t_{10} & t_{11} & t_{12}
-\end{pmatrix}
+\end{pmatrix}}_{[\mathbf{R}|\mathbf{t}]}
 \begin{pmatrix}
 X \\ Y \\ Z \\ 1
 \end{pmatrix}.
@@ -904,8 +904,9 @@ To simplify the representation, define $\mathbf{T}$ as a row vector:
 \[
 \mathbf{t}_{1}=(t_{1},t_{2},t_{3},t_{4})^T,
 \mathbf{t}_{2}=(t_{5},t_{6},t_{7},t_{8})^T,
-\mathbf{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^T,
+\mathbf{t}_{3}=(t_{9},t_{10},t_{11},t_{12})^T.
 \]
+
 Now we have:
 \[
 \mathbf{t}_1^T\mathbf{P}-\mathbf{t}_3^T\mathbf{P} u_1=0,
@@ -915,14 +916,14 @@ and
 \mathbf{t}_2^T\mathbf{P}-\mathbf{t}_3^T\mathbf{P} v_1=0.
 \]
 
-Please note that $\mathbf{t}$ is the variable to be found. As you can see, each feature point provides two linear constraints on $\mathbf{t}$. Assuming there are a total of $N$ feature points, the following linear equations can be constructed:
+Please note that $\mathbf{t}$ is the variable to be determined. As you can see, each feature point provides two linear constraints on $\mathbf{t}$. Assuming there are a total of $N$ feature points, the following linear equations can be constructed:
 \begin{equation}
 \begin{pmatrix}
-\mathbf{P}_{1}^{\mathrm{T}} & 0 & -u_{1}\mathbf{P}_{1}^{\mathrm{T}}	\\
-0 & \mathbf{P}_{1}^{\mathrm{T}} & -v_{1}\mathbf{P}_{1}^{\mathrm{T}}	\\
+\mathbf{P}_{1}^T & 0 & -u_{1}\mathbf{P}_{1}^T	\\
+0 & \mathbf{P}_{1}^T & -v_{1}\mathbf{P}_{1}^T	\\
 \vdots & \vdots & \vdots			\\
-\mathbf{P}_{N}^{\mathrm{T}} & 0 & -u_{N}\mathbf{P}_{N}^{\mathrm{T}} \\
-0 & \mathbf{P}_{N}^{\mathrm{T}} & -v_{N}\mathbf{P}_{N}^{\mathrm{T}}
+\mathbf{P}_{N}^T & 0 & -u_{N}\mathbf{P}_{N}^T \\
+0 & \mathbf{P}_{N}^T & -v_{N}\mathbf{P}_{N}^T
 \end{pmatrix}
 \begin{pmatrix}
 \mathbf{t}_{1} \\ \mathbf{t}_{2} \\ \mathbf{t}_{3}
@@ -930,25 +931,25 @@ Please note that $\mathbf{t}$ is the variable to be found. As you can see, each 
 =0.
 \end{equation}
 
-Since $\mathbf{t}$ has a total dimension of 12, the linear solution of matrix $\mathbf{T}$ can be achieved by at least 6 pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least-square solution of the overdetermined equation.
+Since $\mathbf{t}$ has a total dimension of 12, the linear solution of the matrix $\mathbf{T}$ can be achieved by at least six pairs of matching points. This method is called Direct Linear Transform (DLT). When the matching points are greater than 6 pairs, methods such as SVD can also be used to find the least-square solution of the overdetermined equation.
 
-In the DLT solution, we directly regard the $\mathbf{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\mathbf{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the constraint, it is a general matrix. The translation vector is easier to handle, it belongs to the vector space. For the rotation matrix $\mathbf{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\mathbf{T}$ estimated by DLT. This can be done by QR decomposition  {\cite{Hartley2003, Chen1994}}, or it can be calculated like this  {\cite{Barfoot2016,Green1952}}:
+In the DLT solution, we directly regard the $\mathbf{T}$ matrix as 12 unknowns, ignoring the correlation between them. Because the rotation matrix $\mathbf{R} \in \mathrm{SO}(3)$, the solution obtained by DLT does not necessarily satisfy the $\mathrm{SE}(3)$ constraint. It is just a general matrix. The translation vector is easier to handle. It belongs to the vector space. For the rotation matrix $\mathbf{R}$, we must look for the best rotation matrix to approximate the matrix block of $3 \times 3$ on the left of $\mathbf{T}$ estimated by DLT. This can be done by QR decomposition  {\cite{Hartley2003, Chen1994}}, or it can be calculated like {\cite{Barfoot2016,Green1952}}:
 \begin{equation}
 \mathbf{R} \leftarrow {\left( {\mathbf{R}{\mathbf{R}^T}} \right)^{ - \frac{1}{2}}} \mathbf{R}.
 \end{equation}
 This can be seen as reprojecting the result from the matrix space onto the $\mathrm{SE}(3)$ manifold and converting it into two parts: rotation and translation.
 
-What needs to be mentioned is that our $\mathbf{x}_1$ here uses normalized plane coordinates and neglects the influence of the intrinsic parameter matrix $\mathbf{K}$, this is because the intrinsic parameter $\mathbf{K}$ is usually assumed to be known in SLAM. Even if the intrinsic parameters are unknown, PnP can be used to estimate the three quantities $\mathbf{K}, \mathbf{R}, \mathbf{t}$. However, due to the increase in the number of unknown variables, the quantity of the result may be worse.
+What needs to be mentioned is that our $\mathbf{x}_1$ here uses normalized plane coordinates and neglects the influence of the intrinsic matrix $\mathbf{K}$. This is because $\mathbf{K}$ is usually assumed to be known in SLAM. Even if the intrinsic parameters are unknown, PnP can still be used to estimate the three quantities $\mathbf{K}, \mathbf{R}, \mathbf{t}$. However, due to the increase in the number of unknown variables, the result's quantity may be worse.
 
 \subsection{P3P}
-P3P is another way to solve PnP. It only uses 3 pairs of matching points and requires less data (this part refers to the literature \cite{web:p3p}).
+P3P is another way to solve PnP. It only uses 3 pairs of matching points and requires less data (this part refers to the \cite{web:p3p}).
 
-P3P requires to establish geometric relationships of the given 3 points. Its input data is 3 pairs of 3D-2D matching points. Define 3D points as $A, B, C$, 2D points as $a, b, c$, where the point represented by the lowercase letter is the projection of the point on the camera image plane represented by the corresponding uppercase letter, as shown in \autoref{fig: p3p}~. In addition, P3P also needs to a pair of verification points to select the correct one from the possible solutions (similar to the case of epipolar geometry). Denote the verification point pair as $D-d$ and the camera principal point as $O$. Suppose that $A, B, C$ are in \textbf{the world coordinate frame}, not \textbf{camera coordinate}. Once the coordinates of the 3D point in the camera coordinate system can be calculated, we get the 3D−3D corresponding point and convert the PnP problem to the ICP problem.
+P3P requires establishing geometric relationships of the given 3 points. Its input data is 3 pairs of 3D-2D matching points. Define 3D points as $A, B, C$, 2D points as $a, b, c$, where the point represented by the lowercase letter is the projection of the point on the camera image plane represented by the corresponding uppercase letter, as shown in \autoref{fig:p3p}~. Also, P3P needs a pair of verification points to select the correct one from the possible solutions (similar to epipolar geometry). Denote the verification point pair as $D-d$ and the principal camera point as $O$. Suppose that $A, B, C$ are in the world coordinate frame, not the camera coordinate. Once the coordinates of the 3D point in the camera coordinate system can be calculated, we get the 3D−3D corresponding point and convert the PnP problem to the ICP problem.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.54\linewidth]{vo1/p3p.pdf}
-	\caption{P3P问题示意图。}
+	\caption{The P3P problem.}
 	\label{fig:p3p}
 \end{figure}
 
@@ -980,7 +981,7 @@ Divide all the above three equations by $OC^2$ on both sides, and let $x=OA/OC, 
 \end{array}
 \end{equation}
 
-Let $v = AB^2/OC^2, uv = BC^2/OC^2, wv = AC^2/OC^2$， we then have：
+Let $v = AB^2/OC^2, uv = BC^2/OC^2, wv = AC^2/OC^2$, then we have:
 \begin{equation}
 \begin{array}{l}
 {x^2} + {y^2} - 2xy\cos \left\langle a,b \right \rangle  - v = 0\\
@@ -997,49 +998,24 @@ Move $v$ in the first equation to the right side, and combine it with the other 
 \end{array}
 \end{equation}
 
-Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=BC^2/AB^2, w=AC^2/AB^2$ can be calculated by the coordinates of $A, B, C$ in the world frame, transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the system of equations is a quadratic equation (polynomial equation) about two unknowns $x, y$. Solving the equations analytically is complicated and requires Wu's elimination method. It will not be introduced here, interested readers could refer to the literature \cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\mathbf{E}$, this equation may get 4 solutions at most, but we can use the verification points to select the most probable solution, and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\mathbf{R}, \mathbf{t}$ can be calculated, which will be introduced in section 7.9.
+Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=BC^2/AB^2, w=AC^2/AB^2$ can be calculated by the coordinates of $A, B, C$ in the world frame. Transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the equations are quadratic equations about two unknowns $x, y$. Analytically solving the equations is complicated and requires Wu's elimination method. It will not be introduced here. Interested readers could refer to the literature \cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\mathbf{E}$, this equation may get 4 solutions at most. Still, we can use the verification points to select the most probable solution and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\mathbf{R}, \mathbf{t}$ can be calculated, which will be introduced in section 7.9.
 
-From the principle of P3P to solve PnP, we use the similarity of triangles to solve the 3D coordinates of the projection points $a, b, c$ in the camera frame, and finally convert the problem into a 3D to 3D pose estimation problem. As we will see later, it is easy to solve the 3D-3D pose with matching information, so this idea is very effective. Some other methods, such as EPnP, also adopted this idea. However, P3P also has some deficiencies:
+From the principle of P3P to solve PnP, we use the triangle relationships to solve the 3D coordinates of the projection points $a, b, c$ in the camera frame, and finally convert the problem into a 3D to 3D pose estimation problem. As we will see later, it is easy to solve the 3D-3D pose with matching information, so this idea is very effective. Some other methods, such as EPnP, also adopted this idea. However, P3P also has some deficiencies:
 
 \begin{enumerate}
 	\item P3P only includes the information of 3 points. When the given matched points are more than 3, it is difficult to use more information.
-	\item If the 3D point or 2D point is affected by noise, or there is a mismatch, the algorithm goes into trouble.
+	\item If the 3D point or 2D point is affected by noise or a mismatch, the algorithm goes into trouble.
 \end{enumerate}
 
-People also proposed many other methods, such as EPnP, UPnP and so on. They use more information and optimize the camera pose in an iterative way to eliminate the effects of noise as much as possible. However, compared to P3P, the principles are more complicated, so we recommend that readers read the original papers or understand the PnP process by practice. In SLAM, the usual approach is to first estimate the camera pose using methods such as P3P/EPnP, and then construct a least-squares optimization problem to adjust the estimated values (Bundle Adjustment). When the camera motion is sufficiently continuous, or you can also assume that the camera does not move or move at a constant speed, you can use the estimated values as the initial values for optimization. Next we look at the PnP problem from the perspective of nonlinear optimization.
+People also proposed many other methods, such as EPnP, UPnP, and so on. They use more information and iteratively optimize the camera pose to eliminate noise as much as possible. However, compared to P3P, the principles are more complicated, so we recommend that readers read the original papers or understand the PnP process by practice. In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares optimization problem to adjust the estimated values (bundle adjustment). When the camera motion is sufficiently continuous, or you can also assume that the camera does not move or move at a constant speed, you can use the estimated values as the initial values for optimization. Next, we look at the PnP problem from the perspective of nonlinear optimization.
 
-%
-%\subsubsection{Random sample consensus（RANSAC）}
-%During the feature matching process, a large number of incorrect matches will inevitably occur, which will seriously affect the accuracy of pose estimation. Therefore, we need to eliminate incorrect matches. The following uses the eight-point method to calculate the fundamental matrix as an example to explain how to perform RANSAC, the meaning and derivation of the fundamental matrix, and the eight-point method will be explained in detail in section \ref{sec:funmatrix} of this book. \par
-%
-%\begin{enumerate}
-	% \item randomly select 8 pairs from all pairs of matching point and set them as the group $M_{k}$, $k=1, 2, ..., K$.
-	% \item use the group $M_{k}$, and uses the eight-point method to calculate the corresponding fundamental matrix, $F_{k}$.
-	% \item For each pair of interior points $In_{i}$,$i=1,2,...,I$, calculate the reprojection error $e_{k}$ of $F_{k}$ (refer to section \ref{sec:reprojection} of this book for reprojection error). If $e_{k}^{i}$ is less than a specific threshold $threshold$, this pair is judged to be valid, and the score for $F_{k}^{i}$ is $score_{k}^{i}=\frac{1}{e_{k}^{i}}$. Otherwise, the point pair is removed from the interior points pair. The final score $score_{k}$ for $F_{k}$ is the sum of all valid scores $score_{k}^{i}$.
-	% \item Repeat steps 1, 2, 3 until it reaches the maximum number of iterations $MaxIteration$, which is defined manually. The final 8 pairs of matching points are the group $M_{k}$ corresponding to the highest scored $F_{k}$.
-%\end{enumerate}
-%
-%
-% In fact, RANSAC is an algorithmic idea. For different models, there are different parameters and evaluation criteria. As in the above example, it is the fundamental matrix, the parameter is 8 pairs of matching points, and the evaluation criterion is to minimize the reprojection error. In theory, the greater the number of iterations, the more likely it is to find the best parameters of the model. However, due to the real-time requirements in SLAM, we need to minimize the number of iterations while finding reasonable model parameters. Suppose $u$ is the probability of finding a set of interior points, $v=1-u$ is the probability of finding a set of exterior points, and $p$ is the probability that at least one set of parameters does not contain the exterior points (usually set to $99\% $), $m$ is the number of parameters required, and $N$ is the number of iterations. Then there are:
-%
-%\begin{equation}
-%1-p=(1-u^{m})^{N}
-%\end{equation}
-%
-% So the minimum number of iterations can be found by the following formula, $u$ and $v$ usually use empirical values.
-%
-%\begin{equation}
-%N=\frac{log(1-p)}{1-(1-v)^{m}}
-%\end{equation}
-
-
-\subsection{Solve PnP by minimizing reprojection error}
+\subsection{Solve PnP by Minimizing the Reprojection Error}
 \label{sec:BA-vo1}
-Other than the linear method, we can also construct the PnP problem as a nonlinear least-square problem about reprojection errors. This will use the knowledge from the \ref{cpt:4} and \ref{cpt:5} chapters of this book. The linear method mentioned above is often \textbf{a first look for the camera pose and the position of the points in space}, while nonlinear optimization treats them as optimization variables and optimizes them together. This is a very general solution method, we can use it to optimize the results given by PnP or ICP. This type of problems, \textbf{putting the camera and 3D points together to minimize}, are generally referred to as Bundle Adjustment\footnote{The meaning of BA in different documents and contexts are not exactly the same. Some scholars only refer to the problem of minimizing reprojection errors as BA, while others have a broader definition of BA. Even if the BA has only one camera or other similar sensors, it can be called BA. I personally prefer the broader definition, so the method of calculating PnP here is also called BA.}.
+Other than the linear method, we can also construct the PnP problem as a nonlinear least-square problem about reprojection errors. This will use the knowledge from the chapters \ref{cpt:4} and \ref{cpt:5} of this book. The linear method mentioned above is often divided into many steps, such as estimating the camera pose first and then the point's position. While nonlinear optimization treats them as optimization variables and optimizes them together. This is a very general solution method. We can use it to optimize the results given by PnP or ICP. This type of problem, putting the camera and 3D points together to minimize, is generally referred to as bundle adjustment \footnote{The meaning of BA in different documents and contexts are not exactly the same. Some people only refer to problems that minimize the reprojection errors as BA, while others have a broader definition of BA. Even if the BA has only one camera, it can be called BA. I personally prefer the broader definition, so the method of calculating PnP here is also called BA.}.
 
-We can build a Bundle Adjustment problem in PnP to optimize the camera pose. If the camera is moving continuously (as in the majority of SLAM processes), you can also use BA directly to solve the camera pose. In this section, we will give the basic form of this problem in two views, and then discuss the larger-scale BA problem in Lecture 9.
+We can build a bundle adjustment problem in PnP to optimize the camera pose. If the camera is moving continuously (as in most SLAM processes), we can also use BA directly to solve the camera pose. In this section, we will give the basic two-view form of this problem and then discuss the larger-scale BA problem in lecture \ref{cpt:9}.
 
-Considering $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\mathbf{R}, \mathbf{t}$ of the camera, and its Lie group is expressed as $\mathbf{T}$. Suppose the coordinates of a point in space are $\mathbf{P}_i=[X_i,Y_i,Z_i]^T$, and their projected pixel coordinates are $\mathbf{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
+Suppose we have $n$ 3D space points $P$ and their projection $p$, we want to calculate the pose $\mathbf{R}, \mathbf{t}$ of the camera. Suppose the coordinates of a point are $\mathbf{P}_i=[X_i,Y_i,Z_i]^T$, and their projected pixel coordinates are $\mathbf{u}_i=[u_i,v_i]^ \mathrm{T}$. According to \ref{cpt:5}, the relationship between the 2D pixel position and the 3D spatial position is:
 \begin{equation}
 s_i \left[ 
 \begin{array}{l}
@@ -1050,33 +1026,33 @@ u_i \\ v_i \\ 1
 X_i \\ Y_i \\ Z_i \\ 1
 \end{array} \right]  .
 \end{equation}
-In matrix form, it is:
+Or in the matrix form:
 \[
 {{s_i {\mathbf{u}}_i} = \mathbf{K} \mathbf{T} \mathbf{P}}_i.
 \]
 
-This equation includes a conversion from homogeneous coordinates to non-homogeneous coordinates implicitly. Otherwise, according to the matrix multiplication, the dimension is wrong \footnote{The result of $ \mathbf{T} {\mathbf{P}_i}$ is $4 \times 1$, and the $\mathbf{K}$ on the left is $3 \times 3$, so the first three dimensions of $\mathbf{T}\mathbf{P}_i$ must be taken out and changed into three dimension non-homogeneous coordinates. Or, using $\mathbf{R}\mathbf{P}+\mathbf{t}$}. Now, due to the unknown camera pose and the noise of the observation points, there is a residual in the equation. Therefore, we sum up the residuals, construct a least-square problem, and then minimize it to find the most reliable camera pose:
+This equation includes a conversion from homogeneous coordinates to non-homogeneous coordinates implicitly. Or we can also use $\mathbf{R}\mathbf{P}+\mathbf{t}$. Now, due to the unknown camera pose and the noise of the observation points, there is a residual in the equation. Therefore, we sum up the residuals, construct a least-square problem, and then minimize it to find the most possible camera pose:
 \begin{equation}
 {\mathbf{T}^*} = \arg \mathop {\min }\limits_{\mathbf{T}}  \frac{1}{2}\sum\limits_{i = 1}^n {\left\| {{{\mathbf{u}}_i} - \frac{1}{s_i} \mathbf{K}\mathbf{T}{\mathbf{P}}_i} \right\|_2^2} .
 \end{equation}
 
-The residual term of this problem is the difference between the projection position of the 3D points and the observation positions, so it is called \textbf{reprojection error}. When using homogeneous coordinates, this error has 3 dimensions. However, since the last dimension of ${\mathbf{u}}$ is 1, the error of this dimension is always zero, so more often we use non-homogeneous coordinates, thus the error is only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P \hat{p}_2$ and the actual $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
+The residual term is the error of the projected position and the observed position, which is called the reprojection error. With homogeneous coordinates, this error has three dimensions. However, since the last dimension of ${\mathbf{u}}$ is 1, the error of this dimension is always zero, so we normally use non-homogeneous coordinates. Therefore, the error has only 2 dimensions. As shown in \autoref{fig:reprojection}~, we know that $p_1$ and $p_2$ are projections of the same space point $P$ through feature matching, but we don't know the pose of the camera. In the initial value, there is a certain distance between the projection of $P \hat{p}_2$ and the observed $p_2$. So we adjusted the pose of the camera to make this distance smaller. However, since this adjustment needs to consider many points, the goal is to reduce the overall error, and the error of each point usually can not be exactly zero.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.8\linewidth]{vo1/reprojection}
-	\caption{重投影误差示意图。}
+	\caption{The reprojection error.}
 	\label{fig:reprojection}
 \end{figure}
 
-We have already discussed the least-square optimization problem in the Chapter \ref{cpt:6}. Using Lie algebra, unconstrained optimization problems can be constructed, which can be easily solved by optimization algorithms such as Gauss Newton method and Levenberg-Marquardt method. However, before using the Gauss-Newton method and Levenberg-Marquardt method, we need to find the derivative of each error term with respect to the optimization variable, which is \textbf{linearization}:
+We have already discussed the least-square optimization problem in chapter \ref{cpt:6}. Using Lie algebra, we can construct an unconstrained optimization problem on the manifold, easily solved using optimization algorithms such as the Gauss-Newton method and Levenberg-Marquardt method. However, we need to calculate the derivative of each error term with respect to the optimization variable, which is also the linearization:
 \begin{equation}
 \mathbf{e}( \mathbf{x} + \Delta \mathbf{x} ) \approx \mathbf{e}(\mathbf{x}) + \mathbf{J} ^T\Delta \mathbf{x}.
 \end{equation}
 
-The form of $\mathbf{J}^T$ is worth discussing, and it can even be said to be the key. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer to analytical derivatives. Now, $\mathbf{e}$ is the pixel coordinate error (2-dimensional) and $\mathbf{x}$ is the camera pose (6-dimensional), $\mathbf{J}^T$ is a matrix of $2 \times 6$. Let's derive the form of $\mathbf{J}^T$.
+The form of $\mathbf{J}^T$ is worth discussing. Definitely, we can use numerical derivatives, but if we can derive an analytical form, we will prefer the analytical derivatives. Now, $\mathbf{e}$ is the pixel coordinate error (2-d) and $\mathbf{x}$ is the camera pose (6-d), $\mathbf{J}^T$ is a matrix of $2 \times 6$. Let's derive the form of $\mathbf{J}^T$.
 
-We have introduced how to use the perturbation model to find the derivative of Lie algebra. First, define the coordinates of the space point in the camera frame as $\mathbf{P}'$, and take out the first 3 dimensions:
+We have introduced how to use the perturbation model to find the pose variable's derivative (chapter \ref{cpt:4}). First, define the coordinates of the space point in the camera frame as $\mathbf{P}'$, and take out the first 3 dimensions:
 \begin{equation}
 \mathbf{P}' = \left( \mathbf{T}{\mathbf{P}} \right)_{1:3}= [X', Y', Z']^T.
 \end{equation}
@@ -1086,7 +1062,7 @@ Then, the camera projection model with respect to $\mathbf{P}'$ is:
 s {\mathbf{u}} = \mathbf{K} \mathbf{P}'.
 \end{equation}
 
-Expand:
+Expand it:
 \begin{equation}
 \left[ \begin{array}{l}
 su\\
@@ -1109,7 +1085,7 @@ Use the third row to eliminate $s$ (actually it is the distance of $\mathbf{P}'$
 u = {f_x}\frac{{X'}}{{Z'}} + {c_x}, \quad v = {f_y}\frac{{Y'}}{{Z'}} + {c_y}.
 \end{equation}
 
-This is consistent with the camera model described in \ref{cpt:5}. When we find the error, we can compare the $u, v$ here with the actual measured value to find the difference. After defining the intermediate variables, we left multiply $\mathbf{T}$ by a disturbance quantity $\delta \boldsymbol{\xi}$, and then consider the derivative of the change of $\mathbf{e}$ with respect to the disturbance quantity. Using the chain rule, it is:
+This is consistent with the camera model described in \ref{cpt:5}. When we find the error, we can compare the $u, v$ here with the measured value to find the difference. After defining the intermediate variables, we left multiply $\mathbf{T}$ by a disturbance quantity $\delta \boldsymbol{\xi}$, and then consider the derivative of the change of $\mathbf{e}$ with respect to the disturbance quantity. Using the chain rule, it is:
 \begin{equation}
 \frac{{\partial \mathbf{e}}}{{\partial \delta \boldsymbol{\xi} }} = \mathop {\lim }\limits_{\delta \boldsymbol{\xi}  \to 0} \frac{{\mathbf{e}\left( {\delta \boldsymbol{\xi}  \oplus \boldsymbol{\xi} } \right)-\mathbf{e}(\boldsymbol{\xi})}}{{\delta \boldsymbol{\xi} }}  = \frac{{\partial \mathbf{e}}}{{\partial \mathbf{P}'}}\frac{{\partial \mathbf{P}'}}{{\partial \delta \boldsymbol{\xi} }}.
 \end{equation}
@@ -1151,7 +1127,7 @@ Multiply these two items together, we get the $2 \times 6$ Jacobian matrix:
 	\end{array}} \right].
 \end{equation}
 
-This Jacobian matrix describes the first-order derivative of the reprojection error with respect to the Lie algebra of the camera pose. We keep the negative sign in front of it because the error is defined by \textbf{observed value minus predicted value}. It can also be reversed and defined in the form of "predicted value minus observed value". In that case, just remove the negative sign in front. In addition, if the definition of $\mathfrak{se}(3)$ is rotation followed by translation, just swap the first 3 columns and the last 3 columns of this Jacobian matrix.
+This Jacobian matrix describes the first-order derivative of the reprojection error with respect to the left perturbation model. We keep the negative sign in front of it because the error is defined by the observed value minus the predicted value. It can also be reversed and defined in the form of the predicted value minus the observed value. In that case, just remove the negative sign in front. Besides, if the definition of $\mathfrak{se}(3)$ is a rotation followed by translation, just swap the first 3 columns and the last 3 columns of this Jacobian matrix.
 
 On top of optimizing the pose, we want to optimize the spatial position of the feature points. Therefore, we also need to discuss the derivative of $\mathbf{e}$ with respect to the space point $\mathbf{P}$. Fortunately, this derivative matrix is relatively easy. Still using the chain rule, there are:
 \begin{equation}
@@ -1162,7 +1138,7 @@ The first item has been deduced before, and the second item is defined as:
 \[
 \mathbf{P}'= (\mathbf{T} \mathbf{P})_{1:3} = \mathbf{R} \mathbf{P} + \mathbf{t},
 \]
-We find that after $\mathbf{P}'$ differentiates $\mathbf{P}$, only $\mathbf{R}$ is left. then:
+So only $\mathbf{R}$ is left in the derivative:
 \begin{equation}
 \label{eq:jacob-uv2P}
 \frac{{\partial \mathbf{e}}}{{\partial \mathbf{P} }} = -\left[ 
@@ -1172,15 +1148,15 @@ We find that after $\mathbf{P}'$ differentiates $\mathbf{P}$, only $\mathbf{R}$ 
 \end{array} \right] \mathbf{R}.
 \end{equation}
 
-Now, we derived the two Jacobian matrices of the observation camera equation with respect to the camera pose and feature points. They are \textbf{very important} to provide gradient directions in the optimization and guide the iteration of optimization.
+We have derived the two Jacobian matrices of the observation camera equation with respect to the camera pose and feature points. They are very important to provide gradient directions in the optimization and guide the iteration of optimization.
 
 \section{Practice: Solving PnP}
-\subsection{Use EPnP to solve pose}
-In the following, we will have a deeper understand of the PnP process through practice. First, we demonstrate how to use OpenCV's EPnP to solve the PnP problem, and then solve it again through nonlinear optimization. In the second edition of the book, we also add a handwriting optimization practice. Since PnP needs to use 3D points, in order to avoid the trouble of initialization, we use the depth map (1_depth.png) in the RGB-D camera as the 3D position of the feature points. First look at the PnP function provided by OpenCV:
+\subsection{Use EPnP to Solve the Pose}
+In the following, we will have a deeper understanding of the PnP process through practice. First, we demonstrate how to use OpenCV's EPnP to solve the PnP problem and then solve it again through nonlinear optimization. In the second edition of the book, we also add a handwriting optimization practice. Since PnP needs to use 3D points, to avoid the trouble of initialization, we use the depth map (1_depth.png) in the RGB-D camera as the 3D position of the feature points. First look at the PnP function provided by OpenCV:
 
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp (part)]
 int main( int argc, char** argv ) {
-    Mat r, t;
+   Mat r, t;
    solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false); // Call OpenCV's PnP, you can choose from EPNP, DLS and other methods
    Mat R;
    cv::Rodrigues(r, R); // r is in the form of rotation vector, and converted to a rotation matrix by Rodrigues formula
@@ -1189,9 +1165,9 @@ int main( int argc, char** argv ) {
 }
 \end{lstlisting}
 
-In the example, after obtaining the matched feature points, we look for their depth in the depth map of the first image and find their spatial position. Taking this spatial position as a 3D point, and then taking the pixel position of the second image as a 2D point, call EPnP to solve the PnP problem. The program output is as follows:
+In the example, after obtaining the matched feature points, we get their depth in the depth map of the first image and find their spatial position. Taking this spatial position as a 3D point and then taking the second image's pixel position as a 2D observation, we call EPnP to solve the PnP problem. The program output is as follows:
 
-\begin{lstlisting}[language=sh,caption=终端输入：]
+\begin{lstlisting}[language=sh,caption=Terminal output:]
 % build/pose_estimation_3d2d 1.png 2.png d1.png d2.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
@@ -1210,9 +1186,9 @@ t=
 Readers can compare $\mathbf{R},\mathbf{t}$ solved in the previous 2D-2D case to see the difference. It can be seen that when 3D information is involved, the estimated $\mathbf{R}$ is almost the same, while the $\mathbf{t}$ is quite different. This is due to the inclusion of depth information. However, since the depth map collected by Kinect has some noise, the 3D points here are not accurate. In a larger-scale BA, we would like to optimize the pose and all 3D feature points at the same time.
 
 
-\subsection{Handwriting pose estimation}
-The following demonstrates how to use nonlinear optimization to calculate the camera pose. We first write a PnP of Gauss-Newton method, and then demonstrate how to solve it by g2o.  
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
+\subsection{Pose Estimation from Scratch}
+The following demonstrates how to use nonlinear optimization to calculate the camera pose. We first write a PnP of the Gauss-Newton method and then demonstrate how to solve it by g2o.  
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp (part)]
 void bundleAdjustmentGaussNewton(
 const VecVector3d &points_3d,
 const VecVector2d &points_2d,
@@ -1286,15 +1262,15 @@ Sophus::SE3d &pose) {
 }
 \end{lstlisting}
 
-In this function, we implement a simple Gauss-Newton iteration optimization based on the previous theoretical derivation. Then we will compare the efficiency of OpenCV, handwritten implementation and g2o implementation.
+In this function, we implement a simple Gauss-Newton iterated optimization based on the previous derivation. Then we will compare the efficiency of OpenCV, handwritten implementation, and the g2o implementation.
 
-\subsection{BA optimization by g2o}
-After handwriting the optimization process, let's look at how to achieve the same functionality using the library g2o (in fact, it is completely similar with Ceres). The basic knowledge of g2o has been introduced in Lecture \ref{cpt:6}. Before using g2o, we have to model the problem as a graph optimization problem, as shown in \autoref{fig:ba-graph}~.
+\subsection{Optimization by G2o}
+After handwriting the optimization process, let's look at how to achieve the same functionality using the library g2o (it is similar to Ceres). The basic knowledge of g2o has been introduced in lecture \ref{cpt:6}. Before using g2o, we have to model the problem as a graph optimization problem, as shown in \autoref{fig:ba-graph}~.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=0.9\linewidth]{vo1/ba-graph}
-	\caption{PnP的Bundle Adjustment的图优化表示。}
+	\caption{PnP's graph structure.}
 	\label{fig:ba-graph}
 \end{figure}
 
@@ -1307,10 +1283,10 @@ In this graph optimization, the nodes and edges are defined as follows:
 	\]
 \end{enumerate}
 
-Since the pose of the first camera is fixed to zero, we excluded it from the optimization variables, but in the normal occasions, we will consider estimations of a lot of camera poses. Now we estimate the pose of the second camera based on a set of 3D points and the 2D projection in the second image. We drew the first camera as a dotted line to indicate that we don't want to consider it.
+Since the pose of the first camera is fixed to identity, we excluded it from the optimization variables. But in normal cases, we will consider estimations of many cameras. Now we estimate the second camera pose based on a set of 3D points and the 2D projection in the second image. We drew the first camera as a dotted line to indicate that we don't want to consider it.
 
-g2o provides many nodes and edges about BA. For example, g2o/\\types/sba/types\_six\_dof\_expmap.h provides nodes and edges expressed by Lie algebra. In the second edition of the book, we implement a VertexPose vertex and EdgeProjection edge ourselves, as follows:
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
+G2o provides many nodes and edges about BA. For example, \textit{g2o/\\types/sba/types\_six\_dof\_expmap.h} provides nodes and edges expressed by Lie algebra. In the second edition of the book, we implement a VertexPose vertex and EdgeProjection edge ourselves, as follows:
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp (part)]
 /// vertex and edges used in g2o ba
 class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d> {
 	public:
@@ -1374,7 +1350,7 @@ class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose>
 \end{lstlisting}
 
 This implements vertex update and edge error calculation. The following is to combine them into a graph optimization problem:
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp（片段）]
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp (part)]
 void bundleAdjustmentG2O(
 const VecVector3d &points_3d,
 const VecVector2d &points_2d,
@@ -1429,9 +1405,9 @@ Sophus::SE3d &pose) {
 }
 \end{lstlisting}
 
-The program is similar to g2o in lecture 6. We first declare the g2o graph optimizer, and configure the optimization solver and gradient descent method. Then based on the estimated feature points, put the pose and spatial points into the graph. Finally, the optimization function is called. The partial output of the run is as follows:
+The program is similar to g2o in lecture 6. We first declare the g2o graph optimizer and configure the solver and gradient descent method. Then, based on the estimated feature points, we put the pose and spatial points into the graph. Finally, the optimization function is called. The partial output of the run is as follows:
 
-\begin{lstlisting}[language=sh,caption=终端输入：]
+\begin{lstlisting}[language=sh,caption=Terminal output:]
 ./build/pose_estimation_3d2d 1.png 2.png 1_depth.png 2_depth.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
@@ -1475,26 +1451,27 @@ pose estimated by g2o =
 solve pnp by g2o cost time: 0.000923095 seconds.
 \end{lstlisting}
 
-Those three results are basically the same. In terms of efficiency, the Gauss-Newton method implemented by ourselves ranked first with 0.15 milliseconds, followed by OpenCV's PnP, and finally the implementation of g2o. Nonetheless, the time for the three is within 1 millisecond, which shows that the pose estimation algorithm does not really consume computational effort.
 
-Bundle Adjustment is common. It may not be limited to two images. We can put the poses and spatial points matched by multiple images for iterative optimization, and even put the entire SLAM process in. That approach is large in scale and mainly used in the backend. We will deal with this problem again in Lecture 10. At the frontend, we usually consider a small Bundle Adjustment problem regarding local camera poses and feature points, aiming to solve and optimize it in real time.
+Those three results are basically the same. In terms of efficiency, the Gauss-Newton method implemented by ourselves ranked first with 0.15 milliseconds, followed by OpenCV's PnP, and finally, the implementation of g2o. Nonetheless, the time usages are all within 1 millisecond, which shows that the pose estimation algorithm does not really consume computational effort.
+
+Bundle Adjustment is a common method rather than a special task. It may not be limited to two images. We can put the poses, and spatial points matched by multiple images for iterative optimization and even put the entire SLAM process in. We will deal with the large-scale problem again in lecture \ref{cpt:9}. We usually consider a small bundle adjustment problem regarding local camera poses and feature points at the frontend, aiming to solve and optimize it in real-time.
 
 \section{3D−3D：Iterative Closest Point (ICP)}
 In the end, we will introduce the 3D-3D pose estimation problem. Suppose we have a set of matched 3D points (for example, we matched two RGB-D images):
 \[
 \mathbf{P} = \{ \mathbf{p}_1, \cdots, \mathbf{p}_n \}, \quad \mathbf{P}' = \{ \mathbf{p}_1', \cdots, \mathbf{p}_n'\},
 \]
-Now, we want to find an Euclidean transformation $\mathbf{R}, \mathbf{t}$, which makes \footnote{slightly different from the symbols in the previous two chapters. You can consider $\mathbf{p}_i$ as the data in the second image, and $\mathbf{p}_i'$ as the data in the first image, and consistently geting $ \mathbf{R},\mathbf{t}$.}:
+Now, we want to find an Euclidean transformation $\mathbf{R}, \mathbf{t}$, which is \footnote{The notation in this section is slightly different from the symbols in the previous two sections. You can consider $\mathbf{p}_i$ as the data in the second image, and $\mathbf{p}_i'$ as the data in the first image, and consistently geting $ \mathbf{R},\mathbf{t}$.}:
 \[
 \forall i, \mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}.
 \]
 
-This problem can be solved by Iterative Closest Point (ICP). The camera model does not appear in the 3D−3D pose estimation, meaning that when only the transformation between two sets of 3D points is considered, it has nothing to do with the camera. Therefore, ICP is also feasible in laser SLAM, but since the features in laser data are not rich enough, it is hard to know the \textbf{matching relationship} between the two point sets, and we can only consider the two closest points to be the same. So this method is called iterative closest point. In vision, the feature points provide us with a better matching relationship, so the whole problem becomes simpler. In RGB-D SLAM, the camera pose can be estimated in this way. In the following, we use ICP to refer to the motion estimation problem between the two sets of \textbf{matched} points.
+This problem can be solved by the iterative closest point (ICP). The camera model does not appear in the 3D−3D pose estimation, meaning that when only the transformation between two sets of 3D points is considered, it has nothing to do with the camera. Therefore, ICP is also feasible in lidar SLAM. But since lidar features are not rich enough, it is hard to know the matching relationship between the two pointsets.  We can only assume the closest points are the same. So this method is called the iterative closest point. The feature points provide us with a better matching relationship in the computer vision, so the whole problem becomes easier to solve. In RGB-D SLAM, the camera pose can also be estimated in this way. In the following, we use ICP to refer to the motion estimation problem between the two sets of \textbf{matched} points.
 
-Similar to PnP, the solution to ICP can be divided into two ways: using linear algebra (mainly SVD), and using nonlinear optimization (similar to Bundle Adjustment). They will be introduced separately below.
+Similar to PnP, the solution to ICP can be divided into two ways: using linear algebra (mainly SVD) and using nonlinear optimization (similar to Bundle Adjustment). They will be introduced separately below.
 
-\subsection{Using linear algebra (SVD)}
-First look at SVD, on behalf of the algebraic method. According to the ICP problem described above, we first define the error term for the point $i$ as:
+\subsection{Using Linear Algebra (SVD)}
+First, let's look at the SVD on behalf of the algebraic method. According to the ICP problem described above, we first define the error term for the point $i$ as:
 \begin{equation}
 \mathbf{e}_i = \mathbf{p}_i - (\mathbf{R} \mathbf{p}_i' + \mathbf{t} ) .
 \end{equation}
@@ -1504,12 +1481,12 @@ Then, construct a least-square problem to find the $\mathbf{R}, \mathbf{t}$ by m
 \mathop {\min }\limits_{\mathbf{R}, \mathbf{t}} \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{\mathbf{p}_i} - \left( {\mathbf{R}{\mathbf{p}_i}' + \mathbf{t}} \right)} \right)} \|^2_2.
 \end{equation}
 
-First, define the centroids of the two sets of points as:
+To solve this problem, we define the centroids of the two sets of points as:
 \begin{equation}
 \mathbf{p} = \frac{1}{n}\sum_{i=1}^n ( \mathbf{p}_i ), \quad \mathbf{p}' = \frac{1}{n} \sum_{i=1}^n ( \mathbf{p}_i' ). 
 \end{equation}
 
-Note that the centroid is not subscripted. Then, in the error function:
+The centroids are not subscripted. Then, in the error function:
 \begin{align*}
 \begin{array}{ll}
 \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\mathbf{p}_i} - \left( {\mathbf{R}{ \mathbf{p}_i}' + \mathbf{t}} \right)} \right\|}^2}}  & = \frac{1}{2}\sum\limits_{i = 1}^n {{{\left\| {{\mathbf{p}_i} - \mathbf{R}{\mathbf{p}_i}' - \mathbf{t} - \mathbf{p} + \mathbf{Rp}' + \mathbf{p} - \mathbf{Rp}'} \right\|}^2}} \\
@@ -1528,7 +1505,7 @@ Carefully observe those two terms, we find that the first term is only related t
 
 \begin{mdframed}
 \begin{enumerate}
-	\item Calculate the centroid positions of the two groups of points $\mathbf{p}, \mathbf{p}'$, and then calculate the \textbf{de-centroid coordinates} of each point:
+	\item Calculate the centroids of the two groups of points $\mathbf{p}, \mathbf{p}'$, and then calculate the \textbf{de-centroid coordinates} of each point:
 	\[
 	\mathbf{q}_i = \mathbf{p}_i - \mathbf{p}, \quad \mathbf{q}_i' = \mathbf{p}_i' - \mathbf{p}'.
 	\]
@@ -1544,14 +1521,14 @@ Carefully observe those two terms, we find that the first term is only related t
 \end{enumerate}
 \end{mdframed}
 
-We find that once the rotation between the two sets of points is found, and the translation is easy to obtain. So we focus on the calculation of $\mathbf{R}$. Expand the error term about $\mathbf{R}$, get:
+We find that once the rotation between the two sets of points is found, and the translation is easy to obtain. So we focus on the calculation of $\mathbf{R}$. Expand the error term about $\mathbf{R}$, we get:
 \begin{equation}
- \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\mathbf{q}_i} - \mathbf{R} \mathbf{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \mathbf{q}_i^T \mathbf{q}_i + \mathbf{q}_i^{ \prime \mathrm{T}}  \mathbf{R}^T \mathbf{R} \mathbf{q}^\prime_i - 2\mathbf{q}_i^T \mathbf{R} \mathbf{q}^\prime_i.
+ \frac{1}{2}\sum\limits_{i = 1}^n \left\| {{\mathbf{q}_i} - \mathbf{R} \mathbf{q}_i' } \right\|^2 = \frac{1}{2}\sum\limits_{i = 1}^n \underbrace{\mathbf{q}_i^T \mathbf{q}_i}_{\text{not relavant}} + \mathbf{q}_i^{ \prime \mathrm{T}} \underbrace{\mathbf{R}^T \mathbf{R}}_{=\mathbf{I}} \mathbf{q}^\prime_i - 2\mathbf{q}_i^T \mathbf{R} \mathbf{q}^\prime_i.
 \end{equation}
 
-The first item is not relevant to $\mathbf{R}$. The second item can also be ignored since $\mathbf{R}^T\mathbf{R}=\mathbf{I}$. Therefore, the actual optimization objective function becomes the simplest form of
+The first item is not relevant to $\mathbf{R}$. The second item can also be ignored since $\mathbf{R}^T\mathbf{R}=\mathbf{I}$. Therefore, the actual optimization objective function becomes the form of:
 \begin{equation}
-\sum\limits_{i = 1}^n - \mathbf{q}_i^T \mathbf{R} \mathbf{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \mathbf{R} \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \right) = - \mathrm{tr} \left( \mathbf{R} \sum\limits_{i = 1}^n \mathbf{q}_i^{\prime} \mathbf{q}^{\mathrm{T}}_i \ \right).
+\sum\limits_{i = 1}^n - \mathbf{q}_i^T \mathbf{R} \mathbf{q}^\prime_i = \sum\limits_{i = 1}^n -\mathrm{tr} \left( \mathbf{R} \mathbf{q}_i^{\prime} \mathbf{q}^T_i \right) = - \mathrm{tr} \left( \mathbf{R} \sum\limits_{i = 1}^n \mathbf{q}_i^{\prime} \mathbf{q}^T_i \ \right).
 \end{equation}
 
 Next, we introduce how to solve the optimal $\mathbf{R}$ in the above problem through SVD. The proof of optimality is more complicated, and interested readers can refer to the literature \cite{Arun1987, PomerleauColasSiegwart2015}. To find $\mathbf{R}$, first define the matrix:
@@ -1561,18 +1538,18 @@ Next, we introduce how to solve the optimal $\mathbf{R}$ in the above problem th
 
 $\mathbf{W}$ is a $3 \times 3$ matrix. Performing SVD decomposition on $\mathbf{W}$, we get:
 \begin{equation}
-\mathbf{W} = \mathbf{U \Sigma V}^T.
+\mathbf{W} = \mathbf{U} \boldsymbol{\Sigma} \mathbf{V}^T.
 \end{equation}
 
-$\boldsymbol{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\mathbf{U}$ and $\mathbf{V}$ are diagonal matrices. When $\mathbf{W}$ is of full rank, $\mathbf{R}$ is
+$\boldsymbol{\Sigma}$ is a diagonal matrix composed of singular values, the diagonal elements are arranged from large to small, and $\mathbf{U}$, $\mathbf{V}$ are diagonal matrices. When $\mathbf{W}$ is of full rank, $\mathbf{R}$ is:
 \begin{equation}
 \mathbf{R} = \mathbf{U} \mathbf{V}^T.
 \end{equation}
 
-Once solving $\mathbf{R}$, use the equation \eqref{eq:pnp-solve-t} to solve $\mathbf{t}$. If the determinant of $\mathbf{R}$ is negative, then $-\mathbf{R}$ is taken as the optimal value.
+Once solving $\mathbf{R}$, we can use the equation \eqref{eq:pnp-solve-t} to solve $\mathbf{t}$. If the determinant of $\mathbf{R}$ is negative, then $-\mathbf{R}$ is taken as the optimal value.
 
 \subsection{Using non-linear optimization}
-Another way to solve ICP is to use non-linear optimization to find the optimal value iteratively. This method is similar to the PnP we described earlier. When expressing the poses in Lie algebra, the objective function can be written as
+Another way to solve ICP is to use nonlinear optimization to find the optimal value iteratively. This method is similar to the PnP we described earlier. When expressing the poses in Lie algebra, the objective function can be written as
 \begin{equation}
 \mathop {\min }\limits_{\boldsymbol{\xi}} = \frac{1}{2} \sum\limits_{i = 1}^n\| {\left( {{{\mathbf{p}}_i} - \exp \left( \boldsymbol{\xi}^\wedge \right) {\mathbf{p}}'_i} \right)} \|^2_2.
 \end{equation}
@@ -1582,14 +1559,14 @@ The derivative of a single error term with respect to the pose has been derived 
 \frac{{\partial \mathbf{e}}}{{\partial \delta \boldsymbol{\xi} }} =  - {\left( {\exp \left( {{ \boldsymbol{\xi} ^ \wedge }} \right){{\mathbf{p}}_i}'} \right)^ \odot }.
 \end{equation}
 
-Therefore, in nonlinear optimization, it only needs to iterate continuously to find the minimum value. Moreover, it can be proved that  {\cite{Barfoot2016}}, the ICP problem has a unique solution or an infinite number of solutions. In the case of a unique solution, as long as the minimum value solution can be found, then \textbf{this minimum value is the global optimal value}. So the local minimum is always the global minimum. This also means that the initial value of the ICP solution can be arbitrarily selected. This is a big advantage of solving ICP when the points have been matched already.
+Therefore, in nonlinear optimization, it only needs to iterate continuously to find the minimum value. Moreover, it can be proved that  {\cite{Barfoot2016}} the ICP problem has a unique solution or an infinite number of solutions. In the case of a unique solution, as long as the minimum value solution can be found, this minimum value is the global minimum. This also means that the initial value of the ICP solution can be arbitrarily selected. This is a big advantage of solving ICP when the points have been matched already.
 
-It should be noted that the ICP we are talking about here refers to the problem of pose estimation when the matching is given by the image features. In the case of known matching, this least-squares problem actually has an analytical solution  {\cite{Faugeras1986, Horn1987, Sharp2002}}, so iterative optimization is not necessary. ICP researchers tend to be more concerned about the unknown matching situation. So, why do we introduce optimization-based ICP? This is because, in some cases, such as in RGB-D SLAM, the depth of a pixel may or may not be measured, so we can combine PnP and ICP optimization: For feature points with known depth, model their 3D-3D errors; for feature points with unknown depths, model 3D-2D reprojection errors. Therefore, all errors can be considered in the same problem, making the solution more convenient.
+It should be noted that the ICP we are talking about here refers to the problem of pose estimation when the matching is given by the image features. In the case of known matching, this least-squares problem actually has an analytical solution  {\cite{Faugeras1986, Horn1987, Sharp2002}}, so iterative optimization is not necessary. ICP researchers tend to be more concerned about the unknown matching situation. So, why do we introduce optimization-based ICP? Because in some cases, such as in RGB-D SLAM, the depth of a pixel may or may not be measured, so we can combine PnP and ICP optimization. For feature points with known depth, model their 3D-3D errors; for feature points with unknown depths, model 3D-2D reprojection errors. Therefore, all errors can be considered in the same problem, making the solution more convenient.
 
 \section{Practice: Solving ICP}
 \subsection{Using SVD}
-Let's demonstrate how to use SVD and nonlinear optimization to solve ICP. In this section, we use two RGB-D images to obtain two sets of 3D points through feature matching, and finally use ICP to calculate their pose transformation. Since OpenCV does not currently have a method to calculate two sets of ICPs with matching points, and its principle is not complicated, we will implement an ICP by ourselves.
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose\_estimation\_3d3d.cpp（片段）]
+Let's demonstrate how to use SVD and nonlinear optimization to solve ICP. In this section, we use two RGB-D images to obtain two sets of 3D points through feature matching, and finally, we use ICP to calculate their pose transformation. Since OpenCV does not currently have a method to calculate two sets of ICPs with matching points, and its principle is not complicated, we will implement an ICP by ourselves.
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose\_estimation\_3d3d.cpp (part)]
 void pose_estimation_3d3d(
 const vector<Point3f> &pts1,
 const vector<Point3f> &pts2,
@@ -1639,9 +1616,9 @@ Mat &R, Mat &t) {
 }
 \end{lstlisting}
 
-The implementation of ICP is consistent with the previous theoritical part. We call Eigen for SVD, and then calculate the $\mathbf{R}, \mathbf{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}$, here is $\mathbf{R}, \mathbf{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
+The implementation of ICP is consistent with the previous theoretical part. We call Eigen for SVD and then calculate the $\mathbf{R}, \mathbf{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}$, here is $\mathbf{R}, \mathbf{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
 
-\begin{lstlisting}[language=sh,caption=终端输入：]
+\begin{lstlisting}[language=sh,caption=Terminal output:]
 ./build/pose_estimation_3d3d 1.png 2.png 1_depth.png 2_depth.png
 -- Max dist : 95.000000 
 -- Min dist : 4.000000 
@@ -1671,15 +1648,14 @@ t_inv = [-0.1429199667309695;
 0.03832465717628181]
 \end{lstlisting}
 
-Readers can compare the difference between ICP and PnP, and the motion estimation results of epipolar geometry. We can conclude that we are using more and more information (no depth - the depth of one image - the depth of two images). Therefore, when the depth is accurate, the estimates will be more and more accurate. However, due to the noise in Kinect's depth map and the possibility of data loss, we have to discard some feature points without depth data. This may cause the estimation of ICP to be inaccurate, and if too many feature points are discarded, it may cause a situation where motion estimation cannot be performed due to too few feature points.
+Readers can compare the difference between ICP and PnP and the motion estimation results of epipolar geometry. We are using more and more information in this process (no depth $\rightarrow$ the depth of one image $\rightarrow$ the depth of two images). Therefore, when the depth is accurate, the estimates will be more and more accurate. However, due to the noise in Kinect's depth map and the possibility of data loss, we have to discard some feature points without depth data. This may cause the estimation of ICP to be inaccurate, and if too many feature points are discarded, it may cause a situation where motion estimation cannot be performed due to too few feature points.
 
 \subsection{Using non-linear optimization}
-Now consider using nonlinear optimization to calculate ICP. We still use Lie algebra to optimize the camera pose. The RGB-D camera can observe the 3D position of the landmarks every time, thereby generating 3D observation data. We use the VertexPose in the previous practice, and then define the unary edges of 3D-3D:
-\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose\_estimation\_3d3d.cpp]
-
+Now consider using nonlinear optimization to calculate ICP. We still use Lie algebra to optimize the camera pose. The RGB-D camera can observe the 3D position of the landmarks every time, thereby generating 3D observation data. We use the VertexPose in the previous practice and then define the unary edges of 3D-3D:
+\begin{lstlisting}[language=c++,caption=slambook2/ch7/pose\_estimation\_3d3d.cpp (part)]
 /// g2o edge
 class EdgeProjectXYZRGBDPoseOnly : public g2o::BaseUnaryEdge<3, Eigen::Vector3d, VertexPose> {
-	public:
+public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	
 	EdgeProjectXYZRGBDPoseOnly(const Eigen::Vector3d &point) : _point(point) {}
@@ -1701,16 +1677,16 @@ class EdgeProjectXYZRGBDPoseOnly : public g2o::BaseUnaryEdge<3, Eigen::Vector3d,
 	
 	bool write(ostream &out) const {}
 	
-	protected:
+protected:
 	Eigen::Vector3d _point;
 };
 \end{lstlisting}
 
-They are unary edges, written similar to the g2o::EdgeSE3ProjectXYZ mentioned earlier, but the observation has changed from 2 to 3 dimensions, there is no camera model involved, and only one node is related. Please pay attention to the form of the Jacobian matrix here, it must be consistent with our previous derivation. The Jacobian matrix gives the derivative of the camera pose and is $3 \times 6$.
+They are unary edges, similar to the g2o::EdgeSE3ProjectXYZ mentioned earlier, but the observation has changed from 2 to 3 dimensions. There is no camera model involved, and only one vertex is related. Please pay attention to the form of the Jacobian matrix here. It must be consistent with our previous derivation. The Jacobian matrix gives the derivative of the camera pose and is $3 \times 6$.
 
-The code for using g2o for optimization is similar, we just set the nodes and edges for graph optimization. Readers are suggested check the source file for this part of the code, which is not listed here. Now, let’s take a look at the results of the optimization:
+The code for using g2o for optimization is similar. We just set the nodes and edges for graph optimization. Readers are suggested to check the source file for this part of the code, which is not listed here. Now, let’s take a look at the results of the optimization:
 
-\begin{lstlisting}[language=sh, caption=终端输出：]
+\begin{lstlisting}[language=sh, caption=Terminal output:]
 iteration= 0	 chi2= 1.811539	 time= 1.7046e-05	 cumTime= 1.7046e-05	 edges= 74	 schur= 0
 iteration= 1	 chi2= 1.811051	 time= 1.0422e-05	 cumTime= 2.7468e-05	 edges= 74	 schur= 0
 iteration= 2	 chi2= 1.811050	 time= 9.589e-06	 cumTime= 3.7057e-05	 edges= 74	 schur= 0
@@ -1728,34 +1704,34 @@ T=
 
 We found that the overall error has become stable after only one iteration, indicating that the algorithm has converged after only one iteration. From the result of the pose, it can be seen that it is almost the same as the pose calculated by the previous SVD, which shows that SVD has already given an analytical solution to the optimization problem. Therefore, in this practice, it can be considered that the result given by SVD is the optimal value of the camera pose.
 
-It should be noted that in the practice of ICP, we used feature points that have depth readings in both images. However, in fact, as long as the depth of one of the images is determined, we can use errors similar to PnP to add them to the optimization. In addition to the camera pose, considering the spatial points as optimization variables is also a way to solve the problem. We should be clear that the actual solution is very flexible and does not need to be bound to a certain fixed form. If you consider points and cameras at the same time, the whole problem becomes \textbf{more flexible}, and you may get other solutions. For example, you can make the camera rotate less and move the point more. This reflects that in Bundle Adjustment, we would like to have as many constraints as possible, because multiple observations will bring more information and enable us to estimate each variable more accurately.
+It should be noted that in the practice of ICP, we used feature points that have depth readings in both images. However, as long as the depth of one of the images is determined, we can use errors similar to PnP to add them to the optimization. In addition to the camera pose, considering the spatial points as optimization variables is also a way to solve it. We should be clear that the actual solution is very flexible and does not need to be bound to a certain fixed form. If you consider points and cameras simultaneously, the whole problem becomes more flexible, and you may get other solutions. For example, you can make the camera rotate less and move the point more. This reflects that we would like to have as many constraints as possible in bundle adjustment because multiple observations will bring more information and enable us to estimate each variable more accurately.
 
 \section{Summary}
-This chapter introduces several important issues in visual odometry based on feature points. include:
+This chapter introduces several important issues in visual odometry based on feature points, including:
 
 \begin{enumerate}
 	\item How the feature points are extracted and matched.
 	\item How to estimate camera motion through 2D-2D feature points.
 	\item How to estimate the spatial position of a point from a 2D−2D match.
-	\item 3D−2D PnP problem, its linear solution and Bundle Adjustment solution.
-	\item 3D−3D ICP problem, its linear solution and Bundle Adjustment solution.
+	\item 3D−2D PnP problem and its linear solution and bundle adjustment solution.
+	\item 3D−3D ICP problem and its linear solution and bundle adjustment solution.
 \end{enumerate}
 
-This chapter is complicated in content and combines the basic knowledge of the previous lectures. If readers find it difficult to understand, they can go back to review the previous knowledge. It is best to do the practice yourself to entirely understand the content of the motion estimation.
+This chapter is complicated in content and combines the basic knowledge of the previous lectures. If readers find it difficult to understand, please go back to review the previous chapters. It is best to do the practice yourself to entirely understand the content of the motion estimation.
 
-What needs to be mentioned here is we have omitted a lot of discussion about some special situations. For example, what happens if the given feature points are coplanar during the solution of the epipolar geometry (this is mentioned in the homography matrix $\mathbf{H}$)? What happens to collinear? Given such a solution in PnP and ICP, what will happen? Can the solution algorithm recognize these special cases and report that the resulting solution may be unreliable? Can you give the estimated uncertainty of $\mathbf{T}$? Although they are all worthy of research and exploration, the discussion on them is more suitable in specific papers. The goal of this book is extensive knowledge coverage and basic knowledge. We will not expand on these issues for now. At the same time, these situations rarely occur in engineering. If you care about these rare situations, you can read papers such as \cite{Hartley2003}.
+What needs to be mentioned here is we have omitted a lot of discussion about some special situations. For example, what happens if the given feature points are coplanar during the epipolar geometry solution (this is mentioned in the homography matrix $\mathbf{H}$)? What happens to collinear? If we solve such a solution in PnP and ICP, what will happen? Can the algorithms recognize these exceptional cases and report that the resulting solution may be unreliable? Can you give the estimated uncertainty of $\mathbf{T}$? Although they are all worthy of research and exploration, their discussion is more suitable in specific papers. The goal of this book is to cover basic knowledge of visual SLAM. We will not expand on these issues for now. At the same time, these situations rarely occur in engineering. If you care about these rare situations, you can read books such as \cite{Hartley2003}.
 
 \section*{Exercises}
 \begin{enumerate}
-	\item In addition to the ORB feature points introduced in this book, what other feature points do you know? Please elaborate the principles of SIFT or SURF, and compare their advantages and disadvantages with ORB.
-	\item Design a program to call other types of feature points in OpenCV. Compare their time spent on your machine when extracting 1000 feature points.
+	\item In addition to the ORB feature points introduced in this book, what other feature points do you know? Please elaborate on the principles of SIFT or SURF, and compare their advantages and disadvantages with ORB.
+	\item Write a program to call other types of feature points in OpenCV. Compare their time spent on your machine when extracting 1000 feature points.
 	\item[\optional] We found that the ORB feature points provided by OpenCV are not evenly distributed in the image. Can you find or propose a way to make the distribution of feature points more evenly?
 	\item Investigate why FLANN can quickly handle matching problems. In addition to FLANN, what other ways to accelerate matching?
 	\item Substitute the EPnP used in the demo program with other PnP methods and investigate their working principles.
-	\item In PnP optimization, taking the observation of the first camera into consideration, how should the problem/program be formed? How will the final result change?
-	\item In the ICP program, if the spatial point is also considered as an optimization variable, how should the program be written? How will the final result change?
+	\item In PnP optimization, taking the first camera's observation into consideration, how should the problem/program be formed? How will the final result change?
+	\item In the ICP program, if the spatial points are also considered optimization variables, how should the program be written? How will the final result change?
 	\item[\optional] In the feature point matching, mismatches will inevitably be encountered. What happens if we put the wrong match into PnP or ICP? What methods can you think of to avoid mismatches?
-	\item[\optional] Use the SE3 class in Sophus to design the nodes and edges of g2o by yourself to implement the optimization of PnP and ICP.
+	\item[\optional] Use the SE3 class in Sophus to write the nodes and edges of g2o by yourself and implement the optimization of PnP and ICP.
 	\item[\optional] Implement the optimization of PnP and ICP in Ceres.
 \end{enumerate}
 
