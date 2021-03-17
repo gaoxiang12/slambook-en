@@ -7,7 +7,7 @@
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
 		\item Learn how to formulate the backend problem into a filter or least-square optimization problem.
 		\item Learn how to use the sparse structure in the bundle adjustment problem. 
-		\item Solve a BA problem with g2o and Ceres.
+		\item Solve a BA problem with \textit{g2o} and \textit{Ceres}.
 	\end{enumerate}
 \end{mdframed}
 
@@ -283,7 +283,7 @@ So, is EKF enough for modern SLAM systems? Why are we using optimization approac
 	Finally, filter methods such as EKF have no outlier detection mechanism, which causes the system to diverge when there are outliers. Outliers are very common in visual SLAM: regardless of feature matching or optical flow method, it is easy to track or match to the wrong point. Lack of an outlier detection mechanism will make the system very unstable in practice.
 \end{enumerate}
 
-Due to these obvious shortcomings of EKF, we usually think that with the same amount of calculation, nonlinear optimization can achieve better results than the filters in terms of accuracy and robustness  {\cite{Strasdat2012}}. Let's discuss the backend based on nonlinear optimization in the following sections. We will mainly introduce the graph optimization and demonstrate the backend optimization with g2o and Ceres.
+Due to these obvious shortcomings of EKF, we usually think that with the same amount of calculation, nonlinear optimization can achieve better results than the filters in terms of accuracy and robustness  {\cite{Strasdat2012}}. Let's discuss the backend based on nonlinear optimization in the following sections. We will mainly introduce the graph optimization and demonstrate the backend optimization with \textit{g2o} and \textit{Ceres}.
 
 \section{Bundle Adjustment and Graph Optimization}
 If you have been working on visual 3D reconstruction, you should be familiar with this concept. The so-called Bundle Adjustment refers to optimizing both camera parameters (intrinsic and extrinsic) and 3D landmarks with images. Consider the bundles of light rays emitted from 3D points. They are projected into the image planes of several cameras and then detected as feature points. The purpose of optimization can be explained as to \textit{adjust} the camera poses and the 3D points, to ensure the projected 2D features (bundles) match the detected results {\cite{Triggs2000}}.
@@ -659,16 +659,16 @@ We see that when the error of $e$ is greater than a certain threshold $\delta$, 
 	\label{fig:huber}
 \end{figure}
 
-In addition to Huber kernels, there are also Cauchy kernels, Tukey kernels, and so on. Please check which kernel functions are supported in g2o and Ceres.
+In addition to Huber kernels, there are also Cauchy kernels, Tukey kernels, and so on. Please check which kernel functions are supported in \textit{g2o} and \textit{Ceres}.
 
 \subsection{Summary}
 In this section, we focus on the sparsity problem in BA. However, in practice, most libraries have implemented the detailed operations for us, and what we need to do is mainly to construct the Bundle Adjustment problem, set the marginalized part, and then call the dense or sparse matrix solver to optimize the variables. If readers want to have a deeper understanding of BA, please refer to the \cite{Triggs2000} or other related papers. 
 
-In the following two sections, we will use the Ceres and g2o libraries to do Bundle Adjustment. In order to show the difference between them, we will use a public data set BAL {\cite{bundleadjustmentinlarge}}, and use the common read and write code.
+In the following two sections, we will use the Ceres and \textit{g2o} libraries to do Bundle Adjustment. In order to show the difference between them, we will use a public data set BAL {\cite{bundleadjustmentinlarge}}, and use the common read and write code.
 
 \section{Practice: BA with Ceres}
 \subsection{BAL Dataset}
-We use the BAL data set to demonstrate the BA experiments. The BAL data set provides several scenes. The camera and landmark information in each scene are given by a text file. We use the file problem-16-22106-pre.txt as an example. This file stores the BA problem information in a line-by-line manner. For the detailed format, see \url{https://grail.cs.washington.edu/projects/bal}. We use the BALProblem class defined in common.h to read in the content of the file, and then use Ceres and g2o to solve them.
+We use the BAL data set to demonstrate the BA experiments. The BAL data set provides several scenes. The camera and landmark information in each scene are given by a text file. We use the file problem-16-22106-pre.txt as an example. This file stores the BA problem information in a line-by-line manner. For the detailed format, see \url{https://grail.cs.washington.edu/projects/bal}. We use the BALProblem class defined in common.h to read in the content of the file, and then use Ceres and \textit{g2o} to solve them.
 
 It should be noted that the BAL data set has some special features:
 \begin{enumerate}
@@ -812,13 +812,13 @@ The overall error should continue to decrease as the number of iterations increa
 
 \begin{figure}[!htp]
 	\centering
-	\includegraphics[width=1.0\textwidth]{backend1/g2o-ba}
+	\includegraphics[width=1.0\textwidth]{backend1/g2o-BA}
 	\caption{Visualized point cloud before and after optimization. Left side: the initial value before optimization; Right side: the optimized value.}
 	\label{fig:g2o-BA}
 \end{figure}
 
-\section{Practice: BA with g2o}
-Let's consider how to use g2o to solve this BA problem. As mentioned before, g2o uses a graph model to describe the problem's structure, so we need to use nodes to represent cameras and landmarks and then use edges to represent observations between them. We still use custom defined vertices and edges instead of built-in edges. For cameras and landmarks, we can define the following structure and use the override keyword to indicate the virtual functions:
+\section{Practice: BA with \textit{g2o}}
+Let's consider how to use \textit{g2o} to solve this BA problem. As mentioned before, \textit{g2o} uses a graph model to describe the problem's structure, so we need to use nodes to represent cameras and landmarks and then use edges to represent observations between them. We still use custom defined vertices and edges instead of built-in edges. For cameras and landmarks, we can define the following structure and use the override keyword to indicate the virtual functions:
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch9/bundle_adjustment_g2o.cpp (part)]
 struct PoseAndIntrinsics {
@@ -918,7 +918,7 @@ public g2o::BaseBinaryEdge<2, Vector2d, VertexPoseAndIntrinsics, VertexPoint> {
 };
 \end{lstlisting}
 
-We define the rotation, translation, focal length, and distortion parameters in the same camera vertex and then define the camera's observation edge and the landmark. Here we do not implement the Jacobian calculation function of the edge \footnote{You can implement it by yourself if interested. Here we just want to make a fair comparison since we do not provide Jacobians in Ceres version.}, so g2o will automatically provide a numerical calculation of Jacobian. Finally, according to the data in BAL, we can set up the optimization problem of g2o:
+We define the rotation, translation, focal length, and distortion parameters in the same camera vertex and then define the camera's observation edge and the landmark. Here we do not implement the Jacobian calculation function of the edge \footnote{You can implement it by yourself if interested. Here we just want to make a fair comparison since we do not provide Jacobians in Ceres version.}, so \textit{g2o} will automatically provide a numerical calculation of Jacobian. Finally, according to the data in BAL, we can set up the optimization problem of g2o:
 \begin{lstlisting}[language=c++,caption=slambook2/ch9/bundle_adjustment_g2o.cpp (part)]
 void SolveBA(BALProblem &bal_problem) {
 	const int point_block_size = bal_problem.point_block_size();
@@ -989,20 +989,20 @@ void SolveBA(BALProblem &bal_problem) {
 }
 \end{lstlisting}
 
-The above defines the nodes and edges used in this problem. Next, we need to generate some nodes and edges based on the actual data in the BALProblem class and hand them to g2o for optimization. It is worth noting that to take full advantage of sparse BA, we must set the setMarginalized function in the landmarks here. The big difference between g2o and Ceres is that when using sparse optimization, g2o must manually set which vertices are marginalized; otherwise, it will report a runtime error (readers can try to comment out the v->setMarginalized(true) line). The rest is similar to the Ceres version, so that we won't introduce more. The g2o experiment will also output point clouds before and after optimization for comparison and review.
+The above defines the nodes and edges used in this problem. Next, we need to generate some nodes and edges based on the actual data in the BALProblem class and hand them to \textit{g2o} for optimization. It is worth noting that to take full advantage of sparse BA, we must set the setMarginalized function in the landmarks here. The big difference between \textit{g2o} and Ceres is that when using sparse optimization, \textit{g2o} must manually set which vertices are marginalized; otherwise, it will report a runtime error (readers can try to comment out the v->setMarginalized(true) line). The rest is similar to the Ceres version, so that we won't introduce more. The g2o experiment will also output point clouds before and after optimization for comparison and review.
 
 \section{Summary}
-This lecture discusses the state estimation problem and the solution of graph optimization in depth. We see that SLAM can be regarded as a state estimation problem in the classic model. If we assume Markov property and only consider the current state, we get a filter model represented by EKF. If not, we can also choose to consider all motions and observations, which constitute a least-squares problem. In the case of only observation equations, this problem is called BA and can be solved by nonlinear optimization methods. We carefully discussed the sparsity problem in the solution process and pointed out the connection between the problem and graph optimization. Finally, we demonstrated how to use the g2o and Ceres libraries to solve the same optimization problem so that readers have an intuitive understanding of BA.
+This lecture discusses the state estimation problem and the solution of graph optimization in depth. We see that SLAM can be regarded as a state estimation problem in the classic model. If we assume Markov property and only consider the current state, we get a filter model represented by EKF. If not, we can also choose to consider all motions and observations, which constitute a least-squares problem. In the case of only observation equations, this problem is called BA and can be solved by nonlinear optimization methods. We carefully discussed the sparsity problem in the solution process and pointed out the connection between the problem and graph optimization. Finally, we demonstrated how to use the \textit{g2o} and Ceres libraries to solve the same optimization problem so that readers have an intuitive understanding of BA.
 
 \section*{Exercises}
 \begin{enumerate}
 	\item Derive \eqref{eq:kalman-K-another} using Sherman-Morrison-Woodbury identities \cite{Sherman1950, Barfoot2016}.
 	\item 
-	Compare the final cost of g2o and Ceres after optimization. Discuss why they are siminlar in Meshlab by have different numerical values. 
+	Compare the final cost of \textit{g2o} and Ceres after optimization. Discuss why they are siminlar in Meshlab by have different numerical values.
 	\item 
 	Search for methods that can provide partial Schur elimination in Ceres, and show the difference. 
 	\item Show that the $\mathbf{S}$ matrix is semi-definite. 
-	\item Read \cite{Kummerle2011} and discuss the difference between the kernel functions in g2o and the loss function in Ceres. 
+	\item Read \cite{Kummerle2011} and discuss the difference between the kernel functions in \textit{g2o} and the loss function in Ceres.
 	\item[\optional] In the practice part, we optimize the pose and intrinsics parametrized with $f, k_1, k_2$. Please use the full intrinsic and distortion model in lecture 5 and modify the programs to complete the optimization. 
 \end{enumerate}
 

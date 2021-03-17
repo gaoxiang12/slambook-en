@@ -7,7 +7,7 @@
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
 		\item Study the principle of optical flow.
 		\item Learn how to use the direct method to estimate the camera pose.
-        \item Use g2o to implement the direct method.
+        \item Use \textit{g2o} to implement the direct method.
 	\end{enumerate}
 \end{mdframed}
 
@@ -535,7 +535,7 @@ It can be seen that the reconstruction from sparse to dense can be calculated by
 \subsection{Single-layer Direct Method}
 Now, let's demonstrate how to use the sparse direct method. Since this book does not involve GPU programming, the dense direct method is omitted. Meanwhile, to keep the program simple, we use depth data instead of monocular data to omit the monocular depth recovery part. The depth recovery based on feature points (i.e., triangulation) has been introduced in the previous chapter, and the depth recovery based on block matching will be introduced later. In this section, we will consider the sparse direct method of binocular cameras.
 
-Since solving the direct method is finally equivalent to solving an optimization problem, we can use optimization libraries such as g2o or Ceres to help us or implement the Gauss-Newton method by ourselves. Like the optical flow, the direct method can also be divided into a single-layer direct method and a pyramid-like multi-layer direct method. We also first implement the single-layer direct method and then extend it to multiple layers.
+Since solving the direct method is finally equivalent to solving an optimization problem, we can use optimization libraries such as \textit{g2o} or Ceres to help us or implement the Gauss-Newton method by ourselves. Like the optical flow, the direct method can also be divided into a single-layer direct method and a pyramid-like multi-layer direct method. We also first implement the single-layer direct method and then extend it to multiple layers.
 
 In the single-layer direct method, similar to the parallel optical flow, we can also calculate each pixel's error and Jacobian in parallel. For this reason, we define a class for calculating Jacobian:
 
@@ -848,7 +848,7 @@ On the other hand, its shortcomings are also obvious:
 	\item In addition to LK optical flow, do you know other optical flow methods? What are their characteristics?
 	\item In the program to calculate the image gradient, we simply calculate the difference between the brighteness of $u+1$ and $u-1$ divided by 2 as the gradient in the direction of $u$. What are the disadvantages of this approach? Hint: For features closer together, the changes should be faster; while for features farther away it changes more slowly in the image, can this information be used when calculating the gradient?
 	\item Can the direct method be implemented in an "inverse" way like optical flow? That is, use the gradient of the original image instead of the gradient of the target image?
-	\item[\optional] Use Ceres or g2o to implement sparse direct method and semi-dense direct method.
+	\item[\optional] Use Ceres or \textit{g2o} to implement sparse direct method and semi-dense direct method.
 	\item Compared with the direct method of RGB-D, the monocular direct method is often more complicated. In addition to the unknown matching, the distance of the pixel also needs to be estimated. We need to use pixel depth as an optimization variable during optimization. Refer to the literature \cite{Engel2013, Engel2014}, can you implement its calculation?
 \end{enumerate}
 

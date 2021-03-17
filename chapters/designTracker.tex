@@ -41,7 +41,7 @@ We are discussing a project realization, and the project usually has the concept
 	\item \textit{src} stores the source code files, mainly .cpp files.
 	\item \textit{test} stores the files used for testing, which are also .cpp files.
 	\item \textit{config} stores the configuration files.
-	\item \textit{cmake\_modules} saves the cmake files of third-party libraries, which are used by libraries such as g2o.
+	\item \textit{cmake\_modules} saves the cmake files of third-party libraries, which are used by libraries such as \textit{g2o}.
 \end{enumerate}
 
 In this way, we have determined the location of the code file. Now let's discuss the basic data structure involved in VO.
@@ -379,7 +379,7 @@ int Frontend::TrackLastFrame() {
 }
 \end{lstlisting}
 
-In the implementation, we often split the complex functions into some short functions until the underlying functions call OpenCV or g2o to achieve specific calculations. The readability and reusability of the program can be improved in this way. For example, the same feature extraction function can be used for both the initialization phase and the keyframe's new feature detection part. We recommend that readers go through this code by themselves (the frontend is less than 400 lines).
+In the implementation, we often split the complex functions into some short functions until the underlying functions call OpenCV or \textit{g2o} to achieve specific calculations. The readability and reusability of the program can be improved in this way. For example, the same feature extraction function can be used for both the initialization phase and the keyframe's new feature detection part. We recommend that readers go through this code by themselves (the frontend is less than 400 lines).
 
 \subsection{Implement the Backend}
 Compared with the frontend, the logic of the backend implementation will be more complicated. The overall backend implementation is as follows:

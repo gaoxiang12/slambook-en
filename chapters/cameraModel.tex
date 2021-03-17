@@ -398,7 +398,7 @@ If you call this program in the IDE, be sure to give it parameters at the same t
 \item OpenCV provides many functions for manipulating images. We will not list them one by one. Otherwise, this book will become an OpenCV operation manual. The example shows the most common things like image reading and displaying and the deep copy function in cv::Mat. During the programming process, readers will also encounter operations such as image rotation and interpolation. At this time, you should refer to the corresponding documentation of the function to understand their principles and usage.
 \end{enumerate}
 
-It should be noted that OpenCV is not the only image library. It is just one of the more widely used ones. However, most image libraries have similar image operations. We hope that readers can understand the representation of images in other libraries after using OpenCV to quickly adjust to any other libraries. Since cv::Mat is also a matrix class, we can also use it to store matrix data such as rotation matrix and do some linear algebra operations. But it is generally believed that Eigen is more efficient for use with fixed-size matrices.
+It should be noted that OpenCV is not the only image library. It is just one of the more widely used ones. However, most image libraries have similar image operations. We hope that readers can understand the representation of images in other libraries after using OpenCV to quickly adjust to any other libraries. Since cv::Mat is also a matrix class, we can also use it to store matrix data such as rotation matrix and do some linear algebra operations. But it is generally believed that \textit{Eigen} is more efficient for use with fixed-size matrices.
 
 \subsection{Image Undistortion}
 We've introduced the rad-tan distortion model in the previous section, now let write an example to show the implementation. OpenCV has provided the cv::Undistort function for us, but we will also give a hand-written undistortion function to show the principles.
@@ -588,7 +588,7 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-We can see the point cloud in Pangolin after building it (see \autoref{fig:pointcloudmapping}). 
+We can see the point cloud in \textit{Pangolin} after building it (see \autoref{fig:pointcloudmapping}).
 
 \begin{figure}[!t]
     \centering
