@@ -370,7 +370,7 @@ We created a new intermediate folder ``\textit{build}'', and then entered the bu
 \subsection{Use Libraries}
 In a C++ project, not all code is compiled into executables. Only executable files with the main function will generate executable programs. For other codes, we just want to package them into a packet for other programs to call. This packet is called \textit{library}.
 
-A library is often just a collection of many algorithms and programs, and we will be exposed to other libraries in later exercises. For example, the OpenCV library provides many computer vision-related algorithms, while the Eigen library provides calculations of matrix algebra. Therefore, we need to learn how to use CMake to generate libraries and use the library's functions. Now let's demonstrate how to write a library yourself. Write the following ``libHelloSLAM.cpp'' file:
+A library is often just a collection of many algorithms and programs, and we will be exposed to other libraries in later exercises. For example, the OpenCV library provides many computer vision-related algorithms, while the \textit{Eigen} library provides calculations of matrix algebra. Therefore, we need to learn how to use CMake to generate libraries and use the library's functions. Now let's demonstrate how to write a library yourself. Write the following ``libHelloSLAM.cpp'' file:
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch2/libHelloSLAM.cpp]
 #include <iostream>

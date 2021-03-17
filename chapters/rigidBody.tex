@@ -6,11 +6,11 @@
 	\textbf{Goal of Study}
 	\begin{enumerate}
 		\item Study the rigid body geometry in three-dimensional space: rotation matrix, transformation matrix, quaternion, and Euler angle.
-		\item Learn the usage of the Eigen library's matrix and geometry module.
+		\item Learn the usage of the \textit{Eigen} library's matrix and geometry module.
 	\end{enumerate}
 \end{mdframed}
 
-In the last lecture, we explained the framework and content of visual SLAM. This lecture will introduce one of the fundamental problems of visual SLAM: How to describe a rigid body's motion in three-dimensional space? Intuitively, we certainly know that this consists of one rotation plus one translation. The translation part does not really have any problems, but the rotation part is questionable. We will introduce the meaning of rotation matrices, quaternions, Euler angles and how they are computed and transformed. In the practice section, we will introduce one of the widely used linear algebra libraries: Eigen. It provides a C++ matrix calculation, and its geometry module also provides the necessary data structures and operations, like quaternions. Eigen is heavily optimized, but there are still some special issues to be discussed about its usage. We will leave it to the practice part.
+In the last lecture, we explained the framework and content of visual SLAM. This lecture will introduce one of the fundamental problems of visual SLAM: How to describe a rigid body's motion in three-dimensional space? Intuitively, we certainly know that this consists of one rotation plus one translation. The translation part does not really have any problems, but the rotation part is questionable. We will introduce the meaning of rotation matrices, quaternions, Euler angles and how they are computed and transformed. In the practice section, we will introduce one of the widely used linear algebra libraries: \textit{Eigen}. It provides a C++ matrix calculation, and its geometry module also provides the necessary data structures and operations, like quaternions. \textit{Eigen} is heavily optimized, but there are still some special issues to be discussed about its usage. We will leave it to the practice part.
 
 \newpage
 \includepdf{resources/other/ch3.pdf}
@@ -204,24 +204,24 @@ Again, we use the notation of $ \mathbf{T}_{12} $ to represent a transformation 
 
 Let's take a review now. First, we introduce the vector and its coordinate representation and introduce the operation between the vectors; then, the motion between the coordinate systems is described by the Euclidean transformation, which consists of translation and rotation. The rotation can be described by the rotation matrix $ \mathrm{SO}( 3 ) $, while the translation is directly described by an $ \mathbb{R}^ 3 $ vector. Finally, if the translation and rotation are placed in a matrix, the transformation matrix $ \mathrm{SE}( 3 ) $ is formed.
 
-\section{Practice: Use Eigen}
-The practical part of this lecture has two sections. In the first part, we will explain how to use Eigen to represent matrices and vectors and then extend to the calculation of rotation matrix and transformation matrix. The code for this section is in \textit{slambook2/ch3/useEigen}.
+\section{Practice: Use \textit{Eigen}}
+The practical part of this lecture has two sections. In the first part, we will explain how to use \textit{Eigen} to represent matrices and vectors and then extend to the calculation of rotation matrix and transformation matrix. The code for this section is in ``slambook2/ch3/useEigen''.
 
-Eigen \footnote{Official home page: \url{http://eigen.tuxfamily.org/index.php?title=Main_Page}. } is a C++ open-source linear algebra library. It provides fast linear algebra operations on matrices, as well as functions such as solving linear equations. Many upper-level software libraries also use Eigen for matrix operations, including g2o, Sophus, and others. Let's learn about Eigen's programming.
+\textit{Eigen} \footnote{Official home page: \url{http://eigen.tuxfamily.org/index.php?title=Main_Page}. } is a C++ open-source linear algebra library. It provides fast linear algebra operations on matrices, as well as functions such as solving linear equations. Many upper-level software libraries also use \textit{Eigen} for matrix operations, including \textit{g2o}, Sophus, and others. Let's learn about \textit{Eigen}'s programming.
 
-Eigen may not have been installed on your PC. Please enter the following command to install it:
+\textit{Eigen} may not have been installed on your PC. Please enter the following command to install it:
 
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 sudo apt-get install libeigen3-dev
 \end{lstlisting}
 
-Most of the commonly used libraries in our book are available in the Ubuntu software center. With the apt command, we can easily install Eigen. Looking back at the previous lesson, we know that a library consists of header files and library files. The Eigen header file's default location should be  \textit{/usr/include/eigen3/}. If you are not sure, you can find it by entering the following command:
+Most of the commonly used libraries in our book are available in the Ubuntu software center. With the apt command, we can easily install \textit{Eigen}. Looking back at the previous lesson, we know that a library consists of header files and library files. The \textit{Eigen} header file's default location should be  \textit{/usr/include/eigen3/}. If you are not sure, you can find it by entering the following command:
 
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 sudo locate eigen3
 \end{lstlisting}
 
-Eigen is a special library built with pure header files (this is the amazing part!). This means you can only locate its header files, not binary files like .so or .a. When you use it, you only need to import Eigen's header file. You don't need to link the library file (because it doesn't have any library files). Now let's write a piece of code below to actually practice the use of Eigen:
+\textit{Eigen} is a special library built with pure header files (this is the amazing part!). This means you can only locate its header files, not binary files like .so or .a. When you use it, you only need to import \textit{Eigen}'s header file. You don't need to link the library file (because it doesn't have any library files). Now let's write a piece of code below to actually practice the use of \textit{Eigen}:
 \begin{lstlisting}[language=c++,caption=slambook2/ch3/useEigen/eigenMatrix.cpp]
 #include <iostream>
 using namespace std;
@@ -350,13 +350,13 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-This example demonstrates the basic operations and operations of the Eigen matrix. To compile it, you need to specify the header file directory of Eigen in the \textit{CMakeLists.txt}:
+This example demonstrates the basic operations and operations of the \textit{Eigen} matrix. To compile it, you need to specify the header file directory of \textit{Eigen} in the \textit{CMakeLists.txt}:
 \begin{lstlisting}[caption=slambook2/ch3/useEigen/CMakeLists.txt]
 # Add header file
 include_directories( "/usr/include/eigen3" )
 \end{lstlisting}
 
-Because the Eigen library only has header files, we don't need to link the program to the library with the target\_link\_libraries statement. However, for most other libraries, you still need to use the link command. The approach here is not necessarily the best because others may have Eigen installed in different locations, then you must manually modify the header file directory here. In the rest of the book, we will use the find\_ package command to search the library, but we keep it simple in this lecture. After compiling this program, run it, and you can see the output of each matrix.
+Because the \textit{Eigen} library only has header files, we don't need to link the program to the library with the target\_link\_libraries statement. However, for most other libraries, you still need to use the link command. The approach here is not necessarily the best because others may have \textit{Eigen} installed in different locations, then you must manually modify the header file directory here. In the rest of the book, we will use the find\_ package command to search the library, but we keep it simple in this lecture. After compiling this program, run it, and you can see the output of each matrix.
 
 \begin{lstlisting}[caption=Terminal output:]
 % build/eigenMatrix
@@ -396,15 +396,15 @@ Since the detailed comments are given in the code, we will not elaborate on each
     
     \item KDevelop may not prompt C++ member functions, which is caused by its incompleteness. Please type the above contents just like what they are. Do not care if KDevelop prompts any errors. Clion's completion may be better. 
     
-    \item Eigen's matrix is very similar to MATLAB, and almost all data is treated as a matrix. However, to achieve better efficiency, you need to specify the size and type of the Eigen matrix. For matrices that we know the size at compile-time, they are processed faster than dynamically changing matrices. Therefore, data such as rotation matrices and transformation matrices can be determined at compile times by their size and data type.
+    \item Eigen's matrix is very similar to MATLAB, and almost all data is treated as a matrix. However, to achieve better efficiency, you need to specify the size and type of the \textit{Eigen} matrix. For matrices that we know the size at compile-time, they are processed faster than dynamically changing matrices. Therefore, data such as rotation matrices and transformation matrices can be determined at compile times by their size and data type.
     
-    \item The matrix implementation inside  Eigen is more complicated. I won't introduce it here. We hope you can use Eigen's matrix just like the built-in data types such as float and double. 
+    \item The matrix implementation inside  \textit{Eigen} is more complicated. I won't introduce it here. We hope you can use \textit{Eigen}'s matrix just like the built-in data types such as float and double.
     
-    \item The  Eigen matrix does not support automatic type promotion, which is quite different from C++'s built-in data types. In a C++ program, we can add and multiply a float variable and double variable, and the compiler will automatically \textit{cast} the data type to the most appropriate one. In Eigen, for performance reasons, you must explicitly convert the matrix type. And if you forget to do this, Eigen will (not very friendly) prompt you with a very long ``YOU MIXED DIFFERENT NUMERIC TYPES ...'' compilation error. You can try to find out which part of the error message this message appears in. If the error message is too long, it is best to save it to a file and find it.
+    \item The \textit{Eigen} matrix does not support automatic type promotion, which is quite different from C++'s built-in data types. In a C++ program, we can add and multiply a float variable and double variable, and the compiler will automatically \textit{cast} the data type to the most appropriate one. In \textit{Eigen}, for performance reasons, you must explicitly convert the matrix type. And if you forget to do this, \textit{Eigen} will (not very friendly) prompt you with a very long ``YOU MIXED DIFFERENT NUMERIC TYPES ...'' compilation error. You can try to find out which part of the error message this message appears in. If the error message is too long, it is best to save it to a file and find it.
     
-    \item At the same time, the calculation process also needs to ensure the correctness of the matrix dimension. Otherwise, there will be a ``YOU MIXED MATRICES OF DIFFERENT SIZES'' error. Please don't complain about this kind of error prompts. For C++ template meta-programming, it is very fortunate to have readable error information. Later, if you find some compilation error about Eigen, you can directly look for the uppercase part and figure out the problem.
+    \item At the same time, the calculation process also needs to ensure the correctness of the matrix dimension. Otherwise, there will be a ``YOU MIXED MATRICES OF DIFFERENT SIZES'' error. Please don't complain about this kind of error prompts. For C++ template meta-programming, it is very fortunate to have readable error information. Later, if you find some compilation error about \textit{Eigen}, you can directly look for the uppercase part and figure out the problem.
     
-    \item Our example only covers the very basic matrix operations. You can learn more about Eigen by reading the Eigen official website tutorial: \\ { \url{http://eigen.tuxfamily.org/dox-devel/modules.html} }. Only the simplest part is demonstrated here. It is not equal to the fact that you can understand Eigen.
+    \item Our example only covers the very basic matrix operations. You can learn more about \textit{Eigen} by reading the \textit{Eigen} official website tutorial: \\ { \url{http://eigen.tuxfamily.org/dox-devel/modules.html} }. Only the simplest part is demonstrated here. It is not equal to the fact that you can understand \textit{Eigen}.
 \end{enumerate}
 
 In the last piece of code, the efficiency of inversion and QR decomposition is compared. You can look at the time difference on your own machine. Is there a significant difference between the two methods?
@@ -760,9 +760,9 @@ In addition to the Euclidean transformation, there are several other transformat
 
 We will introduce later that the transformation from the real world to the camera photo is a perspective transformation. If the focal length of the camera is infinity, then this transformation is affine. However, before we go into the camera model's details, let's do some experiments to have a rough impression of these transformations.
 
-\section{Practice: Eigen Geometry Module}
-\subsection{Data Structure of the Eigen Geometry Module}
-Now, let's actually practice the various rotation expressions mentioned earlier. We will use quaternions, Euler angles, and rotation matrices in Eigen to demonstrate how they are transformed. We will also provide a visualization program to help the reader understand the relationship between these transformations.
+\section{Practice: \textit{Eigen} Geometry Module}
+\subsection{Data Structure of the \textit{Eigen} Geometry Module}
+Now, let's actually practice the various rotation expressions mentioned earlier. We will use quaternions, Euler angles, and rotation matrices in \textit{Eigen} to demonstrate how they are transformed. We will also provide a visualization program to help the reader understand the relationship between these transformations.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch3/useGeometry/useGeometry.cpp]
 #include <iostream>
@@ -827,7 +827,7 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-The various forms of expression in Eigen are summarized below. Note that each type has both single and double data types and, as before, cannot be automatically converted by the compiler. Taking the double-precision as an example, you can simply change the last ``d'' to ``f'' to use a single-precision data structure.
+The various forms of expression in \textit{Eigen} are summarized below. Note that each type has both single and double data types and, as before, cannot be automatically converted by the compiler. Taking the double-precision as an example, you can simply change the last ``d'' to ``f'' to use a single-precision data structure.
 \begin{itemize}
 	\item Rotation matrix ( $ 3  \times  3 $ ): Eigen::Matrix3d.
 	\item Rotation vector ( $ 3  \times  1 $ ): Eigen::AngleAxisd.
@@ -838,7 +838,7 @@ The various forms of expression in Eigen are summarized below. Note that each ty
 	\item Perspective transformation ( $ 4  \times  4 $ ): Eigen::Projective3d.
 \end{itemize}
 
-This program can be compiled by referring to the corresponding ``CMakeLists.txt'' in the code. This program demonstrates how to use the rotation matrix, rotation vectors (AngleAxis), Euler angles, and quaternions in Eigen. We use these rotations to rotate a vector $ \mathbf {v} $ and find that the result is the same. At the same time, it also demonstrates how to convert these expressions in the program. Readers who want to learn more about Eigen's geometry modules can refer to \url {http://eigen.tuxfamily.org/dox/group__TutorialGeometry.html}.
+This program can be compiled by referring to the corresponding ``CMakeLists.txt'' in the code. This program demonstrates how to use the rotation matrix, rotation vectors (AngleAxis), Euler angles, and quaternions in \textit{Eigen}. We use these rotations to rotate a vector $ \mathbf {v} $ and find that the result is the same. At the same time, it also demonstrates how to convert these expressions in the program. Readers who want to learn more about \textit{Eigen}'s geometry modules can refer to \url {http://eigen.tuxfamily.org/dox/group__TutorialGeometry.html}.
 
 Note that the code has some subtle differences from the mathematical representation. For example, by operator overloading in C++, quaternions and three-dimensional vectors can directly be multiplied, but mathematically, the vector needs to be converted into an imaginary quaternion, as we talked about in the last section, and then quaternion multiplication is used for calculation. The same applies to the transformation matrix multiplying with a three-dimensional vector. In general, the usage in the program is more flexible than the mathematical formula.
 
@@ -891,7 +891,7 @@ When drawing the trajectory, we should draw the ``trajectory'' as a sequence of 
 \end{equation}
 This is exactly the translation part of $ \mathbf {T}_{WR} $. So, you can see the robot's position directly from $ \mathbf {T}_{WR} $. Therefore, in most of the public datasets, the trajectory file stores $ \mathbf {T}_{WR} $ instead of $ \mathbf {T}_{RW} $ .
 
-Finally, we need a library that supports 3D drawing. Many libraries support 3D drawing, such as the famous Matlab, python matplotlib, OpenGL, etc. In Linux, a widely used library in SLAM is the OpenGL-based Pangolin library \footnote{See \url {https://github.com/stevenlovegrove/Pangolin}.}, which provides simple OpenGL drawing operations in a window. In the second edition of the book, we used git's submodule feature to manage the third-party libraries that this book relies on. Readers can go directly to the ``3rdparty'' folder to install the required libraries, and git guarantees that you are using the same version with us.
+Finally, we need a library that supports 3D drawing. Many libraries support 3D drawing, such as the famous Matlab, python matplotlib, OpenGL, etc. In Linux, a widely used library in SLAM is the OpenGL-based \textit{Pangolin} library \footnote{See \url {https://github.com/stevenlovegrove/Pangolin}.}, which provides simple OpenGL drawing operations in a window. In the second edition of the book, we used git's submodule feature to manage the third-party libraries that this book relies on. Readers can go directly to the ``3rdparty'' folder to install the required libraries, and git guarantees that you are using the same version with us.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch3/examples/plotTrajectory.cpp]
 #include <pangolin/pangolin.h>
@@ -982,7 +982,7 @@ void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> pos
 }
 \end{lstlisting}
 
-This program demonstrates how to draw a 3D pose in Pangolin. We draw the three axes of each pose in red, green, and blue (actually, we calculate each axis's world coordinates) and then connect the poses with black lines. The result is shown in \autoref {fig:trajectory}.
+This program demonstrates how to draw a 3D pose in \textit{Pangolin}. We draw the three axes of each pose in red, green, and blue (actually, we calculate each axis's world coordinates) and then connect the poses with black lines. The result is shown in \autoref {fig:trajectory}.
 
 \begin{figure}[!htp]
 	\centering
@@ -999,7 +999,7 @@ This program demonstrates how to draw a 3D pose in Pangolin. We draw the three a
 	\label{fig:visualizeGeometry}
 \end{figure}
 
-In addition to displaying the trajectory, we can also display the camera's pose in the 3D window. In slambook2/ch3/visualizeGeometry, we visualize various expressions of camera poses (see \autoref{fig:visualizeGeometry}). When the reader uses the mouse to move the camera, the box on the left side will display the rotation matrix, translation, Euler angle, and quaternion of the camera pose in real-time. You can see how the data changes. According to our experience, it is hard to infer the exact rotation from quaternions or matrices. However, although the rotation matrix or transformation matrix is not intuitive, it is not difficult to visually display them. This program uses the Pangolin library as a 3D display library. Please refer to ``Readme.txt'' to compile the program.
+In addition to displaying the trajectory, we can also display the camera's pose in the 3D window. In slambook2/ch3/visualizeGeometry, we visualize various expressions of camera poses (see \autoref{fig:visualizeGeometry}). When the reader uses the mouse to move the camera, the box on the left side will display the rotation matrix, translation, Euler angle, and quaternion of the camera pose in real-time. You can see how the data changes. According to our experience, it is hard to infer the exact rotation from quaternions or matrices. However, although the rotation matrix or transformation matrix is not intuitive, it is not difficult to visually display them. This program uses the \textit{Pangolin} library as a 3D display library. Please refer to ``Readme.txt'' to compile the program.
 
 \section*{Exercises}
 \begin{enumerate}
@@ -1007,6 +1007,6 @@ In addition to displaying the trajectory, we can also display the camera's pose 
 	\item Prove the Rodrigues formula.
 	\item Verify that after the quaternion rotates a point, the result is a imaginary quaternion (the real part is zero), so it still corresponds to a three-dimensional space point, see~\eqref{eq:rotate-with-quaternion}.
 	\item Draw a table that summarizes the conversion relationship of the rotation matrix, rotation angle, Euler angle and quaternion.
-	\item Suppose there is a large Eigen matrix, we want to know the value in the top left $3 \times 3$ blocks, and then assign it to $\mathbf{I}_{3 \times 3}$. Please implement it in C++.
-	\item When does a general linear equation $\mathbf{A} \mathbf{x}=\mathbf{b}$ has a unique solution of $\mathbf{x}$? How to solve it numerically? Can you implement it in Eigen?
+	\item Suppose there is a large \textit{Eigen} matrix, we want to know the value in the top left $3 \times 3$ blocks, and then assign it to $\mathbf{I}_{3 \times 3}$. Please implement it in C++.
+	\item When does a general linear equation $\mathbf{A} \mathbf{x}=\mathbf{b}$ has a unique solution of $\mathbf{x}$? How to solve it numerically? Can you implement it in \textit{Eigen}?
 \end{enumerate}

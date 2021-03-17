@@ -6,7 +6,7 @@
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
 		\item Understand how to form the batch state estimation problem into a least-square and how to solve the least-square problem.
 		\item Understand the Gauss-Newton and Levenburg-Marquardt method and implement them.
-		\item Learn how to use the Google Ceres and g2o library to solve a least-square problem.
+		\item Learn how to use the Google Ceres and \textit{g2o} library to solve a least-square problem.
 	\end{enumerate}
 \end{mdframed} 
 
@@ -14,7 +14,7 @@ In the previous lectures, we introduced the motion and observation equations of 
 
 However, due to the presence of noise, the equations of motion and observation can not be exactly met. Although the camera can fit the pinhole model very well, unfortunately, the data we get is usually affected by various unknown noises. Even if we have a high-precision camera and controller, the motion and observations equations can only be approximated. Therefore, instead of assuming that the data must conform to the equation precisely, it is better to find an estimation approach to get the state from the noisy data.
 
-Solving the state estimation problem requires a certain degree of optimization background knowledge. This section will introduce the basic unconstrained nonlinear optimization method and introduce optimization libraries g2o and Ceres.
+Solving the state estimation problem requires a certain degree of optimization background knowledge. This section will introduce the basic unconstrained nonlinear optimization method and introduce optimization libraries \textit{g2o} and Ceres.
 
 \newpage
 \includepdf{resources/other/ch6.pdf}
@@ -492,7 +492,7 @@ It is easy to see that the objective function of the whole problem approaches co
 \end{figure}
 
 \subsection{Curve Fitting with Google Ceres}
-In the next two sections we introduce two C++ optimization libraries: the Ceres library \cite{Ceres} from Google and the g2o library \cite{Kummerle2011} based on graph optimization. Since in g2o, we still need some knowledge about graph optimizations, we first go through the Ceres here, then introduce some graph optimization theories, and finally talk about g2o. Since the optimization algorithms will still appear in the later chapters, please make sure you understand the meaning of the optimization algorithm and the content of the program.
+In the next two sections we introduce two C++ optimization libraries: the Ceres library \cite{Ceres} from Google and the \textit{g2o} library \cite{Kummerle2011} based on graph optimization. Since in \textit{g2o}, we still need some knowledge about graph optimizations, we first go through the Ceres here, then introduce some graph optimization theories, and finally talk about \textit{g2o}. Since the optimization algorithms will still appear in the later chapters, please make sure you understand the meaning of the optimization algorithm and the content of the program.
 
 \subsubsection{Introduction to Ceres}
 Google Ceres is a widely used optimization library for least-square problems. In Ceres, as users, we only need to define the optimization problem to be solved according to specific steps and then hand it over to the solver for calculation. The most general form of the least-square problem solved by Ceres is as follows (kernel function least-squares with boundary):
@@ -637,8 +637,8 @@ The final optimized value is basically the same as our experimental result in th
 
 I hope readers have a general understanding of how to use Ceres through this simple example. Its advantage is that it provides an automatic derivation tool, making it unnecessary to calculate the troublesome Jacobian matrix. Ceres's automatic derivation is realized through template elements, and the automatic derivation can be completed at compile-time, but it is still a numerical derivative. Most of the time in this book, I will still introduce the Jacobian matrix calculation because it helps understand the problem. Besides, Ceres' optimization process configuration is also very rich, making it suitable for a wide range of least-squares optimization problems, including various problems other than SLAM.
 
-\subsection{Curve Fitting with G2o}
-The second practice part of this lecture is about another optimization library (widely used mainly in the SLAM field): g2o (general graphic optimization, g$^2$o). It is a library based on \textit{graphic optimization}. Graph optimization is a theory that combines nonlinear optimization with graph theory, so before using it, let's spend a little space to introduce graph optimization theory.
+\subsection{Curve Fitting with \textit{g2o}}
+The second practice part of this lecture is about another optimization library (widely used mainly in the SLAM field): \textit{g2o} (general graphic optimization, g$^2$o). It is a library based on \textit{graphic optimization}. Graph optimization is a theory that combines nonlinear optimization with graph theory, so before using it, let's spend a little space to introduce graph optimization theory.
 
 \subsubsection{Introduction to Graph Optimization Theory}
 We have introduced the solution of nonlinear least-squares. The least-square problem in SLAM is normally composed of the sum of many small error terms. However, if we only treat them as variables and residuals, it would be hard to tell the \textit{relationship} between them. For example, how many error terms are related to a certain optimization variable $x_j$? If we adjust some variables, does the overall cost function change or keep the same? Furthermore, we hope to visually see what optimization problem \textit{looks like}. Therefore, graph optimization is involved.
@@ -654,20 +654,20 @@ Graph optimization is a way to express the optimization problem as a graph.  A g
     \label{fig:graph-optimization}
 \end{figure}
 
-The g2o is a \textit{general} graph optimization library. ``General'' means that you can solve any least-squares problem that can be expressed as graph optimization, obviously including the curve-fitting problem discussed above. Let us demonstrate how to do that.
+The \textit{g2o} is a \textit{general} graph optimization library. ``General'' means that you can solve any least-squares problem that can be expressed as graph optimization, obviously including the curve-fitting problem discussed above. Let us demonstrate how to do that.
 
-\subsubsection{Compilation and Installation of G2o}
-Just like the Ceres section, we should first compile and install the g2o library. Readers should have experienced this process many times, and they are basically the same. Regarding g2o, readers can download it from GitHub: \url{https://github.com/RainerKuemmerle/g2o}, or obtain it from the third-party code library provided in this book. Since g2o is still being updated, I suggest using g2o under 3rdparty to ensure that the version is the same as mine.
+\subsubsection{Compilation and Installation of \textit{g2o}}
+Just like the Ceres section, we should first compile and install the \textit{g2o} library. Readers should have experienced this process many times, and they are basically the same. Regarding \textit{g2o}, readers can download it from GitHub: \url{https://github.com/RainerKuemmerle/g2o}, or obtain it from the third-party code library provided in this book. Since \textit{g2o} is still being updated, I suggest using \textit{g2o} under 3rdparty to ensure that the version is the same as mine.
 
-G2o is also a cmake project. Let's install its dependencies first (some dependencies overlap with Ceres):
+\textit{g2o} is also a cmake project. Let's install its dependencies first (some dependencies overlap with Ceres):
 \begin{lstlisting}[language=sh,caption=Terminal input:]
     sudo apt-get install qt5-qmake qt5-default libqglviewer-dev-qt5 libsuitesparse-dev libcxsparse3 libcholmod3
 \end{lstlisting}
 
-Then, compile and install g2o according to the cmake method. The description of the process is omitted here. After the installation is complete, the header files of g2o will be located under /usr/local/g2o, and the library files will be located under /usr/local/lib/. We reconsider the curve fitting experiment in the Ceres routine and do that experiment again in g2o.
+Then, compile and install \textit{g2o} according to the cmake method. The description of the process is omitted here. After the installation is complete, the header files of \textit{g2o} will be located under ``/usr/local/g2o'', and the library files will be located under /usr/local/lib/. We reconsider the curve fitting experiment in the Ceres routine and do that experiment again in \textit{g2o}.
 
-\subsubsection{Curve Fitting with G2o}
-In order to use g2o, the curve fitting problem must first be constructed into graph optimization. In this process, just remember that nodes are the optimization variables, and edges are the error terms. The graph optimization problem of curve fitting can be drawn in the form of \autoref{fig:graph-fitting}~.
+\subsubsection{Curve Fitting with \textit{g2o}}
+In order to use \textit{g2o}, the curve fitting problem must first be constructed into graph optimization. In this process, just remember that nodes are the optimization variables, and edges are the error terms. The graph optimization problem of curve fitting can be drawn in the form of \autoref{fig:graph-fitting}~.
 
 \begin{figure}[!ht]
     \centering
@@ -678,12 +678,12 @@ In order to use g2o, the curve fitting problem must first be constructed into gr
 
 The entire problem has only one vertex: the parameters $a, b, c$ of the curve model. Each noisy data point constitutes an error term, which is the edge of the graph optimization. But the edges here are not the same as we usually think. They are unary edges, which means that the edges connect only one vertex. Because the entire graph has only one vertex. So in \autoref{fig:graph-fitting}~, we can only draw it as if it is connected to itself. An edge in graph optimization can connect one, two, or more vertices, reflecting how many optimization variables each error is related to. In a slightly mysterious way, we call it a hyperedge. The whole graph is called hypergraph \footnote{I personally would better call it just as a graph to avoid being mysterious. }.
 
-After clarifying the graph model, the next step is to build the model in g2o for optimization. As a user of g2o, what we need to do mainly includes the following steps:
+After clarifying the graph model, the next step is to build the model in \textit{g2o} for optimization. As a user of \textit{g2o}, what we need to do mainly includes the following steps:
 \begin{enumerate}
     \item Define the type of vertices and edges.
     \item Build the graph.
     \item Select the optimization algorithm.
-    \item Call g2o to optimize and get the result.
+    \item Call \textit{g2o} to optimize and get the result.
 \end{enumerate}
 
 This part is very similar to Ceres. Of course there will be some differences in coding. Let's demonstrate the program.
@@ -799,11 +799,11 @@ int main(int argc, char **argv) {
 }
 \end{lstlisting}
 
-In this program, we derive graph optimization vertices and edges for curve fitting from g2o built-in classes: CurveFittingVertex and CurveFittingEdge, which essentially expands the use of g2o. These two classes are derived from BaseVertex and BaseUnaryEdge, respectively. In the derived classes, we have rewritten some important virtual functions:
+In this program, we derive graph optimization vertices and edges for curve fitting from \textit{g2o} built-in classes: CurveFittingVertex and CurveFittingEdge, which essentially expands the use of \textit{g2o}. These two classes are derived from BaseVertex and BaseUnaryEdge, respectively. In the derived classes, we have rewritten some important virtual functions:
 \begin{enumerate}
     \item Vertex update function: \textit{oplusImpl}. We know that the most important thing in the optimization process is the calculation of incremental $\Delta \mathbf{x}$, and this function deals with $\mathbf{x}_{k+1} = \mathbf{x}_k + \Delta \mathbf{x}$ process.
 
-    Readers may think this is not something worth mentioning because it is just simple addition. Why doesn't g2o help us complete it? In the curve fitting process, since the optimization variables (curve parameters) are located in the plain vector space, this update calculation is indeed nothing but just simple addition. However, when the optimization variable is not in the vector space, for example, for $\mathbf{x}$ is the camera pose, it does not necessarily have an addition operation. At this time, it is necessary to redefine the behavior of how the increment is added to the existing estimate. According to the explanation in lecture \ref{cpt:4}, we may use the left-multiplication update or the right-multiplication update instead of direct addition.
+    Readers may think this is not something worth mentioning because it is just simple addition. Why doesn't \textit{g2o} help us complete it? In the curve fitting process, since the optimization variables (curve parameters) are located in the plain vector space, this update calculation is indeed nothing but just simple addition. However, when the optimization variable is not in the vector space, for example, for $\mathbf{x}$ is the camera pose, it does not necessarily have an addition operation. At this time, it is necessary to redefine the behavior of how the increment is added to the existing estimate. According to the explanation in lecture \ref{cpt:4}, we may use the left-multiplication update or the right-multiplication update instead of direct addition.
 
     \item Vertex reset function: \textit{setToOriginImpl}. This is trivial, and we just set the estimate to zero.
 
@@ -814,7 +814,7 @@ In this program, we derive graph optimization vertices and edges for curve fitti
     \item Save and read functions: read, write. Since we do not want to perform read/write operations, leave it blank.
 \end{enumerate}
 
-After defining the vertices and edges, we declare a graph model in the main function, then add vertices and edges to the graph model according to the generated noise data, and finally call the optimization function for optimization. g2o will give the optimized result:
+After defining the vertices and edges, we declare a graph model in the main function, then add vertices and edges to the graph model according to the generated noise data, and finally call the optimization function for optimization. \textit{g2o} will give the optimized result:
 \begin{lstlisting}[language=sh,caption=Terminal output:]
 start optimization
 iteration= 0	 chi2= 376785.128234	 time= 3.3299e-05	 cumTime= 3.3299e-05	 edges= 100	 schur= 0
@@ -831,24 +831,24 @@ solve time cost = 0.000919301 seconds.
 estimated model: 0.890912   2.1719 0.943629
 \end{lstlisting}
 
-We use the Gauss-Newton method for gradient descent, and after 9 iterations, the optimization result is obtained, which is almost the same as the Ceres and handwritten Gauss-Newton method. From the running speed perspective, our experimental conclusion is that handwriting is faster than g2o, and g2o is faster than Ceres. This is a generally intuitive experience that versatility and efficiency are often contradictory. However, in this experiment, Ceres uses automatic derivation, and the solver configuration is not completely consistent with Gauss-Newton, so it seems slower.
+We use the Gauss-Newton method for gradient descent, and after 9 iterations, the optimization result is obtained, which is almost the same as the Ceres and handwritten Gauss-Newton method. From the running speed perspective, our experimental conclusion is that handwriting is faster than \textit{g2o}, and \textit{g2o} is faster than Ceres. This is a generally intuitive experience that versatility and efficiency are often contradictory. However, in this experiment, Ceres uses automatic derivation, and the solver configuration is not completely consistent with Gauss-Newton, so it seems slower.
 
 \section{Summary}
-This section introduces a nonlinear optimization problem often encountered in SLAM: the least-squares problem consisting of the sum of squares of many error terms. We introduced its definition and solution and discussed two main gradient descent methods: the Gauss-Newton method and the Levenberg-Marquardt method. In the practice part, two optimization libraries of the handwritten Gauss-Newton method, Ceres and g2o, were used to solve the same curve-fitting problem and found that they gave similar results.
+This section introduces a nonlinear optimization problem often encountered in SLAM: the least-squares problem consisting of the sum of squares of many error terms. We introduced its definition and solution and discussed two main gradient descent methods: the Gauss-Newton method and the Levenberg-Marquardt method. In the practice part, two optimization libraries of the handwritten Gauss-Newton method, Ceres and \textit{g2o}, were used to solve the same curve-fitting problem and found that they gave similar results.
 
-Since the bundle adjustment has not been discussed in detail, we have chosen a simple but representative example of curve fitting in the practice part to demonstrate the general nonlinear least-squares solution method. In particular, if you use g2o to fit a curve, you must first convert the problem to graph optimization and define new vertices and edges. This approach is somewhat roundabout—the main purpose of g2o is not here. In contrast, Ceres' usage is much more natural because it is designed to be a general optimization library. However, the SLAM problem is about solving an optimization problem with many camera poses and many spatial points. In particular, when the camera pose is represented by Lie algebra, calculating the derivative of the camera pose in the error term will be worthy of detailed discussion. We will find in the follow-up content that g2o provides a large number of ready-to-use vertices and edges, which is very convenient for the camera pose estimation problem. In Ceres, we have to implement each cost function by ourselves, which has some inconveniences.
+Since the bundle adjustment has not been discussed in detail, we have chosen a simple but representative example of curve fitting in the practice part to demonstrate the general nonlinear least-squares solution method. In particular, if you use \textit{g2o} to fit a curve, you must first convert the problem to graph optimization and define new vertices and edges. This approach is somewhat roundabout—the main purpose of \textit{g2o} is not here. In contrast, Ceres' usage is much more natural because it is designed to be a general optimization library. However, the SLAM problem is about solving an optimization problem with many camera poses and many spatial points. In particular, when the camera pose is represented by Lie algebra, calculating the derivative of the camera pose in the error term will be worthy of detailed discussion. We will find in the follow-up content that \textit{g2o} provides a large number of ready-to-use vertices and edges, which is very convenient for the camera pose estimation problem. In Ceres, we have to implement each cost function by ourselves, which has some inconveniences.
 
-In the two programs of the practical part, we did not calculate the derivative of the curve model with respect to the three parameters but used the numerical derivative of the optimization library, which made the theory and code simpler. The Ceres library provides automatic derivation based on template elements and numerical derivation at runtime, while g2o only provides a numerical derivation method. However, for most problems, if you can derive the analytical form of the Jacobian matrix and tell the optimization library, you can avoid many problems in numerical derivation.
+In the two programs of the practical part, we did not calculate the derivative of the curve model with respect to the three parameters but used the numerical derivative of the optimization library, which made the theory and code simpler. The Ceres library provides automatic derivation based on template elements and numerical derivation at runtime, while \textit{g2o} only provides a numerical derivation method. However, for most problems, if you can derive the analytical form of the Jacobian matrix and tell the optimization library, you can avoid many problems in numerical derivation.
 
-Finally, I hope readers can adapt to Ceres and g2o's extensive use of template programming. It may seem scary at first (especially the parenthesis operator for Ceres to set the residual block and the code for the g2o initialization part). But once you are familiar with it, you will feel that this method is natural and easy to extend. We will continue to discuss issues such as sparsity, kernel functions, and pose graphs in the SLAM backend lecture.
+Finally, I hope readers can adapt to Ceres and \textit{g2o}'s extensive use of template programming. It may seem scary at first (especially the parenthesis operator for Ceres to set the residual block and the code for the \textit{g2o} initialization part). But once you are familiar with it, you will feel that this method is natural and easy to extend. We will continue to discuss issues such as sparsity, kernel functions, and pose graphs in the SLAM backend lecture.
 
 \section*{Exercises}
 \begin{enumerate}
     \item Prove that in the linear equation $\mathbf{A} \mathbf{x} = \mathbf{b}$, when the coefficient matrix $\mathbf{A}$ is over-determined, the least-square solution is $\mathbf{x} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T \mathbf{b}$.
-    \item Investigate the advantages and disadvantages of the steepest descent method, Newton method, Gauss-Newton method, and Levenberg-Marquardt method. In addition to the Ceres library and g2o library we cited, are there any commonly used optimization libraries? (You may find some libraries on MATLAB.)
+    \item Investigate the advantages and disadvantages of the steepest descent method, Newton method, Gauss-Newton method, and Levenberg-Marquardt method. In addition to the Ceres library and \textit{g2o} library we cited, are there any commonly used optimization libraries? (You may find some libraries on MATLAB.)
     \item Why does the coefficient matrix of the Gauss-Newton method's incremental equation may not be positive definite? What is the geometric meaning of indefinite? Why is the solution unstable in this case?
     \item What is DogLeg? What are the similarities and differences between it and the Gauss-Newton method and the Levenberg-Marquardt method? Please search for relevant materials \footnote{\url{http://www.numerical.rl.ac.uk/people/nimg/course/lectures/raphael/lectures/lec7slides.pdf}. }.
     \item Read Ceres' tutorials (\url{http://ceres-solver.org/tutorial.html}) to better understand its usage.
-    \item Read the documentation that comes with g2o, can you understand it? If you still can't fully understand it, please come back after lectures \ref{cpt:backend1} and \ref{cpt:backend2}.
-    \item[\optional] Please change the curve model in the curve fitting experiment, and use Ceres and g2o to optimize it. For example, write an example with more parameters and more complex models.
+    \item Read the documentation that comes with \textit{g2o}, can you understand it? If you still can't fully understand it, please come back after lectures \ref{cpt:backend1} and \ref{cpt:backend2}.
+    \item[\optional] Please change the curve model in the curve fitting experiment, and use Ceres and \textit{g2o} to optimize it. For example, write an example with more parameters and more complex models.
 \end{enumerate}

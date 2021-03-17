@@ -1187,7 +1187,7 @@ Readers can compare $\mathbf{R},\mathbf{t}$ solved in the previous 2D-2D case to
 
 
 \subsection{Pose Estimation from Scratch}
-The following demonstrates how to use nonlinear optimization to calculate the camera pose. We first write a PnP of the Gauss-Newton method and then demonstrate how to solve it by g2o.  
+The following demonstrates how to use nonlinear optimization to calculate the camera pose. We first write a PnP of the Gauss-Newton method and then demonstrate how to solve it by \textit{g2o}.
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp (part)]
 void bundleAdjustmentGaussNewton(
 const VecVector3d &points_3d,
@@ -1262,10 +1262,10 @@ Sophus::SE3d &pose) {
 }
 \end{lstlisting}
 
-In this function, we implement a simple Gauss-Newton iterated optimization based on the previous derivation. Then we will compare the efficiency of OpenCV, handwritten implementation, and the g2o implementation.
+In this function, we implement a simple Gauss-Newton iterated optimization based on the previous derivation. Then we will compare the efficiency of OpenCV, handwritten implementation, and the \textit{g2o} implementation.
 
-\subsection{Optimization by G2o}
-After handwriting the optimization process, let's look at how to achieve the same functionality using the library g2o (it is similar to Ceres). The basic knowledge of g2o has been introduced in lecture \ref{cpt:6}. Before using g2o, we have to model the problem as a graph optimization problem, as shown in \autoref{fig:ba-graph}~.
+\subsection{Optimization by \textit{g2o}}
+After handwriting the optimization process, let's look at how to achieve the same functionality using the library \textit{g2o} (it is similar to Ceres). The basic knowledge of \textit{g2o} has been introduced in lecture \ref{cpt:6}. Before using \textit{g2o}, we have to model the problem as a graph optimization problem, as shown in \autoref{fig:ba-graph}~.
 
 \begin{figure}[!htp]
 	\centering
@@ -1285,7 +1285,7 @@ In this graph optimization, the nodes and edges are defined as follows:
 
 Since the pose of the first camera is fixed to identity, we excluded it from the optimization variables. But in normal cases, we will consider estimations of many cameras. Now we estimate the second camera pose based on a set of 3D points and the 2D projection in the second image. We drew the first camera as a dotted line to indicate that we don't want to consider it.
 
-G2o provides many nodes and edges about BA. For example, \textit{g2o/\\types/sba/types\_six\_dof\_expmap.h} provides nodes and edges expressed by Lie algebra. In the second edition of the book, we implement a VertexPose vertex and EdgeProjection edge ourselves, as follows:
+g2o provides many nodes and edges about BA. For example, \textit{g2o/\\types/sba/types\_six\_dof\_expmap.h} provides nodes and edges expressed by Lie algebra. In the second edition of the book, we implement a VertexPose vertex and EdgeProjection edge ourselves, as follows:
 \begin{lstlisting}[language=c++,caption=slambook2/ch7/pose_estimation_3d2d.cpp (part)]
 /// vertex and edges used in g2o ba
 class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d> {
@@ -1405,7 +1405,7 @@ Sophus::SE3d &pose) {
 }
 \end{lstlisting}
 
-The program is similar to g2o in lecture 6. We first declare the g2o graph optimizer and configure the solver and gradient descent method. Then, based on the estimated feature points, we put the pose and spatial points into the graph. Finally, the optimization function is called. The partial output of the run is as follows:
+The program is similar to \textit{g2o} in lecture 6. We first declare the \textit{g2o} graph optimizer and configure the solver and gradient descent method. Then, based on the estimated feature points, we put the pose and spatial points into the graph. Finally, the optimization function is called. The partial output of the run is as follows:
 
 \begin{lstlisting}[language=sh,caption=Terminal output:]
 ./build/pose_estimation_3d2d 1.png 2.png 1_depth.png 2_depth.png
@@ -1452,7 +1452,7 @@ solve pnp by g2o cost time: 0.000923095 seconds.
 \end{lstlisting}
 
 
-Those three results are basically the same. In terms of efficiency, the Gauss-Newton method implemented by ourselves ranked first with 0.15 milliseconds, followed by OpenCV's PnP, and finally, the implementation of g2o. Nonetheless, the time usages are all within 1 millisecond, which shows that the pose estimation algorithm does not really consume computational effort.
+Those three results are basically the same. In terms of efficiency, the Gauss-Newton method implemented by ourselves ranked first with 0.15 milliseconds, followed by OpenCV's PnP, and finally, the implementation of \textit{g2o}. Nonetheless, the time usages are all within 1 millisecond, which shows that the pose estimation algorithm does not really consume computational effort.
 
 Bundle Adjustment is a common method rather than a special task. It may not be limited to two images. We can put the poses, and spatial points matched by multiple images for iterative optimization and even put the entire SLAM process in. We will deal with the large-scale problem again in lecture \ref{cpt:9}. We usually consider a small bundle adjustment problem regarding local camera poses and feature points at the frontend, aiming to solve and optimize it in real-time.
 
@@ -1616,7 +1616,7 @@ Mat &R, Mat &t) {
 }
 \end{lstlisting}
 
-The implementation of ICP is consistent with the previous theoretical part. We call Eigen for SVD and then calculate the $\mathbf{R}, \mathbf{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}$, here is $\mathbf{R}, \mathbf{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
+The implementation of ICP is consistent with the previous theoretical part. We call \textit{Eigen} for SVD and then calculate the $\mathbf{R}, \mathbf{t}$ matrix. We output the matched result, but please note that since the previous derivation is based on $\mathbf{p}_i = \mathbf{R} \mathbf{p}_i' + \mathbf{t}$, here is $\mathbf{R}, \mathbf{t}$ is the transformation from the second frame to the first frame, which is the opposite of the previous theoritical part. So in the output result, we also printed the inverse transform:
 
 \begin{lstlisting}[language=sh,caption=Terminal output:]
 ./build/pose_estimation_3d3d 1.png 2.png 1_depth.png 2_depth.png
@@ -1684,7 +1684,7 @@ protected:
 
 They are unary edges, similar to the g2o::EdgeSE3ProjectXYZ mentioned earlier, but the observation has changed from 2 to 3 dimensions. There is no camera model involved, and only one vertex is related. Please pay attention to the form of the Jacobian matrix here. It must be consistent with our previous derivation. The Jacobian matrix gives the derivative of the camera pose and is $3 \times 6$.
 
-The code for using g2o for optimization is similar. We just set the nodes and edges for graph optimization. Readers are suggested to check the source file for this part of the code, which is not listed here. Now, let’s take a look at the results of the optimization:
+The code for using \textit{g2o} for optimization is similar. We just set the nodes and edges for graph optimization. Readers are suggested to check the source file for this part of the code, which is not listed here. Now, let’s take a look at the results of the optimization:
 
 \begin{lstlisting}[language=sh, caption=Terminal output:]
 iteration= 0	 chi2= 1.811539	 time= 1.7046e-05	 cumTime= 1.7046e-05	 edges= 74	 schur= 0
@@ -1731,7 +1731,7 @@ What needs to be mentioned here is we have omitted a lot of discussion about som
 	\item In PnP optimization, taking the first camera's observation into consideration, how should the problem/program be formed? How will the final result change?
 	\item In the ICP program, if the spatial points are also considered optimization variables, how should the program be written? How will the final result change?
 	\item[\optional] In the feature point matching, mismatches will inevitably be encountered. What happens if we put the wrong match into PnP or ICP? What methods can you think of to avoid mismatches?
-	\item[\optional] Use the SE3 class in Sophus to write the nodes and edges of g2o by yourself and implement the optimization of PnP and ICP.
+	\item[\optional] Use the SE3 class in Sophus to write the nodes and edges of \textit{g2o} by yourself and implement the optimization of PnP and ICP.
 	\item[\optional] Implement the optimization of PnP and ICP in Ceres.
 \end{enumerate}
 

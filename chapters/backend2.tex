@@ -6,7 +6,7 @@
 	\begin{enumerate}[labelindent=0em,leftmargin=1.5em]
 		\item Learn the principles of sliding window optimization; 
 		\item Learn the basic knowledge about pose graph optimization.
-		\item Pose graph optimization with g2o. 
+		\item Pose graph optimization with \textit{g2o}.
 	\end{enumerate}
 \end{mdframed}
 
@@ -84,7 +84,7 @@ Mathematically, when we marginalize a certain keyframe, the description of the s
 \end{equation}
 Then discard the marginalized part of the information. After the variable is marginalized, we should no longer use it in engineering. Therefore, the sliding window method is more suitable for VO systems but not for large-scale mapping systems.
 
-Since g2o and Ceres have not explicitly supported the marginal operation in the sliding window method \footnote{In the project, we can walk around g2o and Ceres's restrictions through some clever tricks, but this is often very troublesome and not suitable for demos. }, we omit the corresponding experimental part in this section. I hope the theoretical part can help readers understand some SLAM systems based on sliding windows.
+Since \textit{g2o} and Ceres have not explicitly supported the marginal operation in the sliding window method \footnote{In the project, we can walk around \textit{g2o} and Ceres's restrictions through some clever tricks, but this is often very troublesome and not suitable for demos. }, we omit the corresponding experimental part in this section. I hope the theoretical part can help readers understand some SLAM systems based on sliding windows.
 
 \section{Pose Graph Optimization}
 \subsection{Definition of Pose Graph}
@@ -172,11 +172,11 @@ After understanding the Jacobian derivation, the rest is the same as ordinary gr
 
 After understanding the Jacobian derivation, the rest is the same as ordinary graph optimization. In short, all pose vertices and pose edges constitute a graph optimization, which is essentially a least-squares problem. The optimization variable is the pose of each vertex, and the edges come from the pose observation constraints. Let $\mathcal{E}$ be the set of all edges, then the overall objective function is
 
-We can still use Gauss Newton's method, the Levenberg-Marquardt method, etc., to solve this problem.  Based on previous experience, we can naturally solve this with Ceres or g2o. We won't discuss the detailed process of optimization anymore. We have talked about enough in the last lecture.
+We can still use Gauss Newton's method, the Levenberg-Marquardt method, etc., to solve this problem.  Based on previous experience, we can naturally solve this with Ceres or \textit{g2o}. We won't discuss the detailed process of optimization anymore. We have talked about enough in the last lecture.
 
 \section{Practice: Pose Graph}
-\subsection{Pose Graph Using g2o Built-in Classes}
-Now let's demonstrate the use of g2o to optimize the pose graph. First of all, please use g2o\_viewer command to open our pre-generated simulation pose graph, located in slambook2/ch10/sphere.g2o, as shown in \autoref{fig:sphere-before}~.
+\subsection{Pose Graph Using \textit{g2o} Built-in Classes}
+Now let's demonstrate the use of \textit{g2o} to optimize the pose graph. First of all, please use \textit{g2o\_viewer} command to open our pre-generated simulation pose graph, located in ``slambook2/ch10/sphere.g2o'', as shown in \autoref{fig:sphere-before}~.
 
 \begin{figure}[!htp]
 	\centering
@@ -185,9 +185,9 @@ Now let's demonstrate the use of g2o to optimize the pose graph. First of all, p
 	\label{fig:sphere-before}
 \end{figure}
 
-The pose graph is simulated by the create sphere program that comes with g2o. Its ground-truth trajectory is a ball composed of multiple layers from bottom to top. Each layer is a perfect circle. Many circular layers of different sizes form a complete sphere, which contains 2500 pose nodes (\autoref{fig:sphere-before}~upper left). Then, the simulation program generates odometry edges from $t-1$ to $t$. The edges between layers are also generated, called loop closure edges (loop detection algorithm will be introduced in detail in the next lecture). Then, we add observation noise to each edge and reset the initial value of the node according to the noisy initial value of the odometry edge. In this way, the pose graph data will be affected by accumulative error (\autoref{fig:sphere-before}~bottom right). It looks like part of a sphere locally, but the overall shape is far from that of a sphere. Now we start from the initial values ​​of these noisy edges and nodes, optimize the entire pose graph, and get data that approximates the true value.
+The pose graph is simulated by the create sphere program that comes with \textit{g2o}. Its ground-truth trajectory is a ball composed of multiple layers from bottom to top. Each layer is a perfect circle. Many circular layers of different sizes form a complete sphere, which contains 2500 pose nodes (\autoref{fig:sphere-before}~upper left). Then, the simulation program generates odometry edges from $t-1$ to $t$. The edges between layers are also generated, called loop closure edges (loop detection algorithm will be introduced in detail in the next lecture). Then, we add observation noise to each edge and reset the initial value of the node according to the noisy initial value of the odometry edge. In this way, the pose graph data will be affected by accumulative error (\autoref{fig:sphere-before}~bottom right). It looks like part of a sphere locally, but the overall shape is far from that of a sphere. Now we start from the initial values ​​of these noisy edges and nodes, optimize the entire pose graph, and get data that approximates the true value.
 
-Of course, the real robot will certainly not have such a spherical motion trajectory and complete odometry and loop observation data. The advantage of the simulation into a perfect sphere is that we can intuitively see whether the optimization result is correct (as long as to see it is round or not). Readers can click the optimize function in g2o\_viewer to see the optimization results and convergence process of each step. On the other hand, sphere.g2o is also a text file. You can open it with a text editor to view its contents. The first half of the file is composed of nodes, and the second half is edges:
+Of course, the real robot will certainly not have such a spherical motion trajectory and complete odometry and loop observation data. The advantage of the simulation into a perfect sphere is that we can intuitively see whether the optimization result is correct (as long as to see it is round or not). Readers can click the optimize function in \textit{g2o\_viewer} to see the optimization results and convergence process of each step. On the other hand, sphere.g2o is also a text file. You can open it with a text editor to view its contents. The first half of the file is composed of nodes, and the second half is edges:
 
 \begin{lstlisting}
 	VERTEX_SE3:QUAT 0 -0.125664 -1.53894e-17 99.9999 0.706662 4.32706e-17 0.707551 -4.3325e-17 
@@ -195,9 +195,9 @@ Of course, the real robot will certainly not have such a spherical motion trajec
 	EDGE_SE3:QUAT 1524 1574 -0.210399 -0.0101193 -6.28806 -0.00122939 0.0375067 -2.85291e-05 0.999296 10000 0 0 0 0 0 10000 0 0 0 0 10000 0 0 0 40000 0 0 40000 0 40000 
 \end{lstlisting}
 
-As you can see, the node type is VERTEX\_SE3, which expresses a camera pose. g2o uses quaternion and translation vector to describe the pose by default, so the meaning of the following fields are ID, $t_x, t_y, t_z, q_x, q_y, q_z, q_w$. The first 3 are translation vector elements, and the last 4 are unit quaternions that represent rotation. Similarly, the edge information is the ID of the two nodes, $t_x, t_y, t_z, q_x, q_y, q_z, q_w$, the upper right corner of the information matrix (because the information matrix is a symmetric matrix, you only need to save half of it). You can see that the information matrix is set to a diagonal matrix.
+As you can see, the node type is VERTEX\_SE3, which expresses a camera pose. \textit{g2o} uses quaternion and translation vector to describe the pose by default, so the meaning of the following fields are ID, $t_x, t_y, t_z, q_x, q_y, q_z, q_w$. The first 3 are translation vector elements, and the last 4 are unit quaternions that represent rotation. Similarly, the edge information is the ID of the two nodes, $t_x, t_y, t_z, q_x, q_y, q_z, q_w$, the upper right corner of the information matrix (because the information matrix is a symmetric matrix, you only need to save half of it). You can see that the information matrix is set to a diagonal matrix.
 
-In order to optimize the pose graph, we can use the default vertices and edges of g2o, which are represented by quaternions. Since the simulation data is also generated by g2o, optimization by g2o itself does not require us to do any more work. Just configure the optimization parameters. The program slambook2/ch10/pose\_graph\_g2o\_SE3.cpp demonstrates how to use the Levenberg-Marquardt method to optimize the pose image and store the result in the result.g2o file.
+In order to optimize the pose graph, we can use the default vertices and edges of \textit{g2o}, which are represented by quaternions. Since the simulation data is also generated by \textit{g2o}, optimization by \textit{g2o} itself does not require us to do any more work. Just configure the optimization parameters. The program slambook2/ch10/pose\_graph\_g2o\_SE3.cpp demonstrates how to use the Levenberg-Marquardt method to optimize the pose image and store the result in the result.g2o file.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch10/pose\_graph\_g2o\_SE3.cpp]
 #include <iostream>
@@ -289,18 +289,18 @@ iteration= 29 chi2= 44811.248504 time= 1.76326  cumTime= 31.8442 edges= 9799 sch
 saving optimization results ...
 \end{lstlisting}
 
-Then, open result.g2o with g2o\_viewer to view the results, as shown in \autoref{fig:result-SE3}~.
+Then, open ``result.g2o'' with \textit{g2o\_viewer} to view the results, as shown in \autoref{fig:result-SE3}~.
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=0.75\textwidth]{backend2/result-SE3.pdf}
-	\caption{Optimization results using built-in g2o classes.}
+	\caption{Optimization results using built-in \textit{g2o} classes.}
 	\label{fig:result-SE3}
 \end{figure}
 
-The result was optimized from an irregular shape to a seemingly complete ball. This process is essentially the same as clicking the optimize button on g2o\_viewer. Below, we implement the optimization using Sophus based on the previous derivation.
+The result was optimized from an irregular shape to a seemingly complete ball. This process is essentially the same as clicking the optimize button on \textit{g2o\_viewer}. Below, we implement the optimization using Sophus based on the previous derivation.
 
 \subsection{Pose Graph Using Sophus}
-Remember how we used Sophus to express the poses? Let's try to use Sophus in g2o to define our own vertices and edges.
+Remember how we used Sophus to express the poses? Let's try to use \textit{Sophus} in \textit{g2o} to define our own vertices and edges.
 
 \begin{lstlisting}[language=c++,caption=slambook2/ch10/pose\_graph\_g2o\_lie\_algebra.cpp()part)]
 typedef Matrix<double, 6, 6> Matrix6d;
@@ -407,11 +407,11 @@ class EdgeSE3LieAlgebra : public g2o::BaseBinaryEdge<6, SE3d, VertexSE3LieAlgebr
 };
 \end{lstlisting}
 
-In order to realize the storage and reading of g2o files, the program implements the read and write functions, and pretend itself as the build-in SE3 vertex of g2o, so that g2o\_viewer can recognize and render it. In fact, apart from using Sophus's Lie algebra representation internally, it looks no different from the outside.
+In order to realize the storage and reading of \textit{g2o} files, the program implements the read and write functions, and pretend itself as the build-in SE3 vertex of \textit{g2o}, so that \textit{g2o\_viewer} can recognize and render it. In fact, apart from using Sophus's Lie algebra representation internally, it looks no different from the outside.
 
-It is worth noting the calculation process of Jacobian here. We have several options: one is not to provide the Jacobian calculation function, let g2o automatically calculate the numerical Jacobian. The second is to provide a complete or approximate Jacobian calculation process. Here we use JRInv() function to provide approximate $\bm{\mathcal{J}}_r^{-1}$. Readers can try to approximate it to $\bm{I}$, or simply comment out the oplusImpl function to see what the difference is.
+It is worth noting the calculation process of Jacobian here. We have several options: one is not to provide the Jacobian calculation function, let \textit{g2o} automatically calculate the numerical Jacobian. The second is to provide a complete or approximate Jacobian calculation process. Here we use JRInv() function to provide approximate $\bm{\mathcal{J}}_r^{-1}$. Readers can try to approximate it to $\bm{I}$, or simply comment out the oplusImpl function to see what the difference is.
 
-Then call g2o to optimize the problem:
+Then call \textit{g2o} to optimize the problem:
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 $ build/pose_graph_g2o_lie sphere.g2o    
 read total 2500 vertices, 9799 edges.
@@ -423,7 +423,7 @@ iteration= 3	 chi2= 84218288.615592	 time= 0.525079	 cumTime= 2.14278	 edges= 97
 ......
 \end{lstlisting}
 
-We found that after 23 iterations, the overall error remains the same, which can actually stop the optimization algorithm. In the previous experiment, the error is still decreasing after 30 iterations. \footnote{Please note that although the error here is larger numerically, because we redefine the calculation method of the error when we customize the edge, therefore, the absolute cost value here cannot be directly used for comparison. }. After calling optimization, check result\_lie.g2o to observe its results, as shown in \autoref{fig:result-lie}~. We cannot see any difference from the naked eye.
+We found that after 23 iterations, the overall error remains the same, which can actually stop the optimization algorithm. In the previous experiment, the error is still decreasing after 30 iterations. \footnote{Please note that although the error here is larger numerically, because we redefine the calculation method of the error when we customize the edge, therefore, the absolute cost value here cannot be directly used for comparison. }. After calling optimization, check ``result\_lie.g2o'' to observe its results, as shown in \autoref{fig:result-lie}~. We cannot see any difference from the naked eye.
 
 \begin{figure}[!ht]
 	\centering
@@ -432,7 +432,7 @@ We found that after 23 iterations, the overall error remains the same, which can
 	\label{fig:result-lie}
 \end{figure}
 
-If you press the optimize button in this g2o\_viewer interface, g2o will use its own SE3 vertex to optimize, you can see in the text box below:
+If you press the optimize button in this \textit{g2o\_viewer} interface, \textit{g2o} will use its own SE3 vertex to optimize, you can see in the text box below:
 \begin{lstlisting}
 loaded result_lie.g2o with 2500 vertices and 9799 measurements
 graph is fixed by node 2499
