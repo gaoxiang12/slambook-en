@@ -35,7 +35,7 @@ We found that the requirements for \textit{localization} at the application leve
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=1.0\textwidth]{mapping/maps.pdf}
-	\caption{Different maps from \cite{Mur-Artal2015, Labbe2014, Salas-Moreno2013}.}
+	\caption{Different maps from~\cite{Mur-Artal2015, Labbe2014, Salas-Moreno2013}.}
 	\label{fig:maps}
 \end{figure}
 
@@ -95,21 +95,21 @@ Okay, now we have taken the small blocks around $\mathbf{p}_1$, and many small b
 	Please note that since correlation is used here, correlation close to 0 means that the two images are not similar, and close to 1 means similar. The first two distances are reversed. Close to 0 means similarity, while a larger value means different.
 \end{enumerate}
 
-Like many situations we have encountered, these calculation methods often have a contradiction between accuracy and efficiency. Methods with good accuracy often require complex calculations, while simple and fast algorithms often do not work well. This requires us to make a choice in actual engineering. In addition to these simple versions, we can remove each small block's mean first, which is called zero-mean SSD, zero mean NCC, and so on. After removing the mean value, we allow situations like ``a small piece of $\mathbf{B}$ is brighter than $\mathbf{A}$ as a whole, but still very similar'' \footnote{The overall lighter may be caused by the ambient light or the camera exposure parameters increase. }, so it is more robust than before. If readers are interested in other block matching measurement methods, it is recommended to read the literature \cite{stereo-matching-website, Hirschmuller2007} as supplementary material.
+Like many situations we have encountered, these calculation methods often have a contradiction between accuracy and efficiency. Methods with good accuracy often require complex calculations, while simple and fast algorithms often do not work well. This requires us to make a choice in actual engineering. In addition to these simple versions, we can remove each small block's mean first, which is called zero-mean SSD, zero mean NCC, and so on. After removing the mean value, we allow situations like ``a small piece of $\mathbf{B}$ is brighter than $\mathbf{A}$ as a whole, but still very similar'' \footnote{The overall lighter may be caused by the ambient light or the camera exposure parameters increase. }, so it is more robust than before. If readers are interested in other block matching measurement methods, it is recommended to read the literature~\cite{stereo-matching-website, Hirschmuller2007} as supplementary material.
 
 We have now calculated the similarity measure between $\mathbf{A}$ and $\mathbf{B}_i$ on the epipolar line. For the convenience of description, suppose we use NCC, then we will get an NCC distribution along the epipolar line. This distribution's shape depends heavily on the image data, as shown in \autoref{fig:matching-score}~. In a long search distance, we usually get a non-convex function: this distribution has many peaks, but there must be only one true corresponding point. In this case, we tend to use probability distributions to describe depth values rather than using a single value to describe the depth. Therefore, our question turns to update the depth distribution when we continue to search for different images with epipolar lines. This is the so-called \textit{depth filter}.
 
 \begin{figure}[!htp]
 	\centering
 	\includegraphics[width=.75\textwidth]{mapping/matching-score.pdf}
-	\caption{Matching score along with the epipolar line \cite{Vogiatzis2011}.}
+	\caption{Matching score along with the epipolar line~\cite{Vogiatzis2011}.}
 	\label{fig:matching-score}
 \end{figure}
 
 \subsection{Gaussian Depth Filters}
 The estimation of pixel depth can also be modeled as a state estimation problem, so there are naturally two ways of solving the problem: filter and nonlinear optimization. Although nonlinear optimization is literally better, in the case of strong real-time requirements such as SLAM, considering that the frontend has already occupied many calculations, the filter method with less calculation is usually used in the mapping. This is also the purpose of the depth filter discussion in this section.
 
-There are several different ways of assuming the distribution of depth. Under relatively simple assumptions, we can assume that the depth value obeys the Gaussian distribution and gets a Kalman-like method (but in fact, it is just a normalized production, as we will see later). On the other hand, in \cite{Vogiatzis2011, Forster2014} and other documents, the assumption of uniform-Gaussian mixture distribution is also used to derive a more complex depth filter. Based on the principle of simplicity and ease of use, we first introduce and demonstrate the depth filter under the assumption of Gaussian distribution and then take the filter with uniform-Gaussian mixture distribution as an exercise.
+There are several different ways of assuming the distribution of depth. Under relatively simple assumptions, we can assume that the depth value obeys the Gaussian distribution and gets a Kalman-like method (but in fact, it is just a normalized production, as we will see later). On the other hand, in~\cite{Vogiatzis2011, Forster2014} and other documents, the assumption of uniform-Gaussian mixture distribution is also used to derive a more complex depth filter. Based on the principle of simplicity and ease of use, we first introduce and demonstrate the depth filter under the assumption of Gaussian distribution and then take the filter with uniform-Gaussian mixture distribution as an exercise.
 
 Assume the depth $d$ of a certain pixel satisfy:
 \begin{equation}
@@ -121,14 +121,14 @@ And whenever new data arrives, we will observe its depth. Similarly, suppose thi
 	P(d_{\mathrm{obs}}) = N(\mu_{\mathrm{obs}}, \sigma_{\mathrm{obs}}^2 ).
 \end{equation}
 
-Therefore, our question is how to use the observed information to update the original distribution of $d$. This is exactly an information fusion problem. According to appendix \ref{cpt:app-A}, we know that the normalized product of two Gaussian distributions is still a Gaussian distribution. Suppose the distribution of $d$ after fusion is $N(\mu_{\mathrm{fuse}}, \sigma_{\mathrm{fuse}}^2)$, then according to the product of the Gaussian distribution, there are:
+Therefore, our question is how to use the observed information to update the original distribution of $d$. This is exactly an information fusion problem. According to appendix~\ref{cpt:app-A}, we know that the normalized product of two Gaussian distributions is still a Gaussian distribution. Suppose the distribution of $d$ after fusion is $N(\mu_{\mathrm{fuse}}, \sigma_{\mathrm{fuse}}^2)$, then according to the product of the Gaussian distribution, there are:
 \begin{equation}
 	{\mu _{\mathrm{fuse}}} = \frac{{\sigma _{\mathrm{obs}}^2\mu  + {\sigma ^2}{\mu _{\mathrm{obs}}}}}{{{\sigma ^2} + \sigma _{\mathrm{obs}}^2}},\quad \sigma _{\mathrm{fuse}}^2 = \frac{{{\sigma ^2}\sigma _{\mathrm{obs}}^2}}{{{\sigma ^2} + \sigma _{\mathrm{obs}}^2}}.
 \end{equation}
 
 Since we only have observation equations and no motion equations, the depth here only uses the information fusion part, and there is no need to predict and update like the complete Kalman filter. Of course, you can consider it as if the motion equation is fixed for the depth value. It can be seen that the fusion equation is indeed relatively simple and easy to understand, but the question remains: how to determine the distribution of the depth we observe? That is, how to calculate $\mu_{\mathrm{obs}}, \sigma_{\mathrm{obs}}$?
 
-Regarding of $\mu_{\mathrm{obs}}$ and $\sigma_{\mathrm{obs}}$, there are also some different processing methods. For example, \cite{Engel2013} considers the sum of geometric uncertainty and photometric uncertainty, while \cite{Vogiatzis2011} only considers geometric uncertainty. For now, we only consider the uncertainty caused by geometric relations. Suppose we have determined the projection position of a pixel through epipolar search and block matching. We know that the block matching's accuracy is about one pixel. So, how does this uncertainty affect the estimated depth?
+Regarding of $\mu_{\mathrm{obs}}$ and $\sigma_{\mathrm{obs}}$, there are also some different processing methods. For example,~\cite{Engel2013} considers the sum of geometric uncertainty and photometric uncertainty, while~\cite{Vogiatzis2011} only considers geometric uncertainty. For now, we only consider the uncertainty caused by geometric relations. Suppose we have determined the projection position of a pixel through epipolar search and block matching. We know that the block matching's accuracy is about one pixel. So, how does this uncertainty affect the estimated depth?
 
 Take \autoref{fig:uncertainty-mapping}~ as an example. Consider in an epipolar searching, we find the pixel $\mathbf{p}_2$ corresponding to $\mathbf{p}_1$, and then compute the depth value of $\mathbf{p}_1$. Let the 3D point corresponding to $\mathbf{ p}_1$ is $\mathbf{P}$. We denote that $\mathbf{O}_1 \mathbf{P}$ is $\mathbf{p}$, $\mathbf{O}_1 \mathbf{O}_2$ is the camera's translation $\mathbf{t} $, and $\mathbf{O}_2 \mathbf{P}$ is $\mathbf{a}$. And, let the two bottom angles of this triangle be $\alpha$ and $\beta$. Now, consider that there is one pixel error on the epipolar line $l_2$, so that the angle of $\beta$ becomes $\beta'$, and $\mathbf{p}_2$ also changes to $\mathbf{p }_2'$. Let the upper corner be $\gamma$. We want to ask, if $\mathbf{p}_2 \mathbf{p}_2^\prime $ is one pixel, then how long is $\mathbf{p}'$ and $\mathbf{p}$?
 
@@ -505,7 +505,7 @@ We omit functions such as drawing and reading data and only show the part relate
 	\begin{equation}
 		\mathrm{NCC}_{z} (\mathbf{A}, \mathbf{B}) = \frac{{\sum\limits_{i,j} {\left( {\mathbf{A}(i,j )-\bar{\mathbf{A}}(i,j)} \right)\left( {\mathbf{B}(i,j)-\bar{\mathbf{B}}(i,j)} \right)} }}{{\sqrt {\sum\limits_{i,j} {{{\left( {\mathbf{A}(i,j)-\bar{\mathbf{A}}(i, j)} \right)}^2}} \sum\limits_{i,j} {{{\left( {\mathbf{B}(i,j)-\bar{\mathbf{B}}(i, j)} \right)}^2}}} }}.
 	\end{equation}
-	\item The triangulation part is consistent with section \ref{sec:7.5}, and the calculation of uncertainty is consistent with the Gaussian fusion method and the previous section.
+	\item The triangulation part is consistent with section~\ref{sec:7.5}, and the calculation of uncertainty is consistent with the Gaussian fusion method and the previous section.
 \end{enumerate}
 
 Although the program is a bit long, I believe readers can understand it according to the above tips. Let's take a look at the results.
@@ -546,7 +546,7 @@ This involves a problem that has been seen once in the direct method chapter. Wh
 
 Our demo program deliberately uses a good-textured environment, such as a checkerboard-like floor, a wood-grained desktop, etc., so we can get a seemingly good result. However, in practice, places with uniform brightness such as walls and smooth surfaces will often appear, affecting our depth estimation. From a certain perspective, the problem cannot be improved or solved on the current algorithm flow (block matching) if we only care about the neighborhood around a certain block.
 
-Further discussing the pixel gradient problem, we will also find the connection between the pixel gradient and the epipolar line. The literature \cite{Engel2013} has discussed their relationship in detail, but it is also intuitively reflected in our demo program.
+Further discussing the pixel gradient problem, we will also find the connection between the pixel gradient and the epipolar line. The literature~\cite{Engel2013} has discussed their relationship in detail, but it is also intuitively reflected in our demo program.
 
 Taking \autoref{fig:epipolar-gradient}~ as an example, we will give two extreme cases: the pixel gradient is parallel to the epipolar direction and orthogonal to the epipolar direction. Let's look at the orthogonal situation first. In this case, even if the blocks have noticeable gradients, when we do block matching along the epipolar line, we will find that the matching degree is the same, so no effective matching can be obtained. Conversely, in the parallel case, we can accurately determine where the highest matching point appears. In reality, the gradient and the epipolar line are probably somewhere in between: they are neither completely orthogonal nor completely parallel. When the angle between the pixel gradient and the epipolar line is large, the uncertainty of the epipolar line matching is large. When the angle is small, the uncertainty of the matching becomes smaller. We uniformly treat these conditions in the demo program as one pixel error, which is not fair enough. A more accurate uncertainty model should be used after considering the angle between the epipolar line and the pixel gradient. Specific adjustments and improvements are left as exercises.
 
@@ -621,7 +621,7 @@ In fact, we can also propose many improvements to this example, such as:
 
 \begin{enumerate}
 	\item If each pixel is completely calculated independently, there may be cases where one pixel's depth is small, and the next one is large. We don't have any smooth constraints on the depth map. However, we can assume that the adjacent depth will not change too much, thus adding a spatial regularization term to the depth estimation. 
-	\item We did not explicitly deal with the case of outliers. Due to various factors such as occlusion, lighting, motion blur, etc., it is impossible to maintain a successful match for every pixel. As long as the NCC is greater than a specific value in the demonstration program, it is considered a successful match, and the mismatch is not considered. There are also several ways to handle mismatches. For example, the depth filter under the uniform-Gaussian mixture distribution is proposed in \cite{Vogiatzis2011} explicitly distinguishes the inlier from the outlier and performs probabilistic modeling, which can better process the outliers. However, this type of filter theory is more complicated, and this book does not want to involve too much. Please read the original paper if you are interested.
+	\item We did not explicitly deal with the case of outliers. Due to various factors such as occlusion, lighting, motion blur, etc., it is impossible to maintain a successful match for every pixel. As long as the NCC is greater than a specific value in the demonstration program, it is considered a successful match, and the mismatch is not considered. There are also several ways to handle mismatches. For example, the depth filter under the uniform-Gaussian mixture distribution is proposed in~\cite{Vogiatzis2011} explicitly distinguishes the inlier from the outlier and performs probabilistic modeling, which can better process the outliers. However, this type of filter theory is more complicated, and this book does not want to involve too much. Please read the original paper if you are interested.
 \end{enumerate}
 
 As can be seen from the above discussion, there are many possible improvements. If we carefully improve every step, we can hope to get a good dense mapping algorithm in the end. However, as we discussed, there are problems with theoretical difficulties, such as the dependence on the texture and the correlation between the pixel gradient and the epipolar direction (the orthogonal case). These problems are difficult to solve by only adjusting the code or parameters. So, until now, although binoculars and mobile monoculars can build dense maps, we usually think that they rely too much on environmental textures and lighting and are not robust enough.
@@ -736,14 +736,14 @@ This code needs to install the point cloud library. In Ubuntu 18.04, just one co
 sudo apt-get install libpcl-dev pcl-tools
 \end{lstlisting}
 
-The code does not change much compared with the lecture \ref{cpt:5}. The main differences are:
+The code does not change much compared with the lecture~\ref{cpt:5}. The main differences are:
 \begin{enumerate}
 	\item When generating the point cloud of each frame, we remove the points with invalid depth values. This is mainly because of the effective range of Kinect. The depth value after exceeding the range will have a large error or return a zero.
 	\item Use the statistical filter method to remove outliers. This filter counts the distance distribution between each point and the nearest $N$ points and removes those with extremely large distances. In this way, we keep those sticky points and remove isolated noise points.
 	\item Finally, the voxel filter is used for downsampling. There will be many redundant points in the overlapping area due to multiple viewing angles. This will take up a lot of memory space in vain. Voxel filtering ensures that there is only one point in a specific size cube (or voxel), which is equivalent to downsampling the 3D space, saving a lot of storage space.
 \end{enumerate}
 
-In the second edition of the book, we use the ICL-NUIM dataset \cite{Handa2014} as an example. This data set is a synthetic RGB-D dataset, which allows us to get noise-free depth data to facilitate experiments. We store five images and depth maps and the corresponding camera poses in the data/ directory. In the voxel filter, we set the resolution to 0.03, which means that there is only one point reserved in each 0.03$\times$0.03$\times$0.03 grid. This is a relatively high resolution. We can see from the program output that the number of points has been significantly reduced (from 1.3 million points to 30,000 points, only 2$ \%$ storage space) but still keeps a similar visual effect.
+In the second edition of the book, we use the ICL-NUIM dataset~\cite{Handa2014} as an example. This data set is a synthetic RGB-D dataset, which allows us to get noise-free depth data to facilitate experiments. We store five images and depth maps and the corresponding camera poses in the data/ directory. In the voxel filter, we set the resolution to 0.03, which means that there is only one point reserved in each 0.03$\times$0.03$\times$0.03 grid. This is a relatively high resolution. We can see from the program output that the number of points has been significantly reduced (from 1.3 million points to 30,000 points, only 2$ \%$ storage space) but still keeps a similar visual effect.
 
 Run the program in the dense\_RGBD directory:
 \begin{lstlisting}[language=sh, caption=Terminal input:]
@@ -874,7 +874,7 @@ This program demonstrates the process of calculating normals and meshes. Use:
 \begin{lstlisting}[language=sh,caption=Terminal input:]
 ./build/surfel_mapping map.pcd
 \end{lstlisting}
-to convert the point cloud into a grid map, as shown in \autoref{fig:mesh}. It can be seen that after the mesh is reconstructed, the normals, texture, and other information can be constructed from the point cloud without surface information. For the point cloud reconstruction algorithms (moving least-square and greedy projection) demonstrated in this section, readers can find them in the literature \cite{Alexa2003} and \cite{Marton2009}, which are classic algorithms in this area.
+to convert the point cloud into a grid map, as shown in \autoref{fig:mesh}. It can be seen that after the mesh is reconstructed, the normals, texture, and other information can be constructed from the point cloud without surface information. For the point cloud reconstruction algorithms (moving least-square and greedy projection) demonstrated in this section, readers can find them in the literature~\cite{Alexa2003} and~\cite{Marton2009}, which are classic algorithms in this area.
 
 \begin{figure}[!htp]
 	\centering
@@ -1021,7 +1021,7 @@ In each TSDF voxel, the distance between the small block and the closest object'
 
 TSDF also has two localization and map building problems, which are very similar to SLAM, but the specific form is slightly different from the previous lectures in this book. Here, the localization problem mainly refers to comparing the current RGB-D image with the TSDF map in the GPU to estimate the camera pose. The problem of mapping is how to update the TSDF map based on the estimated camera pose. In the traditional approach, we also perform a bilateral Bayesian filter on the RGB-D image to remove the depth map's noise.
 
-The localization of TSDF is similar to the ICP described earlier. Due to GPU's parallel computation, we can perform ICP calculation on the entire depth map and TSDF map without having to calculate the feature points first like traditional visual odometry. At the same time, because TSDF does not have color information, it means that we can only use the depth map and compute the pose without using color maps, which to some extent get rid of the dependence of texture or illumination conditions. The RGB-D reconstruction is more robust \footnote{But having said that, it is more dependent on the depth map in this way. }. On the other hand, the mapping part is also a process of updating the values ​​in the TSDF in parallel, making the estimated surface smoother and more reliable. Since we do not introduce GPU-related content too much, the specific method will not be elaborated. Please refer to relevant literature for details.
+The localization of TSDF is similar to the ICP described earlier. Due to GPU's parallel computation, we can perform ICP calculation on the entire depth map and TSDF map without having to calculate the feature points first like traditional visual odometry. At the same time, because TSDF does not have color information, it means that we can only use the depth map and compute the pose without using color maps, which to some extent get rid of the dependence of texture or illumination conditions. The RGB-D reconstruction is more robust \footnote{But having said that, it is more dependent on the depth map in this way. }. On the other hand, the mapping part is also a process of updating the values in the TSDF in parallel, making the estimated surface smoother and more reliable. Since we do not introduce GPU-related content too much, the specific method will not be elaborated. Please refer to relevant literature for details.
 
 \section{Summary}
 This lecture introduces some common map types, especially dense map forms. We see that dense maps can be constructed based on monocular or binocular cameras, while RGB-D sensors are often easier and more stable. The map in this lecture focuses on the measurement map, and the topological map form is quite different from the SLAM research, so it is not discussed in detail.
@@ -1032,6 +1032,6 @@ This lecture introduces some common map types, especially dense map forms. We se
 	\item Change the dense depth estimation in this lecture to semi-dense. You can first filter out the places with obvious gradients
 	\item[\optional] Change the monocular dense reconstruction code demonstrated in this lecture from positive depth to inverse depth, and add affine transformation. Does your experiment improve the results?
 	\item Can you demonstrate how to navigate or plan a path in an octree?
-	\item Read \cite{Newcombe2011} to discuss how the TSDF map performs pose estimation and update. What are the similarities and differences between it and the localization mapping algorithm we talked about before?
+	\item Read~\cite{Newcombe2011} to discuss how the TSDF map performs pose estimation and update. What are the similarities and differences between it and the localization mapping algorithm we talked about before?
 	\item[\optional] Study the principle and realization of uniform-Gaussian mixture filter.
 \end{enumerate}
