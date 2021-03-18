@@ -960,45 +960,45 @@ Obviously, there is a relationship between triangles:
 
 Consider the relationship between $Oab$ and $OAB$. Using the law of cosines, there are:
 \begin{equation}
-O{A^2} + O{B^2} - 2OA \cdot OB \cdot \cos \left\langle a,b \right \rangle  = A{B^2}.
+\overline{OA}^2 + \overline{OB}^2 - 2.\overline{OA}.\overline{OB}.\cos \left\langle a,b \right \rangle  = \overline{AB}^2.
 \end{equation}
 
 The other two triangles have similar properties, so we further get:
 \begin{equation}
 \begin{array}{l}
-O{A^2} + O{B^2} - 2OA \cdot OB \cdot \cos \left\langle a,b \right \rangle  = A{B^2}\\
-O{B^2} + O{C^2} - 2OB \cdot OC \cdot \cos \left\langle b,c \right \rangle  = B{C^2}\\
-O{A^2} + O{C^2} - 2OA \cdot OC \cdot \cos \left\langle a,c \right \rangle  = A{C^2}.
+\overline{OA}^2 + \overline{OB}^2 - 2.\overline{OA}.\overline{OB}.\cos \left\langle a,b \right \rangle  = \overline{AB}^2\\
+\overline{OB}^2 + \overline{OC}^2 - 2.\overline{OB}.\overline{OC}.\cos \left\langle b,c \right \rangle  = \overline{BC}^2\\
+\overline{OA}^2 + \overline{OC}^2 - 2.\overline{OA}.\overline{OC}.\cos \left\langle a,c \right \rangle  = \overline{AC}^2.
 \end{array}
 \end{equation}
 
-Divide all the above three equations by $OC^2$ on both sides, and let $x=OA/OC, y=OB/OC$, we get:
+Divide all the above three equations by $\overline{OC}^2$ on both sides, and consider $x=\overline{OA}/\overline{OC},\ y=\overline{OB}/\overline{OC}$, we get:
 \begin{equation}
 \begin{array}{l}
-{x^2} + {y^2} - 2xy\cos \left\langle a,b \right \rangle  = A{B^2}/O{C^2}\\
-{y^2} + {1^2} - 2y\cos \left\langle b,c \right \rangle  = B{C^2}/O{C^2}\\
-{x^2} + {1^2} - 2x\cos \left\langle a,c \right \rangle  = A{C^2}/O{C^2}.
+{x^2} + {y^2} - 2.x.y.\cos \left\langle a,b \right \rangle  = \overline{AB}^2/\overline{OC}^2\\
+{y^2} + {1^2} - 2.y.\cos \left\langle b,c \right \rangle  = \overline{BC}^2/\overline{OC}^2\\
+{x^2} + {1^2} - 2.x.\cos \left\langle a,c \right \rangle  = \overline{AC}^2/\overline{OC}^2.
 \end{array}
 \end{equation}
 
-Let $v = AB^2/OC^2, uv = BC^2/OC^2, wv = AC^2/OC^2$, then we have:
+Let $v = \overline{AB}^2/\overline{OC}^2,\ u.v = \overline{BC}^2/\overline{OC}^2,\ w.v = \overline{AC}^2/\overline{OC}^2$, then we have:
 \begin{equation}
 \begin{array}{l}
-{x^2} + {y^2} - 2xy\cos \left\langle a,b \right \rangle  - v = 0\\
-{y^2} + {1^2} - 2y\cos \left\langle b,c \right \rangle  - uv = 0\\
-{x^2} + {1^2} - 2x\cos \left\langle a,c \right \rangle  - wv = 0.
+{x^2} + {y^2} - 2.x.y.\cos \left\langle a,b \right \rangle  - v = 0\\
+{y^2} + {1^2} - 2.y.\cos \left\langle b,c \right \rangle  - u.v = 0\\
+{x^2} + {1^2} - 2.x.\cos \left\langle a,c \right \rangle  - w.v = 0.
 \end{array}
 \end{equation}
 
 Move $v$ in the first equation to the right side, and combine it with the other two equations, we have:
 \begin{equation}
 \begin{array}{l}
-\left( {1 - u} \right){y^2} - u{x^2} - \cos \left\langle b,c \right \rangle y + 2uxy\cos \left\langle a,b \right \rangle  + 1 = 0 \\
-\left( {1 - w} \right){x^2} - w{y^2} - \cos \left\langle a,c \right \rangle x + 2wxy\cos \left\langle a,b \right \rangle  + 1 = 0.
+\left( {1 - u} \right){y^2} - u.{x^2} - y.\cos \left\langle b,c \right \rangle + 2.u.x.y.\cos \left\langle a,b \right \rangle  + 1 = 0 \\
+\left( {1 - w} \right){x^2} - w.{y^2} - x.\cos \left\langle a,c \right \rangle + 2.w.x.y.\cos \left\langle a,b \right \rangle  + 1 = 0.
 \end{array}
 \end{equation}
 
-Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=BC^2/AB^2, w=AC^2/AB^2$ can be calculated by the coordinates of $A, B, C$ in the world frame. Transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the equations are quadratic equations about two unknowns $x, y$. Analytically solving the equations is complicated and requires Wu's elimination method. It will not be introduced here. Interested readers could refer to the literature \cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\mathbf{E}$, this equation may get 4 solutions at most. Still, we can use the verification points to select the most probable solution and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\mathbf{R}, \mathbf{t}$ can be calculated, which will be introduced in section 7.9.
+Please distinguish the known from the unknown quantities in these equations. Since we know the positions of the 2D points in the image, the 3 cosine angles $\cos \left \langle a,b \right \rangle$, $\cos \left\langle b,c \right \rangle$, $\cos \left \langle a,c \right \rangle$ can be calculated. Meanwhile, $u=\overline{BC}^2/\overline{AB}^2, w=\overline{AC}^2/\overline{AB}^2$ can be calculated by the coordinates of $A, B, C$ in the world frame. Transforming to the camera frame does not change the ratio. The $x$ and $y$ are unknown and will change as the camera moves. Therefore, the equations are quadratic equations about two unknowns $x, y$. Analytically solving the equations is complicated and requires Wu's elimination method. It will not be introduced here. Interested readers could refer to the literature~\cite{GaoHouTangEtAl2003}. Analogous to the case of decomposing $\mathbf{E}$, this equation may get 4 solutions at most. Still, we can use the verification points to select the most probable solution and get the 3D of $A, B, C$ in the camera frame. Then, based on the 3D−3D point pair, the camera movement $\mathbf{R}, \mathbf{t}$ can be calculated, which will be introduced in section \ref{sec:7.9}.
 
 From the principle of P3P to solve PnP, we use the triangle relationships to solve the 3D coordinates of the projection points $a, b, c$ in the camera frame, and finally convert the problem into a 3D to 3D pose estimation problem. As we will see later, it is easy to solve the 3D-3D pose with matching information, so this idea is very effective. Some other methods, such as EPnP, also adopted this idea. However, P3P also has some deficiencies:
 
