@@ -63,7 +63,7 @@ It is easy to verify that the rotation matrix set with the normal matrix multipl
 
 The group structure guarantees that the group's operations have very good properties. The group theory is the theory that studies the various structures and properties of the groups. Readers interested in group theory can refer to any of the modern algebra books. \textit{Lie Group} refers to a group with continuous (smooth) properties. Discrete groups like the integer group $\mathbb{Z}$ have no continuous properties, so they are not Lie groups. And obviously, $\mathrm{SO}(n)$ and $\mathrm{SE}(n)$ are continuous in real space because we can intuitively imagine that a rigid body moving continuously in the space, so they are all Lie Groups. Since $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$ are especially important for camera pose estimation, we mainly discuss these two Lie groups. However, strictly discussing the concepts of ``continuous'' and ``smooth'' requires knowledge of analysis and topology. We don't want to write this book into a mathematics book, so only some important conclusions directly related to SLAM are introduced. If the reader is interested in the theoretical nature of Lie Groups, please refer to books like~\cite{Varadarajan2013}.
 
-We usually have two ways to introduce the Lie Groups or Lie Algebras. The first is to directly introduce Lie group and Lie algebra and then present to the reader that each Lie group corresponds to a Lie algebra. But, in this case, the reader may think that Lie algebra seems to be a symbol that jumps out with no reason and does not know its physical meaning. So, I will take a little time to draw the Lie algebra from the rotation matrix, similar to the way of~\cite{Ma2012} and \cite{Sola2012}. Let's start with the simpler $\mathrm{SO}(3)$, leading to the Lie algebra $\mathfrak{so}(3)$ above $\mathrm{SO}(3)$.
+We usually have two ways to introduce the Lie Groups or Lie Algebras. The first is to directly introduce Lie group and Lie algebra and then present to the reader that each Lie group corresponds to a Lie algebra. But, in this case, the reader may think that Lie algebra seems to be a symbol that jumps out with no reason and does not know its physical meaning. So, I will take a little time to draw the Lie algebra from the rotation matrix, similar to the way of~\cite{Ma2012} and~\cite{Sola2012}. Let's start with the simpler $\mathrm{SO}(3)$, leading to the Lie algebra $\mathfrak{so}(3)$ above $\mathrm{SO}(3)$.
 
 \subsection{Introduction of the Lie Algebra}
 Consider an arbitrary rotation matrix $\mathbf{R}$, we know that it satisfies:
@@ -313,7 +313,7 @@ Since $\mathbf{J}$ can be obtained from $\boldsymbol{\phi}$, $\boldsymbol{\rho}$
 
 \section{Lie Algebra Derivation and Perturbation Model}
 \subsection{BCH Formula and its Approximation}
-A major motivation for using Lie algebra is to do optimization. The derivative is a very necessary part of the optimization process (we will talk about it in detail in lecture \ref{cpt:6}). Let's consider the problem below. Although we have already understood the relationship between Lie group and Lie algebra on $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, but what happens in $\mathfrak{so}(3)$ when two matrices are multiplied in $\mathrm{SO}(3)$? Conversely, when we add two vectors in $\mathfrak{so}(3)$, does $\mathrm{SO}(3)$ correspond to the product of the two matrices? If we write it out, it should be:
+A major motivation for using Lie algebra is to do optimization. The derivative is a very necessary part of the optimization process (we will talk about it in detail in lecture~\ref{cpt:6}). Let's consider the problem below. Although we have already understood the relationship between Lie group and Lie algebra on $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, but what happens in $\mathfrak{so}(3)$ when two matrices are multiplied in $\mathrm{SO}(3)$? Conversely, when we add two vectors in $\mathfrak{so}(3)$, does $\mathrm{SO}(3)$ correspond to the product of the two matrices? If we write it out, it should be:
 \[
 \exp \left( {\boldsymbol{\phi}_1^\wedge } \right)\exp \left( {\boldsymbol{\phi}_2^\wedge}\right) = \exp \left( {{{\left( {{\boldsymbol{\phi} _1} + {\boldsymbol{\phi} _2}} \right)}^ \wedge }} \right) ?
 \]
@@ -326,7 +326,7 @@ for matrices. Unfortunately, this formula is not true in the matrix. The complet
 \begin{equation}
 \ln \left( {\exp \left( \mathbf{A} \right)\exp \left( \mathbf{B} \right)} \right) = \mathbf{A} + \mathbf{B} + \frac{1}{2}\left[ {\mathbf{A}, \mathbf{B}} \right] + \frac{1}{{12}}\left[ {\mathbf{A},\left[ {\mathbf{A}, \mathbf{B}} \right]} \right] - \frac{1}{{12}}\left[ {\mathbf{B},\left[ {\mathbf{A} ,\mathbf{B}} \right]} \right] + \cdots
 \end{equation}
-where $[]$ is the Lie brackets. The BCH formula tells us that how to deal with the product of two matrices: they produce some extra Lie brackets compared with the scalar form. In particular, consider the case of $\mathrm{SO}(3)$ and $\ln { \left( {\exp \left( { \boldsymbol{\phi} _1^ \wedge } \right)\exp \left ( {\boldsymbol{\phi} _2^ \wedge } \right)} \right) ^ \vee }$, when $\boldsymbol{\phi_1}$ or $\boldsymbol{\phi_2}$ is small. Small items with more than quadratic can be  ignored when taking derivatives. At this time, BCH has a linear approximation\footnote{We are not going to do the detailed derivation of BCH approximation, see \cite{Barfoot2016} if you are interested. }:
+where $[]$ is the Lie brackets. The BCH formula tells us that how to deal with the product of two matrices: they produce some extra Lie brackets compared with the scalar form. In particular, consider the case of $\mathrm{SO}(3)$ and $\ln { \left( {\exp \left( { \boldsymbol{\phi} _1^ \wedge } \right)\exp \left ( {\boldsymbol{\phi} _2^ \wedge } \right)} \right) ^ \vee }$, when $\boldsymbol{\phi_1}$ or $\boldsymbol{\phi_2}$ is small. Small items with more than quadratic can be  ignored when taking derivatives. At this time, BCH has a linear approximation\footnote{We are not going to do the detailed derivation of BCH approximation, see~\cite{Barfoot2016} if you are interested. }:
 \begin{equation}
 \ln { \left( {\exp \left( { \boldsymbol{\phi} _1^ \wedge } \right)\exp \left( {\boldsymbol{\phi} _2^ \wedge } \right)} \right ) ^ \vee } \approx \left\{
 \begin{array}{l}
@@ -369,7 +369,7 @@ This provides a theoretical basis for calculus on Lie algebra. Similarly, for $\
 \exp \left( {{ \boldsymbol{\xi} ^ \wedge }} \right) \exp \left( {\Delta {\boldsymbol{\xi} ^ \wedge }} \right) \approx \exp \left ( {{{\left( {{ \boldsymbol{\mathcal{J}}_r^{-1} }\Delta \boldsymbol{\xi} + \boldsymbol{\xi} } \right)}^ \wedge }} \right).
 \end{equation}
 
-Here the $\boldsymbol{\mathcal{J}}_l$ and $\boldsymbol{\mathcal{J}}_r$ are more complicated $6 \times 6$ matrices. Readers can find its detailed contents in \cite{Barfoot2016}. Since we did not use these two jacobians matrices in the calculation (we will see in the next subsection), the exact form is omitted here.
+Here the $\boldsymbol{\mathcal{J}}_l$ and $\boldsymbol{\mathcal{J}}_r$ are more complicated $6 \times 6$ matrices. Readers can find its detailed contents in~\cite{Barfoot2016}. Since we did not use these two jacobians matrices in the calculation (we will see in the next subsection), the exact form is omitted here.
 
 \subsection{Derivative on $\mathrm{SO}(3)$}
 Now let's talk about how to compute the derivation if our target function is related to a rotation or a transform, which has a powerful practical meaning since we usually have these functions to optimize in solving the SLAM problem. Assume we want to estimate a pose described by $\mathrm{SO}(3)$ or $\mathrm{SE}(3)$ elements. Our robot observes a point with the world coordinate $\mathbf{p}$ and generates an observation data $\mathbf{z}$, which can be written as:
@@ -403,7 +403,7 @@ First, consider the situation on $\mathrm{SO}(3)$. Suppose we rotate a space poi
 \[
 \frac{{\partial \left( {\mathbf{Rp}} \right)}}{{\partial \mathbf{R}}}.
 \]
-Since $\mathrm{SO}(3)$ has no addition operator, it cannot be calculated by the common derivative definition. Let the Lie algebra corresponding to $\mathbf{R}$ be $\boldsymbol{\phi}$, and we will calculate instead of the common derivative:\footnote{Strictly speaking, in matrix differentiation, we can only compute the derivative of a row vector to a column vector, whose result is a matrix. However, in this book, we write the derivative of the column vector to the column vector for convenience. The reader can think that the numerator is transposed first, and after the computation, the final result is also transposed (see appendix \ref{cpt:app-B} for details). This makes the formula look simple; otherwise, we have to add a transpose to each equation. In this sense, we can use equations like $\mathrm{d}(\mathbf{Ax})/\mathrm{d}\mathbf{x} = \mathbf{A}$. }:
+Since $\mathrm{SO}(3)$ has no addition operator, it cannot be calculated by the common derivative definition. Let the Lie algebra corresponding to $\mathbf{R}$ be $\boldsymbol{\phi}$, and we will calculate instead of the common derivative:\footnote{Strictly speaking, in matrix differentiation, we can only compute the derivative of a row vector to a column vector, whose result is a matrix. However, in this book, we write the derivative of the column vector to the column vector for convenience. The reader can think that the numerator is transposed first, and after the computation, the final result is also transposed (see appendix~\ref{cpt:app-B} for details). This makes the formula look simple; otherwise, we have to add a transpose to each equation. In this sense, we can use equations like $\mathrm{d}(\mathbf{Ax})/\mathrm{d}\mathbf{x} = \mathbf{A}$. }:
 \[ \frac{{\partial \left( {\exp \left( \boldsymbol{\phi} ^ \wedge \right) \mathbf{p}} \right)}}{{\partial \boldsymbol{\phi} }}. \]
 
 %\clearpage
@@ -574,7 +574,7 @@ There are many kinds of error indicators. The common used one is \textit{absolut
 \begin{equation}
 \mathrm{ATE}_{\mathrm{all}} = \sqrt{ \frac{1}{N} \sum_{i=1}^N \| \log( \mathbf{T}_{\mathrm{gt },i}^{-1} \mathbf{T}_{\mathrm{esti},i} )^{\vee} \|_2^2},
 \end{equation}
-This is actually the root-mean-squared error (RMSE) for each pose in Lie algebra. This error can describe both the rotation and translation errors. At the same time, some literature only consider the translation error \cite{Sturm2012}, so we can define the \textit{average translational error}:
+This is actually the root-mean-squared error (RMSE) for each pose in Lie algebra. This error can describe both the rotation and translation errors. At the same time, some literature only consider the translation error~\cite{Sturm2012}, so we can define the \textit{average translational error}:
 \begin{equation}
 \mathrm{ATE}_{\mathrm{trans}} = \sqrt{ \frac{1}{N} \sum_{i=1}^N \| \mathrm{trans}( \mathbf{T}_{\mathrm{gt},i}^{-1} \mathbf{T}_{\mathrm{esti},i} ) \|_2^2},
 \end{equation}
@@ -722,7 +722,7 @@ The BCH approximation of $\mathrm{Sim}(3)$ is similar to $\mathrm{SE}(3)$. We ca
     \end{array}} \right].
 \end{equation}
 
-We will end here about the contents of $\mathrm{Sim}(3)$. For more detailed information on $\mathrm{Sim}(3)$, please refer to the literature \cite{Strasdat2012a}.
+We will end here about the contents of $\mathrm{Sim}(3)$. For more detailed information on $\mathrm{Sim}(3)$, please refer to the literature~\cite{Strasdat2012a}.
 
 \section{Summary}
 This lecture introduces Lie group $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, and their corresponding Lie algebras $\mathfrak{so}(3)$ and $\mathfrak{se }(3)$. We introduce the expression and transformation of poses on them, and then through the linear approximation of BCH, we can perturb and predict the pose. This lays the theoretical foundation for optimizing the pose afterward because we need to adjust the estimate of a certain pose frequently to reduce the corresponding error. Only after we have figured out how to adjust and update the pose can we continue to the next step.
