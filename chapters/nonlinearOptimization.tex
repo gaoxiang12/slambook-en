@@ -21,7 +21,7 @@ Solving the state estimation problem requires a certain degree of optimization b
 
 \newpage
 \section{State Estimation}
-\subsection{From Batch State Estimation to least-square}
+\subsection{From Batch State Estimation to Least-square}
 According to the previous sections, the SLAM process can be described by a discrete-time motion and observation equations like~\eqref{eq:slamproblem}:
 \begin{equation}
 \left\{ \begin{array}{l}
@@ -75,7 +75,7 @@ Please note that the denominator part of Bayes' rule has nothing to do with the 
 
 Intuitively speaking, likelihood refers to ``what observation data may be generated in the current pose''. Since we know the observation data, the maximum likelihood estimation can be understood as: ``under what state, it is most likely to produce the data currently observed''. 
 
-\subsection{Introduction to least-squares}
+\subsection{Introduction to Least-squares}
 Now we have formulated the state estimation problem into a MAP/MLE problem, and the next question is how to solve it. Under the assumption of Gaussian distribution, we can have a simpler form of the maximum likelihood problem. Looking back at the observation model, for a certain kind of observation, we have:
 \[
 {\mathbf{z}_{k,j}} = h\left( {{ \mathbf{y}_j},{ \mathbf{x}_k}} \right)+ \mathbf{v}_{k, j},

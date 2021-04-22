@@ -1,7 +1,7 @@
-\chapter{Introduction}
+\chapter*{Preface}
 \label{cpt:1}
 
-\section{What is this book talking about?}
+\section*{What is this book talking about?}
 
 This book introduces visual SLAM, and it is probably the first Chinese book solely focused on this specific topic.
 
@@ -30,41 +30,41 @@ This book will introduce the history, theory, algorithms, and research status in
 
 Well, enough talking, wish you a pleasant journey!
 
-\section{How to Use This Book?}
+\section*{How to Use This Book?}
 
 This book is entitled as \textit{14 Lectures on Visual SLAM}. As the name suggests, we will organize the contents into lectures like studying in a classroom. Each lecture focuses on one specific topic, organized in a logical order. Each chapter will include both a \textit{theoretical} part and a \textit{practical} part, with the theoretical usually coming first. We will introduce the mathematics essential to understand the algorithms, and most of the time in a narrative way, rather than in a \textit{definition, theorem, inference} approach adopted by most mathematical textbooks. We think this will be much easier to understand, but of course, with the price of being less rigorous sometimes. In practical parts, we will provide code, discuss the various components' meaning, and demonstrate some experimental results. So, when you see chapters with the word practice in the title, you should turn on your computer and start to program with us, joyfully.
 
 The book can be divided into two parts: The first part will be mainly focused on fundamental math knowledge, which contains:
 \begin{enumerate}
-	\item Lecture 1: preface (the one you are reading now), introducing the book's contents and structure.
-	\item Lecture 2: an overview of a SLAM system. It describes each module of a typical SLAM system and explains what to do and how to do it. The practice section introduces basic C++ programming in a Linux environment and the use of an IDE.
-	\item Lecture 3: rigid body motion in 3D space. You will learn about rotation matrices, quaternions, Euler angles and practice them with the \textit{Eigen} library.
-	\item Lecture 4: Lie group and Lie algebra. It doesn't matter if you have never heard of them. You will learn the basics of the Lie group and manipulate them with \textit{Sophus}.
-	\item Lecture 5: pinhole camera model and image expression in computer. You will use \textit{OpenCV} to retrieve the camera's intrinsic and extrinsic parameters and generate a point cloud using the depth information through \textit{PCL} (Point Cloud Library).
-	\item Lecture 6: nonlinear optimization, including state estimation, least squares, and gradient descent methods, e.g., Gauss-Newton and Levenburg-Marquardt method. You will solve a curve-fitting problem using the \textit{Ceres} and \textit{g2o} library.
+	\item Preface (the one you are reading now), introducing the book's contents and structure.
+	\item Lecture \ref{cpt:2}: an overview of a SLAM system. It describes each module of a typical SLAM system and explains what to do and how to do it. The practice section introduces basic C++ programming in a Linux environment and the use of an IDE.
+	\item Lecture \ref{cpt:3}: rigid body motion in 3D space. You will learn about rotation matrices, quaternions, Euler angles and practice them with the \textit{Eigen} library.
+	\item Lecture \ref{cpt:4}: Lie group and Lie algebra. It doesn't matter if you have never heard of them. You will learn the basics of the Lie group and manipulate them with \textit{Sophus}.
+	\item Lecture \ref{cpt:5}: pinhole camera model and image expression in computer. You will use \textit{OpenCV} to retrieve the camera's intrinsic and extrinsic parameters and generate a point cloud using the depth information through \textit{PCL} (Point Cloud Library).
+	\item Lecture \ref{cpt:6}: nonlinear optimization, including state estimation, least squares, and gradient descent methods, e.g., Gauss-Newton and Levenburg-Marquardt method. You will solve a curve-fitting problem using the \textit{Ceres} and \textit{g2o} library.
 	
-	From lecture 7, we will be discussing SLAM algorithms, starting with visual odometry (VO) and followed by the map building problems: 
+	From lecture \ref{cpt:7}, we will be discussing SLAM algorithms, starting with visual odometry (VO) and followed by the map building problems: 
 	
-	\item Lecture 7: feature-based visual odometry, which is currently the mainstream in VO. Contents include feature extraction and matching, epipolar geometry calculation, Perspective-n-Point (PnP) algorithm, Iterative Closest Point (ICP) algorithm, and Bundle Adjustment (BA), etc. You will run these algorithms either by calling \textit{OpenCV} functions or constructing your own optimization problem in \textit{Ceres} and \textit{g2o}.
+	\item Lecture \ref{cpt:7}: feature-based visual odometry, which is currently the mainstream in VO. Contents include feature extraction and matching, epipolar geometry calculation, Perspective-n-Point (PnP) algorithm, Iterative Closest Point (ICP) algorithm, and Bundle Adjustment (BA), etc. You will run these algorithms either by calling \textit{OpenCV} functions or constructing your own optimization problem in \textit{Ceres} and \textit{g2o}.
 
-	\item Lecture 8: direct (or intensity-based) method for VO. You will learn the optical flow principle and the direct method. The practice part is about writing single-layer and multi-layer optical flow and direct method to implement a two-view VO.
+	\item Lecture \ref{cpt:8}: direct (or intensity-based) method for VO. You will learn the optical flow principle and the direct method. The practice part is about writing single-layer and multi-layer optical flow and direct method to implement a two-view VO.
 	
-	\item Lecture 9: backend optimization. We will discuss Bundle Adjustment in detail and show the relationship between its sparse structure and the corresponding graph model. You will use \textit{Ceres} and \textit{g2o} separately to solve the same BA problem.
+	\item Lecture \ref{cpt:9}: backend optimization. We will discuss Bundle Adjustment in detail and show the relationship between its sparse structure and the corresponding graph model. You will use \textit{Ceres} and \textit{g2o} separately to solve the same BA problem.
 	
-	\item Lecture 10: pose graph in the backend optimization. Pose graph is a more compact representation for BA, which converts all map points into constraints between keyframes. You will use \textit{g2o} to optimize a pose graph.
+	\item Lecture \ref{cpt:backend2}: pose graph in the backend optimization. Pose graph is a more compact representation for BA, which converts all map points into constraints between keyframes. You will use \textit{g2o} to optimize a pose graph.
 	
-	\item Lecture 11: loop closure detection, mainly Bag-of-Word (BoW) based method. You will use DBoW3 to train a dictionary from images and detect loops in videos. 
+	\item Lecture \ref{cpt:11}: loop closure detection, mainly Bag-of-Word (BoW) based method. You will use DBoW3 to train a dictionary from images and detect loops in videos. 
 	
-	\item Lecture 12: map building. We will discuss how to estimate the depth of pixels in monocular SLAM  (and show why they are unreliable). Compared with monocular depth estimation, building a dense map with RGB-D cameras is much easier. You will write programs for epipolar line search and patch matching to estimate depth from monocular images and then build a point cloud map and octagonal treemap from RGB-D data.
+	\item Lecture \ref{cpt:12}: map building. We will discuss how to estimate the depth of pixels in monocular SLAM  (and show why they are unreliable). Compared with monocular depth estimation, building a dense map with RGB-D cameras is much easier. You will write programs for epipolar line search and patch matching to estimate depth from monocular images and then build a point cloud map and octagonal treemap from RGB-D data.
 	
-	\item Lecture 13: a practice chapter for stereo VO. You will build a visual odometry framework by yourself by integrating the previously learned knowledge and solve problems such as frame and map point management, keyframe selection, and optimization control.
+	\item Lecture \ref{cpt:13}: a practice chapter for stereo VO. You will build a visual odometry framework by yourself by integrating the previously learned knowledge and solve problems such as frame and map point management, keyframe selection, and optimization control.
 	
-	\item Lecture 14: current open-source SLAM projects and future development direction. We believe that after reading the previous chapters, you can understand other people's approaches easily and be capable of achieving new ideas of your own.
+	\item Lecture \ref{cpt:14}: current open-source SLAM projects and future development direction. We believe that after reading the previous chapters, you can understand other people's approaches easily and be capable of achieving new ideas of your own.
 \end{enumerate}
 
 Finally, if you don't understand what we are talking about at all, congratulations! This book is right for you! 
 
-\section{Source Code}
+\section*{Source Code}
 
 All source code in this book is hosted on Github:
 
@@ -77,7 +77,7 @@ Check out the English version by:
 
 It is strongly recommended that readers download them for viewing at any time. The code is divided into chapters. For example, the contents of the \textit{7th} lecture will be placed in folder \textit{ch7}. Some of the small libraries used in the book can be found in the ``3rdparty'' folder as compressed packages. For large and medium-sized libraries like \textit{OpenCV}, we will introduce their installation methods when they first appear. If you have any questions regarding the code, click the \textit{issue} button on GitHub to submit. If there is indeed a problem with the code, we will correct them in time. If you are not accustomed to using Git, you can also click the  \textit{Download} button on the right side to download a zipped file to your local drive.
 
-\section{Oriented readers}
+\section*{Oriented Readers}
 
 This book is for students and researchers interested in SLAM. Reading this book needs specific prerequisites, we assume that you have the following knowledge:
 
@@ -92,7 +92,7 @@ Readers interested in SLAM but do not have the knowledge mentioned above may fin
 
 This book can be used as a textbook for SLAM-related courses or as self-study materials.
 
-\section{Style}
+\section*{Style}
 
 This book covers both mathematical theory and programming implementation. Therefore, for the convenience of reading, we will be using different layouts to distinguish the contents.
 
@@ -133,14 +133,7 @@ This book covers both mathematical theory and programming implementation. Theref
 	\item The book's exercises and optional readings may require you to search for additional materials, so you need to learn to use search engines.
 \end{enumerate}
 
-\section{Acknowledgments}
-The online English version of this book is currently publicly available and open-source. % \textcolor{red}{The Chinese version}
-
-In the process of writing this book, a large number of documents and papers have been referenced. Most of the theoretical knowledge of mathematics is the result of previous research, not my original creation. A small part of the experimental design also comes from various open-source code demonstration programs, but most of them are written by myself. In addition, there are some pictures taken from published journals or conference papers, which have been noted in the text. Unexplained images, either original or from the Internet, will not be listed. I don’t want to infringe anyone’s picture copyright. If readers find any problems, please contact me to modify it. 
-
-Please contact me through GitHub or email: \href{mailto:gao.xiang.thu@gmail.com}{gao.xiang.thu@gmail.com}.
-
-\section{Exercises (self-test questions)}
+\section*{Exercises (Self-test Questions)}
 \begin{enumerate}
 	\item Suppose we have a linear equation $\mathbf{Ax}=\mathbf{b}$. If $\mathbf{A}$ and $\mathbf{b}$ are known, how to solve the $\mathbf{x}$? What are the requirements for $\mathbf{A}$ and $\mathbf{b}$ if we want a unique $\mathbf{x}$? (Hint: check the rank of $\mathbf{A}$ and $\mathbf{b}$).
 	

@@ -4,7 +4,17 @@
 \input{latex/option}
 \input{latex/hack}
 
+% suggested format in Springer
+%i.Title page
+%ii.Author details and  Springer copyright page
+%iii.Dedication page
+%iv.Acknowledgments
+%v.Preface
+%vi.Table of contents
+%vii.Introduction
+
 \begin{document}
+% Title page
 \title{Basic Knowledge on Visual SLAM\\From Theory to Practice}
 \author{Xiang Gao, Tao Zhang, Qinrui Yan and Yi Liu}
 \date{\today}
@@ -12,12 +22,28 @@
 \frontmatter
 \maketitle
 
-\includepdf{resources/other/cover.pdf}
-\includepdf{resources/other/leaf.pdf}
+% Author info & copy right
+
+% dedication page
+\clearpage
+\begin{center}
+	\thispagestyle{empty}
+	\vspace*{\fill}
+	\usefont{T1}{LobsterTwo-LF}{bx}{it}
+	\Large \emph{To my beloved Lilian and Shenghan}
+	\vspace*{\fill}
+\end{center}
+
+% ack
+\include{chapters/acknowledge}
+
+% preface
+%\include{chapters/preface-en}
+\include{chapters/preface}
 
 \tableofcontents
 
- TODO
+% TODO
 % 统一用语：例如key frame -> keyframe, front end -> frontend, real time->real-time，等等
 % \textbf 强调的地方用斜体为佳
 % 检查表述和语法
@@ -31,14 +57,11 @@
 % 回环检测 loop closure或loop closing
 % 最小二乘 least-square 要连字线
 
-
 \mainmatter 
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
 \hypersetup{bookmarksdepth=2}
-\include{chapters/preface-en}
-\include{chapters/preface}
 
-\part{Mathematical Knowledge}
+\part{Fundamental  Knowledge}
 \include{chapters/whatSlam}
 \include{chapters/rigidBody}
 \include{chapters/lieGroup}
