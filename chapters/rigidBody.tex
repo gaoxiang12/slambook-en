@@ -58,7 +58,7 @@ where $ \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle $ refers to the
 	\end{array}} \right] \mathbf{b} \buildrel \Delta \over = { \mathbf{a}^ \wedge } \mathbf{b}.
 \end{equation}
 
-The result of the outer product is a vector whose direction is perpendicular to the two vectors, and the length is $ \left | \mathbf{a} \right | \left | \mathbf{b} \right | \left \langle { \mathbf {a}, \mathbf {b}} \right \rangle  $, which is also the area of the quadrilateral of the two vectors. From the outer product operations, we introduce the $ ^ \wedge $ operator here, which means writing $ \mathbf{a} $ as a \textit {skew-symmetric matrix} \footnote{Skew-symmetric matrix means $ \mathbf{A} $ satisfies $ \mathbf{A}^T=- \mathbf{A}$. }. You can take $ ^ \wedge $ as a skew-symmetric symbol. It turns the outer product $ \mathbf{a} \times  \mathbf{b} $ into the multiplication of the matrix and the vector $ { \mathbf{a}^ \wedge } \mathbf{b} $, which is a linear operation. This symbol will be used frequently in the following sections. This symbol will be used frequently in the following sections. It is a one-to-one mapping, meaning that for any vector, it corresponds to a unique anti-symmetric matrix, and vice versa:
+The result of the outer product is a vector whose direction is perpendicular to the two vectors, and the length is $ \left | \mathbf{a} \right | \left | \mathbf{b} \right | \left \sin \langle { \mathbf {a}, \mathbf {b}} \right \rangle  $, which is also the area of the quadrilateral of the two vectors. From the outer product operations, we introduce the $ ^ \wedge $ operator here, which means writing $ \mathbf{a} $ as a \textit {skew-symmetric matrix} \footnote{Skew-symmetric matrix means $ \mathbf{A} $ satisfies $ \mathbf{A}^T=- \mathbf{A}$. }. You can take $ ^ \wedge $ as a skew-symmetric symbol. It turns the outer product $ \mathbf{a} \times  \mathbf{b} $ into the multiplication of the matrix and the vector $ { \mathbf{a}^ \wedge } \mathbf{b} $, which is a linear operation. This symbol will be used frequently in the following sections. It is a one-to-one mapping, meaning that for any vector, it corresponds to a unique anti-symmetric matrix, and vice versa:
 
 \begin{equation}
 \mathbf{a}^\wedge = \left[ {\begin{array}{*{20}{c}}
@@ -439,7 +439,7 @@ The symbol $ ^ \wedge $ is a vector to skew-symmetric conversion, see the formul
 Therefore:
 \begin{equation}
 \label{eq:R2theta}
-\theta = \arccos ( \frac{\mathrm{tr}(\mathbf{R}) - 1}{2}  ) .
+\theta = \arccos \left( \frac{\mathrm{tr}(\mathbf{R}) - 1}{2}  \right) .
 \end{equation}
 
 Regarding the axis $ \mathbf{n} $, since the rotation axis does not change after the rotation, we have:
@@ -662,7 +662,7 @@ In order to obtain the conversion formula of the quaternion to the rotation vect
 Also obtained by the formula~\eqref{eq:R2theta}:
 \begin{equation}
 	\begin{aligned}
-		\theta &= \arccos(\frac{\mathrm{tr}(\mathbf{R})-1}{2}) \\
+		\theta &= \arccos\left(\frac{\mathrm{tr}(\mathbf{R})-1}{2}\right) \\
 		&=\arccos(2s^2-1),
 	\end{aligned}
 \end{equation}
