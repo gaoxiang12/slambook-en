@@ -1,5 +1,7 @@
 ## Welcome to Basic Knowledge on Visual SLAM: From Theory to Practice, by Xiang Gao, Tao Zhang, Qinrui Yan and Yi Liu
 
+![image](./resources/cheatsheet.png)
+
 This is the English version of this book. If you are a Chinese reader, please check [this page](https://item.jd.com/12666058.html). Our code is in github: [code](https://github.com/gaoxiang12/slambook2).
 
 The English version is based on slambook2 which is still under review. For now the English version is open source and please feel free to download it.
