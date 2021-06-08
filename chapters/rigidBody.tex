@@ -968,7 +968,7 @@ void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> pos
 			glEnd();
 		}
 		// draw a connection
-		for (size_t i = 0; i < poses.size(); i++) {
+		for (size_t i = 0; i < poses.size() - 1; i++) {
 			glColor3f(0.0, 0.0, 0.0);
 			glBegin(GL_LINES);
 			auto p1 = poses[i], p2 = poses[i + 1];
