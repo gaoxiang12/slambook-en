@@ -480,13 +480,13 @@ e(\mathbf{T})=\mathbf{I}_1(\mathbf{p}_{1})-\mathbf{I}_2(\mathbf{u}),
 \end{equation}
 Then we get:
 \begin{equation}
-\frac{\partial e}{\partial \mathbf{T}} = \frac{{\partial {\mathbf{I}_2}}}{{\partial \mathbf{u}}}\frac{{\partial \mathbf{u}}}{{\partial \mathbf{q}}}\frac{{\partial \mathbf{q}}}{{\partial \delta \boldsymbol{\xi} }}\delta \boldsymbol{\xi},
+\frac{\partial e}{\partial \mathbf{T}} = -\frac{{\partial {\mathbf{I}_2}}}{{\partial \mathbf{u}}}\frac{{\partial \mathbf{u}}}{{\partial \mathbf{q}}}\frac{{\partial \mathbf{q}}}{{\partial \delta \boldsymbol{\xi} }},
 \end{equation}
-Where $\delta \boldsymbol{\xi}$ is the left disturbance of $\mathbf{T}$. We see that the first derivative is divided into three terms due to the chain rule, and these three terms are easy to obtain:
+where $\delta \boldsymbol{\xi}$ is the left disturbance of $\mathbf{T}$. We see that the first derivative is divided into three terms due to the chain rule, and these three terms are easy to obtain:
 
 \begin{enumerate}
 	\item $ \partial \mathbf{I}_2 / \partial \mathbf{u} $ is the grayscale gradient at pixel $\mathbf{u}$.
-	\item $ \partial \mathbf{u} / \partial \mathbf{q} $ is the derivative of the projection equation with respect to the three-dimensional point in the camera frame. Remember $\mathbf{q}=[X,Y,Z]^T$, according to chapter $\ref{cpt:7}$, the derivative is:
+	\item $ \partial \mathbf{u} / \partial \mathbf{q} $ is the derivative of the projection equation with respect to the three-dimensional point in the camera frame. Let $\mathbf{q}=[X,Y,Z]^T$, according to chapter $\ref{cpt:7}$, the derivative is:
 	\begin{equation}
 	\frac{{\partial \mathbf{u}}}{{\partial \mathbf{q}}} = \left[ {\begin{array}{*{20}{c}}
 		{\frac{{\partial u}}{{\partial X}}}&{\frac{{\partial u}}{{\partial Y}}}&{\frac{{\partial u}}{{\partial Z}}}\\
