@@ -278,7 +278,7 @@ The first version of this book uses Ubuntu 14.04 as the default development envi
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{whatIsSLAM/ubuntu1804.pdf}
+    \includegraphics[width=1.0\textwidth]{whatIsSLAM/ubuntu.pdf}
     \caption{Ubuntu 18.04 in virtual machine.}
     \label{fig:ubuntu1804}
 \end{figure}
@@ -463,8 +463,8 @@ There are many kinds of IDEs under Linux. Although there are still some gaps wit
 
 Below we take a little bit of space to introduce KDevelop and CLion.
 
-\subsubsection{Use KDE}
-Kdevelop natively supports the CMake project. To do this, after creating ``CMakeLists.txt'' in the terminal, open the ``CMakeLists.txt'' with ``Project $\rightarrow$Open/Import Project'' in KDevelop. The software will ask you a few questions, and by default, create a build folder to help you call the cmake and make commands. These can be done automatically by pressing the shortcut key F8. The following section of \autoref{fig:kdevelop} shows the compilation information.
+\subsubsection{Use KDevelop}
+KDevelop natively supports the CMake project. To do this, after creating ``CMakeLists.txt'' in the terminal, open the ``CMakeLists.txt'' with ``Project $\rightarrow$Open/Import Project'' in KDevelop. The software will ask you a few questions, and by default, create a build folder to help you call the cmake and make commands. These can be done automatically by pressing the shortcut key F8. The following section of \autoref{fig:kdevelop} shows the compilation information.
 
 We hand over the task of adapting to the IDE to the reader. If you are transferring from Windows, you will find its interface similar to Visual C++ or Visual Studio. Please use KDevelop to open the previous project and compile it to see what information it outputs. I believe you will feel more convenient than opening the terminal.
 
@@ -485,11 +485,11 @@ Set( CMAKE_BUILD_TYPE "Debug" )
 
 CMake has some compilation-related built-in variables that give you more precise control over the compilation process. There is usually a \textit{debug} mode for debugging and a \textit{release} mode for publishing. In debug mode, the program runs slower, but breakpoint debugging is possible, and you can see the values of the variables;. In contrast, release mode is faster, but there is probably no debugging information. We set the program to Debug mode and place the breakpoint. Next, tell KDevelop which program you want to launch.
 
-In the second step, open ``Run $\rightarrow$Configure Launcher'' and click on ``Add New $\rightarrow$ Application'' on the left. In this step, our task is to tell KDevelop which program to launch. As shown in \autoref{fig:launchConfigure}, you can either select a CMake project target (that is, the executable we built with the add\_executable directive) or point to a binary file. The second approach is recommended, and in our experience, this is less of a problem.
+In the second step, open ``Run $\rightarrow$Configure Launches'' and click on ``Add New $\rightarrow$ Application'' on the left. In this step, our task is to tell KDevelop which program to launch. As shown in \autoref{fig:launchConfigure}, you can either select a CMake project target (that is, the executable we built with the add\_executable directive) or point to a binary file. The second approach is recommended, and in our experience, this is less of a problem.
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{whatIsSLAM/launchConfigure.pdf}
+    \includegraphics[width=0.8\textwidth]{whatIsSLAM/config-launch.pdf}
     \caption{Config launches. We can choose a launch target and set parameters here. }
     \label{fig:launchConfigure}
 \end{figure}
@@ -517,7 +517,7 @@ Now you should be familiar with the entire process of breakpoint debugging. In t
     \label{fig:clion}
 \end{figure}
 
-CLion is more complete than KDevelop, but it requires a user account, and the memory/CPU requirements for the host will be higher. \footnote{CLion is abnormally slow in the version after 2018. It is recommended that you use the release version around 2017. }. In CLion, you can also open a ``CMakeLists.txt'' or specify a directory. CLion will complete the \textit{cmake-make} process for you. Its running interface is shown in \autoref{fig:clion}.
+CLion is more complete than KDevelop, but it requires a user account, and the memory/CPU requirements for the host will be higher. In CLion, you can also open a ``CMakeLists.txt'' or specify a directory. CLion will complete the \textit{cmake-make} process for you. Its running interface is shown in \autoref{fig:clion}.
 
 Similarly, after opening CLion, you can select the programs you want to run or debug in the upper right corner of the interface and adjust their startup parameters and working directory. Click the small beetle button in this column to start the breakpoint debugging mode. CLion also has several convenient features, such as automatically creating classes, changing functions, and automatically adjusting the coding style. Please try it.
 
