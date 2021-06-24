@@ -115,7 +115,7 @@ Or in $\mathrm{SE}(3)$'s manner:
 
 According to the principle of graph optimization, the equation will not hold exactly in practice. Hence, we set up the least-square error and then, as before, discuss the derivative of the error with respect to the optimized variable. Here, we move the $\bm{T}_{ij}$ of the above equation to the right side of the equation to construct the error $\bm{e}_{ij}$:
 \begin{equation}
-	\bm{e}_{ij} = \Delta \bm{\xi}_{ij} \ln \left( \bm{T}_{ij}^{-1} \bm{T}_i^{-1} \bm{T}_j \right)^\vee
+	\bm{e}_{ij} = \ln \left( \bm{T}_{ij}^{-1} \bm{T}_i^{-1} \bm{T}_j \right)^\vee
 \end{equation}
 
 Note that there are two optimization variables: $\bm{\xi}_i$ and $\bm{\xi}_j$, so we find the derivative of $\bm{e}_{ij}$ about these two variables. According to the derivation method of Lie algebra, give $\bm{\xi}_i$ and $\bm{\xi}_j$ a left disturbance: $ \bm{\delta \xi}_i$ and $\bm{\delta \xi}_j$. Then the error becomes:
