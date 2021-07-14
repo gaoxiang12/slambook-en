@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
     
     // some matrix operations
     // The basic operations are not demonstrated, just use +-*/ operators.
-    Matrix_33 = Matrix3d::Random(); // Random Number Matrix
+    matrix_33 = Matrix3d::Random(); // Random Number Matrix
     cout << "random matrix: \n" << matrix_33 << endl;
     cout << "transpose: \n" << matrix_33.transpose() << endl;
     cout << "sum: " << matrix_33.sum() << endl;
@@ -323,7 +323,7 @@ int main(int argc, char **argv) {
 	    matrix_NN * matrix_NN.transpose(); // Guarantee semi-positive definite
     Matrix<double, MATRIX_SIZE, 1> v_Nd = MatrixXd::Random(MATRIX_SIZE, 1);
     
-    Clock_t time_stt = clock(); // timing
+    clock_t time_stt = clock(); // timing
     // Direct inversion
     Matrix<double, MATRIX_SIZE, 1> x = matrix_NN.inverse() * v_Nd;
     cout << "time of normal inverse is "
