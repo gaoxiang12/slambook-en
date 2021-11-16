@@ -235,7 +235,7 @@ Readers may say that the function $f,h$ here does not seem to specify what is go
     \Delta \theta
     \end{array} \right]_k} + {\mathbf{w}_k},
 \end{equation}
-where $\mathbf{w}_k$ is the noise again. This is a simple linear relationship. However, not all input commands are position and angular changes. For example, the input of ``throttle'' or ``joystick'' is the speed or acceleration, so there are other forms of more complex motion equations. At that time, we would say the kinetic analysis is required.
+where $\mathbf{w}_k$ is the noise again. This is a simple linear relationship. However, not all input commands are position and angular changes. For example, the input of ``throttle'' or ``joystick'' is the speed or acceleration, so there are other forms of more complex motion equations. At that time, we would say the kinematic analysis is required.
 
 Regarding the observation equation, for example, the robot carries a two-dimensional laser sensor. We know that a laser observes a 2D landmark by measuring two quantities: the distance $r$ between the landmark point and the robot, and the angle $\phi$. Let's say the landmark is at $\mathbf{y}_j = [y_1, y_2]_j^\mathrm{T}$, the pose is $\mathbf{x}_k=[x_1,x_2]_k^\mathrm{T}$, and the observed data is $\mathbf{z}_{k,j} = [r_{k,j}, \phi_{k,j}]^\mathrm{T}$, then the observation equation is written as:
 \begin{equation}
