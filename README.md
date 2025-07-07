@@ -4,8 +4,6 @@
 
 This is the English version of this book. If you are a Chinese reader, please check [this page](https://item.jd.com/12666058.html). Our code is in github: [code](https://github.com/gaoxiang12/slambook2).
 
-The English version is based on slambook2 which is still under review. For now the English version is open source and please feel free to download it.
-
 From 2019.6 the English version has been changed to LaTeX instead of markdown. In this repo you can find the LaTeX source files, and if you are only interested in the compiled pdf, click [here](./slambook-en.pdf).
 
 I've finished the translation work in 2021.2.28. Thanks for all the patience.
@@ -20,6 +18,8 @@ author = {Xiang Gao and Tao Zhang and Yi Liu and Qinrui Yan},
 } ```
 
 ```
+
+You maybe also interested in my new book about Lidar-based SLAM, please check it out [here](https://github.com/gaoxiang12/slam-in-ad-en).
 
 ## For reviewers and collaborators
 - Please refer to chapter-cn directory for Chinese version. 
