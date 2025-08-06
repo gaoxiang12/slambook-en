@@ -302,7 +302,7 @@ First, let's review the entire projection process. Starting from a point $\mathb
 	\begin{equation}
 		\mathbf{P}_c = [u_c, v_c, 1]^T = [X'/Z', Y'/Z', 1]^T.
 	\end{equation}
-	\item Apply the distortion model. We only consider the radical distortion here: 
+	\item Apply the distortion model. We only consider the radial distortion here: 
 	\begin{equation}
 		\left\{
 		\begin{array}{l}
@@ -443,7 +443,7 @@ Now let's divide $\mathbf{H}$ into blocks:
 where $\mathbf{H}_{11}$ is only related to camera poses and $\mathbf{H}_{22}$ only to landmarks. When we iterate over the $i,j$ index, please note that the following properties are always hold:
 \begin{enumerate}
 	\item No matter how $i,j$ changes, $\mathbf{H}_{11}$ is always a block-diagonal matrix, with only non-zero blocks at $\mathbf{H}_{i,i}$.
-	\item Save for $\mathbf{H}_{22}$ since we only have non-zero blocks in $\mathbf{H}_{j,j}$. 
+	\item Same for $\mathbf{H}_{22}$ since we only have non-zero blocks in $\mathbf{H}_{j,j}$. 
 	\item  For $\mathbf{H}_{12}$ and $\mathbf{H}_{21}$, they may be sparse or dense, depending on the specific observation data.
 \end{enumerate}
 This shows the sparse structure of $\mathbf{H}$. We will take advantage tof the sparsity in following section to solve the incremental equations. 

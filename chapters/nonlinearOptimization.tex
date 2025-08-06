@@ -58,17 +58,17 @@ P( \mathbf{x},\mathbf{y} | \mathbf{z}, \mathbf{u}).
 
 In particular, when we do not know the control input and only have one image, that is, only considering the data brought by the observation equation, it is equivalent to estimate the conditional probability distribution $ P (\mathbf {x}, \mathbf {y} | \mathbf { z}) $. Such a problem is also called Structure from Motion (SfM), that is, how to reconstruct the three-dimensional spatial structure from images only {\cite {Agarwal2009}}.
 
-To estimation the conditional pdf, we use the Bayes equation to switch the variables:
+To estimate the conditional pdf, we use the Bayes equation to switch the variables:
 \begin{equation}
 P\left( { \mathbf{x},\mathbf{y}| \mathbf{z}, \mathbf{u}} \right) = \frac{{P\left( {\mathbf{z},\mathbf{u}|\mathbf{x},\mathbf{y}} \right)P\left( \mathbf{x}, \mathbf{y} \right)}}{{P\left( \mathbf{z},\mathbf{u}\right)}} \propto \underbrace{P\left(  { \mathbf{z},\mathbf{u}| \mathbf{x},\mathbf{y} } \right)}_{\text{likehood}} \underbrace{P\left( \mathbf{x},\mathbf{y} \right)}_{\text{prior}}.
 \end{equation}
 
-The left side is called \textit {posterior probability}, and $ P (\mathbf {z} | \mathbf {x}) $ on the right is called \textit {likelihood} (or likehood), and the other part is $ P (\mathbf {x}) $ is called \textit {prior}. \textit {It is normally difficult to find the posterior distribution directly (in nonlinear systems), but it is feasible to find an optimal point which maximize the posterior} (Maximize a Posterior, MAP):
+The left side is called \textit {posterior probability}, and $ P (\mathbf {z}, \mathbf{u} | \mathbf {x}, \mathbf{y}) $ on the right is called \textit {likelihood} (or likehood), and the other part is $ P (\mathbf {x}) $ is called \textit {prior}. \textit {It is normally difficult to find the posterior distribution directly (in nonlinear systems), but it is feasible to find an optimal point which maximize the posterior} (Maximize a Posterior, MAP):
 \begin{equation}
 {(\mathbf{x},\mathbf{y})^*}_{\mathrm{MAP}} = \arg {\mathop{\rm max}\nolimits} P \left( {\mathbf{x},\mathbf{y}|\mathbf{z},\mathbf{u}} \right) = \arg \max P(\mathbf{z},\mathbf{u}|\mathbf{x},\mathbf{y})P(\mathbf{x},\mathbf{y}).
 \end{equation}
 
-Please note that the denominator part of Bayes' rule has nothing to do with the state $ \mathbf {x}, \mathbf {y} $ to be estimated, so it can be just ignored. Bayes' rule tells us that solving the maximum posterior probability is \textit {equivalent to the estimate the product of maximum likelihood and a priori}. Further, we can also say, ``I'm sorry, I don't know in prior where the robot pose or the map points are'', then there is no \textit {prior}. In this case, we can solve the \textit {Maximize Likelihood Estimation} (MLE):
+Please note that the denominator part of Bayes' rule has nothing to do with the state $ \mathbf {x}, \mathbf {y} $ to be estimated, so it can be just ignored. Bayes' rule tells us that solving the maximum posterior probability is \textit {equivalent to the estimate the product of maximum likelihood and a priori}. Further, if we say, ``I'm sorry, I don't know in prior where the robot pose or the map points are'', then there is no \textit {prior}. In this case, we can solve the \textit {Maximize Likelihood Estimation} (MLE):
 \begin{equation}
 { (\mathbf{x},\mathbf{y})^*}_{\mathrm{MLE}} = \arg \max P( \mathbf{z},\mathbf{u}| \mathbf{x},\mathbf{y}).
 \end{equation}
@@ -80,11 +80,11 @@ Now we have formulated the state estimation problem into a MAP/MLE problem, and 
 \[
 {\mathbf{z}_{k,j}} = h\left( {{ \mathbf{y}_j},{ \mathbf{x}_k}} \right)+ \mathbf{v}_{k, j},
 \]
-Since we assume the noise item is Gaussian, which means ${\mathbf{v}_k} \sim \mathcal{N}\left( {\mathbf{0},{{{\mathbf{Q}}}_{k,j}}} \right)$, so the conditional probability of the observation data is:
+Since we assume that the noise is Gaussian, which means ${\mathbf{v}_k} \sim \mathcal{N}\left( {\mathbf{0},{{{\mathbf{Q}}}_{k,j}}} \right)$, the conditional probability of the observation data is:
 \[
 P( \mathbf{z}_{j,k} | \mathbf{x}_k, \mathbf{y}_j) = N\left( h(\mathbf{y}_j, \mathbf{x}_k), \mathbf{Q}_{k,j} \right),
 \]
-which is, of course, still a Gaussian distribution. Now let's consider solving the maximum likelihood estimation under this single observation.
+which is, of course, still a Gaussian distribution. Now, let's consider solving the maximum likelihood estimation under this single observation.
 
 We can rewrite this maximum problem into a \textit{minimum of negative logarithm} one. Gaussian distributions have better mathematical forms under negative logarithm. Consider an arbitrary multi-dimensional Gaussian distribution $\mathbf{x} \sim \mathcal{N}(\mathbf{\mu}, \boldsymbol{\Sigma})$, its probability density function expansion form is:
 \begin{equation}
@@ -103,14 +103,16 @@ Because the logarithm function is monotonically increasing, maximizing the origi
 	\end{aligned}
 \end{equation}
 
-We found that this equation is equivalent to a quadratic form that minimizes the noise term (i.e., the error). This quadratic form is called \textit{Mahalanobis distance}. It can also be regarded as the Euclidean distance ($\mathcal{L}_2$-norm) weighted by $\mathbf{Q}_{k,j}^{-1}$, where $\mathbf{Q}_{k,j} ^{-1}$ is also called the \textit{information matrix}, which is exactly the \textit{inverse} of the Gaussian covariance matrix.
+This equation is equivalent to a quadratic form that minimizes the noise term (i.e., the error). This quadratic form is called \textit{Mahalanobis distance}. It can also be regarded as the Euclidean distance ($\mathcal{L}_2$-norm) weighted by $\mathbf{Q}_{k,j}^{-1}$, where $\mathbf{Q}_{k,j} ^{-1}$ is also called the \textit{information matrix}, which is exactly the \textit{inverse} of the Gaussian covariance matrix.
 
 Now we put all the observations together. It is usually assumed that the inputs and observations are independent of each other, which means that each input is independent, each observation is independent, and input and observation are still independent. So we can factorize the joint distribution like this:
 \begin{equation}
 	P\left( {\mathbf{z},\mathbf{u}|\mathbf{x},\mathbf{y}} \right) = \prod\limits_k {P\left( {{\mathbf{u}_k }|{\mathbf{x}_{k-1}},{\mathbf{x}_k}} \right)} \prod\limits_{k,j} {P\left( {{\mathbf{z} _{k,j}}|{\mathbf{x}_k},{\mathbf{y}_j}} \right)},
 \end{equation}
 
-It shows that we can handle the movement and observation at each moment independently. Let's define the error between the model and real data: 
+Note that this factorization uses the chain rule of probabilities, such that $P(\mathbf{z},\mathbf{u} | \mathbf{x}, \mathbf{y}) = P(\mathbf{u} | \mathbf{x}, \mathbf{y},\mathbf{z}) P(\mathbf{z} | \mathbf{x}, \mathbf{y})$. The action $\mathbf{u}$ is independent of the measurement $\mathbf{y}$ and the output of the observation model $\mathbf{z}$, so they are removed from the first term.
+
+This factorization shows that we can handle the movement and observation at each moment independently. Let's define the error between the model and real data: 
 \begin{equation}
 	\begin{array}{l}
 		{\mathbf{e}_{u,k}} = {\mathbf{x}_k}-f\left( {{\mathbf{x}_{k-1}},{\mathbf{u}_k} } \right)\\
@@ -128,7 +130,7 @@ Observing the formula~\eqref{eq:least-square} carefully, we find that the least-
 
 \begin{itemize}
 	\item First, the objective function of the whole problem consists of many (weighted) error quadratic forms. Although the overall state variable's dimensionality is very high, each error term is simple and is only related to one or two state variables. For example, the motion error is only related to $\mathbf{x}_{k-1}, \mathbf{x}_k$, and the observation error is only related to $\mathbf{x}_k, \mathbf{y}_j$. This relationship will give a \textit{sparse} least-square problem, which we will investigate further in the backend chapter.
-	\item Secondly, if you use Lie algebra to represent the increment, the problem is the least-squares problem of \textit{unconstrained}. However, if the rotation matrix/transformation matrix is used to describe the pose, the constraint of the rotation matrix itself will be introduced, that is, ``$\mathrm{s.t.}\ \mathbf{R}^T \mathbf{R} = \mathbf{I}$ and $\det (\mathbf{R})=1$ '' need to be added to the problem. Additional constraints can make optimization more difficult.
+	\item Secondly, if you use Lie algebra to represent the increment, the problem is an \textit{unconstrained} least-squares problem. However, if the rotation matrix/transformation matrix is used to describe the pose, the constraint of the rotation matrix itself will be introduced, that is, ``$\mathrm{s.t.}\ \mathbf{R}^T \mathbf{R} = \mathbf{I}$ and $\det (\mathbf{R})=1$ '' need to be added to the problem. Additional constraints can make optimization more difficult.
 	\item Finally, we used a quadratic metric error, exactly the $\mathcal{L}_2-$norm. The information matrix is used as the weights of each element. For example, if an observation is very accurate, the covariance matrix will be ``small'' and the information matrix will be ``large'', so this error term will have a higher weight than the others in the whole problem. We will see some drawbacks of the $\mathcal{L}_2$ error later.
 \end{itemize}
 
